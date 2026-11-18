@@ -1,4 +1,4 @@
-#define name FediTap
+#define name ⁂tap
 #define inputs text, url
 #define from sharesheet
 #define color lightblue

@@ -104,7 +104,7 @@ What changes when the page runs as a Home Screen web app, and what iOS does not 
 "Not from the Shortcut" cannot be inferred from `document.referrer`: the Shortcut's open-URL action sends no referrer, which looks identical to typing the address or opening a bookmark. Use explicit signals instead:
 
 1. A shared link is present (`?url=` or legacy `#url=`): the person arrived from the Shortcut. Hide the card and remember it.
-2. Change `FediTap.cherri` so the no-link launch opens `page + "?via=shortcut"` (the with-link launch already carries `?url=`). The app reads `via`, removes it from the address bar with `history.replaceState` (as it does for OAuth parameters), and remembers it. This needs the Shortcut rebuilt and re-signed, and existing installs without it keep seeing the card until they share a link once or tap "I already have it".
+2. Change `fedi-tap.cherri` so the no-link launch opens `page + "?via=shortcut"` (the with-link launch already carries `?url=`). The app reads `via`, removes it from the address bar with `history.replaceState` (as it does for OAuth parameters), and remembers it. This needs the Shortcut rebuilt and re-signed, and existing installs without it keep seeing the card until they share a link once or tap "I already have it".
 3. Remember "has the Shortcut" in `localStorage` (separate from the account store, e.g. `feditap.shortcut = "yes" | "dismissed"`). The card hides when set. Storage is per context, so Safari and the Home Screen app each learn separately.
 4. In standalone mode the person cannot have arrived from the Shortcut, so the card shows (with the one-line note that links open in Safari) until dismissed.
 
@@ -167,7 +167,7 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 
 ### Phase 4b — Home Screen web app
 - Add `manifest.webmanifest`, icons and meta tags, `manifest-src 'self'` in the CSP, safe-area padding, standalone detection (section 3a).
-- Implement the Shortcut card rules (section 3b) and change `FediTap.cherri` to add `?via=shortcut`; rebuild and sign the Shortcut.
+- Implement the Shortcut card rules (section 3b) and change `fedi-tap.cherri` to add `?via=shortcut`; rebuild and sign the Shortcut.
 - Real-device test of the standalone OAuth round trip before documenting Home Screen as supported.
 - **Done when:** the page installs with the right name and icon, runs with correct safe areas, hides install hints when standalone, and the Shortcut card shows or hides per the rules.
 

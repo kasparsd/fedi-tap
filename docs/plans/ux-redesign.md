@@ -18,7 +18,7 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 - [x] Phase 2: post/profile card, hidden URL field, Paste loads at once, Shortcut card rules
 - [x] Phase 3: action button states, no double send, inline confirmation, automatic refresh and retry on 401, Reply sheet, Undo only if the server exposes the activity ID (implemented, hidden when the `Location` header is unreadable)
 - [x] Phase 4: structured errors, sign-in fallback without clearing the field, storage-blocked screen
-- [x] Phase 4b: manifest, icons, safe areas, standalone detection, `?via=shortcut` in `FediTap.cherri`
+- [x] Phase 4b: manifest, icons, safe areas, standalone detection, `?via=shortcut` in `fedi-tap.cherri`
 - [x] Remove legacy `#url=` handling
 - [ ] Review against the plan and the security checks
 - [x] Browser test of the Phase 3 to 4b flows in light, dark and 320 px width (Playwright against the mock server); Phase 0 to 2 flows were tested earlier. A final full pass is still open.
@@ -48,7 +48,7 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 
 ## Open items for the owner
 
-- Rebuild and sign `FediTap.shortcut` after the `FediTap.cherri` change (`?via=shortcut` for the no-link launch).
+- Rebuild and sign `⁂tap.shortcut` after the `fedi-tap.cherri` change (`?via=shortcut` for the no-link launch).
 - Decide whether the Home Screen app is a fully supported path once the device test is done.
 - Confirm Undo support with the WordPress ActivityPub plugin (activity ID exposed through CORS).
 - Confirm the WordPress plugin sends `Access-Control-Expose-Headers: Location` on outbox responses; until then Undo never appears there.

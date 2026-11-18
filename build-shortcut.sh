@@ -8,16 +8,17 @@ if [[ $# -gt 1 || (${1:-} != "" && ${1:-} != --unsigned) ]]; then
 fi
 
 stage=$(mktemp -d)
-trap 'rm -f -- "$stage/FediTap.cherri" "$stage/FediTap_unsigned.shortcut" "$stage/FediTap.shortcut"; rmdir -- "$stage"' EXIT
-cp "$project_dir/FediTap.cherri" "$stage/FediTap.cherri"
-cherri "$stage/FediTap.cherri" --skip-sign --no-ansi
-plutil -lint "$stage/FediTap_unsigned.shortcut"
+name="⁂tap"
+trap 'rm -f -- "$stage/fedi-tap.cherri" "$stage/${name}_unsigned.shortcut" "$stage/$name.shortcut"; rmdir -- "$stage"' EXIT
+cp "$project_dir/fedi-tap.cherri" "$stage/fedi-tap.cherri"
+cherri "$stage/fedi-tap.cherri" --skip-sign --no-ansi
+plutil -lint "$stage/${name}_unsigned.shortcut"
 
 if [[ ${1:-} == --unsigned ]]; then
-  artifact=FediTap_unsigned.shortcut
+  artifact=${name}_unsigned.shortcut
 else
-  artifact=FediTap.shortcut
-  if ! shortcuts sign --mode anyone --input "$stage/FediTap_unsigned.shortcut" --output "$stage/$artifact"; then
+  artifact="$name.shortcut"
+  if ! shortcuts sign --mode anyone --input "$stage/${name}_unsigned.shortcut" --output "$stage/$artifact"; then
     echo "Apple Shortcuts signing failed. Run this command from a logged-in macOS Terminal session." >&2
     exit 1
   fi
