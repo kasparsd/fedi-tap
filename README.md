@@ -1,4 +1,7 @@
-# FediTap
+# ⁂tap
+
+[![CI](https://github.com/kasparsd/fedi-tap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kasparsd/fedi-tap/actions/workflows/ci.yml)
+[![Pages](https://github.com/kasparsd/fedi-tap/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/kasparsd/fedi-tap/actions/workflows/pages.yml)
 
 Like, repost, reply to or follow a Fediverse post from your own account. Use FediTap directly in your browser or open it from the Apple share sheet.
 
