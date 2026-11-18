@@ -18,8 +18,10 @@ const form = $("sign-in");
 const input = $("account-input");
 const targetInput = $("post-url");
 const accountPicker = $("selected-account");
+const accountManagement = $("manage-accounts");
+const lookup = $("lookup");
 const actionForm = $("action-form");
-const controls = [$("lookup-controls"), $("action-controls"), $("sign-in-controls")];
+const controls = [$("account-picker"), $("sign-in-controls"), $("lookup-controls"), $("action-controls")];
 let busy = false;
 let resolved = null;
 
@@ -321,7 +323,17 @@ function renderAccounts() {
   )));
   accountPicker.value = selected?.actor ?? "";
   $("account-picker").hidden = !selected;
+  $("fediverse-actions").hidden = !selected;
+  showAccountManagement(Boolean(selected?.needsReauth) || accountManagement.getAttribute("aria-expanded") === "true");
+  updateSharedLinkNotice();
   return selected;
+}
+
+function showAccountManagement(open) {
+  const hasAccount = Boolean(accountPicker.value);
+  accountManagement.setAttribute("aria-expanded", String(hasAccount && open));
+  form.hidden = hasAccount && !open;
+  $("forget").hidden = !hasAccount;
 }
 
 function requireReconnect(store, account) {
@@ -441,6 +453,11 @@ function setTarget(target) {
   url.hash = new URLSearchParams({ url: target.href }).toString();
   history.replaceState(null, "", url);
   targetInput.value = target.href;
+  updateSharedLinkNotice();
+}
+
+function updateSharedLinkNotice() {
+  $("shared-link-notice").hidden = Boolean(accountPicker.value) || !targetInput.value;
 }
 
 function readSharedTarget() {
@@ -450,6 +467,7 @@ function readSharedTarget() {
 function resetPreview() {
   resolved = null;
   actionForm.hidden = true;
+  lookup.hidden = false;
   $("reply").hidden = true;
   $("write-reply").setAttribute("aria-expanded", "false");
   $("reply-text").value = "";
@@ -459,11 +477,12 @@ function showPreview(object) {
   resolved = object;
   const link = $("target-link");
   link.href = object.id;
-  link.textContent = object.id;
+  link.textContent = `${object.isActor ? "Profile" : "Post"} on ${new URL(object.id).hostname}`;
   for (const button of actionForm.querySelectorAll("[value=like], [value=repost], #write-reply")) {
     button.hidden = object.isActor;
   }
   actionForm.querySelector("[value=follow]").textContent = object.isActor ? "Follow" : "Follow author";
+  lookup.hidden = true;
   actionForm.hidden = false;
 }
 
@@ -499,7 +518,7 @@ async function runTask(section, message, task) {
   }
 }
 
-async function findTarget() {
+async function findTarget(focusResult = false) {
   if (busy) return;
   resetPreview();
   const target = httpsUrl(targetInput.value.trim());
@@ -511,17 +530,28 @@ async function findTarget() {
   }
   setTarget(target);
   const actorId = accountPicker.value;
-  await runTask("actions", "Looking up the link…", async () => {
+  const found = await runTask("actions", "Looking up the link…", async () => {
     const object = await withAccount(actorId, (account, refresh) => resolveTarget(account, target.href, refresh));
     if (accountPicker.value !== actorId || targetInput.value !== target.href) return;
     showPreview(object);
-    return "Link found. Choose an action.";
   });
+  if (found && resolved && focusResult) $("target-link").focus();
 }
 
-$("lookup").addEventListener("submit", (event) => {
+lookup.addEventListener("submit", (event) => {
   event.preventDefault();
-  void findTarget();
+  void findTarget(true);
+});
+
+$("change-link").addEventListener("click", () => {
+  resetPreview();
+  $("action-status").textContent = "";
+  $("action-error").textContent = "";
+  targetInput.focus();
+});
+
+accountManagement.addEventListener("click", () => {
+  showAccountManagement(accountManagement.getAttribute("aria-expanded") !== "true");
 });
 
 targetInput.addEventListener("input", () => {
@@ -555,7 +585,7 @@ actionForm.addEventListener("submit", (event) => {
 accountPicker.addEventListener("change", async () => {
   const actorId = accountPicker.value;
   resetPreview();
-  const selected = await runTask("actions", "", async () => {
+  const selected = await runTask("auth", "", async () => {
     await useStore((store) => {
       if (!store.accounts[actorId]) throw new Error("That account was removed in another tab.");
       store.selectedActorId = actorId;
@@ -566,10 +596,10 @@ accountPicker.addEventListener("change", async () => {
   if (selected && targetInput.value) await findTarget();
 });
 
-$("forget").addEventListener("click", () => {
+$("forget").addEventListener("click", async () => {
   const actorId = accountPicker.value;
   resetPreview();
-  void runTask("actions", "", async () => {
+  const removed = await runTask("auth", "", async () => {
     await useStore((store) => {
       delete store.accounts[actorId];
       if (store.selectedActorId === actorId) {
@@ -578,8 +608,10 @@ $("forget").addEventListener("click", () => {
       saveStore(store);
     });
     renderAccounts();
+    showAccountManagement(false);
     return "Account removed from this browser.";
   });
+  if (removed) (accountPicker.value ? accountManagement : input).focus();
 });
 
 window.addEventListener("storage", (event) => {
@@ -597,7 +629,7 @@ window.addEventListener("storage", (event) => {
 window.addEventListener("hashchange", () => {
   const target = readSharedTarget();
   if (!target) return;
-  targetInput.value = target.href;
+  setTarget(target);
   resetPreview();
   if (accountPicker.value) void findTarget();
 });
@@ -635,6 +667,7 @@ async function start() {
     history.replaceState(null, "", callback.href);
     const signedIn = await runTask("auth", "Finishing sign-in…", async () => {
       await completeSignIn(params);
+      showAccountManagement(false);
       input.value = "";
       input.type = "text";
       input.placeholder = "you@example.com";
@@ -644,7 +677,6 @@ async function start() {
     if (!signedIn) return;
   }
   if (targetInput.value && accountPicker.value) await findTarget();
-  else if (targetInput.value) $("action-status").textContent = "Connect a Fediverse account to use this link.";
 }
 
 void start().catch((error) => {
