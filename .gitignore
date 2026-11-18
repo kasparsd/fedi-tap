@@ -1,0 +1,9 @@
+.DS_Store
+/.local/
+*_unsigned.shortcut
+
+# Account settings and token responses from local testing.
+/settings.json
+/refreshed.json
+/fediverse.json
+/fediverse.txt

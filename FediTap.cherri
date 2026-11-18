@@ -1,0 +1,290 @@
+#define name FediTap
+#define inputs text, url
+#define from sharesheet
+
+#include 'actions/text'
+#include 'actions/web'
+#include 'actions/calendar'
+
+action 'documentpicker.open' readSettings(text path: 'WFGetFilePath', bool required: 'WFFileErrorIfNotFound'): variable {
+    "WFFileStorageService": "iCloud Drive",
+    "WFShowFilePicker": false
+}
+
+action 'documentpicker.save' writeSettings(variable contents: 'WFInput') {
+    "WFFileStorageService": "iCloud Drive",
+    "WFAskWhereToSave": false,
+    "WFFileDestinationPath": "fediverse.json",
+    "WFSaveFileOverwrite": true
+}
+
+action 'getvalueforkey' dictionaryValue(variable dictionary: 'WFInput', text key: 'WFDictionaryKey'): variable {
+    "WFGetDictionaryValueType": "Value"
+}
+
+action 'gettimebetweendates' secondsBetween(text end: 'WFInput', text start: 'WFTimeUntilFromDate'): number {
+    "WFTimeUntilUnit": "Seconds"
+}
+
+
+comment('Like, repost, and reply to Fediverse posts or follow their authors from the share sheet. FediTap uses your connected WordPress ActivityPub account. Run it without a shared link to see the installed version.')
+const shortcutVersion = "0.1.0"
+const emptyJSON = text('{}')
+@input = getText(ShortcutInput)
+const setupInput = matchText('(?s)^\s*\{.*"fedishare"\s*:', @input)
+const setupMatches = count(setupInput)
+if setupMatches > 0 {
+    @account = getDictionary(@input)
+    @version = dictionaryValue(@account, "fedishare")
+    const supportedVersion = matchText('^[23]$', "{@version}")
+    if !supportedVersion {
+        alert("This setup data has an unsupported version.")
+        stop()
+    }
+
+    @handle = dictionaryValue(@account, "handle")
+    @kind = dictionaryValue(@account, "kind")
+    @token = dictionaryValue(@account, "token")
+    if !@handle || !@token || @kind.text != "activitypub" {
+        alert("Sign in again to get settings for an ActivityPub account.")
+        stop()
+    }
+
+    @settings = getDictionary(emptyJSON)
+    @accounts = getDictionary(emptyJSON)
+    @savedFile = readSettings("fediverse.json", false)
+    if !@savedFile {
+        @savedFile = readSettings("fediverse.txt", false)
+    }
+    if @savedFile {
+        @settings = getDictionary(@savedFile)
+        @accountsFromFile = dictionaryValue(@settings, "accounts")
+        if @accountsFromFile {
+            @accounts = getDictionary(@accountsFromFile)
+        }
+    }
+    @accounts = setValue(@accounts, "{@handle}", "{@account}")
+    @settings = setValue(@settings, "accounts", "{@accounts}")
+    @settingsText = getText(@settings)
+    const namedSetupSettings = setName(@settingsText, "fediverse.json", true)
+    writeSettings(namedSetupSettings)
+    alert("Connected as {@handle}.", "FediTap v{shortcutVersion}")
+    stop()
+}
+
+const setupPage = "https://kasparsd.github.io/fedi-tap/"
+@settingsFile = readSettings("fediverse.json", false)
+if !@settingsFile {
+    @settingsFile = readSettings("fediverse.txt", false)
+}
+if !@settingsFile {
+    openURL("{setupPage}")
+    stop()
+}
+@settings = getDictionary(@settingsFile)
+@accounts = dictionaryValue(@settings, "accounts")
+if !@accounts {
+    openURL("{setupPage}")
+    stop()
+}
+const savedAccounts = getDictionary(@accounts)
+const handles = getKeys(savedAccounts)
+if !handles {
+    openURL("{setupPage}")
+    stop()
+}
+
+const sharedURLs = getURLs(@input)
+if !sharedURLs {
+    alert("Like, repost, and reply to Fediverse posts or follow their authors using your WordPress ActivityPub account. Open a post and choose Share → FediTap.", "FediTap v{shortcutVersion}")
+    stop()
+}
+
+@handle = getFirstItem(handles)
+const accountValues = getValues(savedAccounts)
+const accountCount = count(handles)
+if accountCount == 1 {
+    const firstAccount = getFirstItem(accountValues)
+    @account = getDictionary(firstAccount)
+} else {
+    @handle = chooseFromList(handles, "Which account do you want to use?")
+    if !@handle {
+        stop()
+    }
+
+    // A Fediverse handle contains dots, which Shortcuts treats as key-path separators.
+    @matchedAccount = false
+    for candidate in accountValues {
+        @candidateAccount = getDictionary(@candidate)
+        @candidateHandle = dictionaryValue(@candidateAccount, "handle")
+        if @candidateHandle.text == "{@handle}" {
+            @account = @candidateAccount
+            @matchedAccount = true
+        }
+    }
+    if !@matchedAccount {
+        openURL("{setupPage}")
+        stop()
+    }
+}
+@access = dictionaryValue(@account, "token")
+
+@proxy = dictionaryValue(@account, "proxy")
+@outbox = dictionaryValue(@account, "outbox")
+@followers = dictionaryValue(@account, "followers")
+const secureProxy = matchText('^https://', "{@proxy}")
+const secureOutbox = matchText('^https://', "{@outbox}")
+if !secureProxy || !secureOutbox || !@access {
+    openURL("{setupPage}")
+    stop()
+}
+
+// Check expiry before resolving the link and again after the user chooses an action.
+repeat requestStep for 2 {
+    @version = dictionaryValue(@account, "fedishare")
+    if @version.number == 3 {
+        const epoch = date("1970-01-01T00:00:00Z")
+        const now = currentDate()
+        const unixTime = secondsBetween("{now}", "{epoch}")
+        @expires = dictionaryValue(@account, "expires")
+        @expiry = number(@expires)
+        const refreshBy = unixTime + 60
+        if @expiry < refreshBy {
+            @tokenEndpoint = dictionaryValue(@account, "token_endpoint")
+            @refreshToken = dictionaryValue(@account, "refresh_token")
+            @clientID = dictionaryValue(@account, "client_id")
+            const secureTokenURL = matchText('^https://', "{@tokenEndpoint}")
+            if !secureTokenURL || !@refreshToken || !@clientID {
+                openURL("{setupPage}")
+                stop()
+            }
+
+            const refreshed = formRequest("{@tokenEndpoint}", 'POST', {
+                "grant_type": "refresh_token",
+                "refresh_token": "{@refreshToken}",
+                "client_id": "{@clientID}"
+            })
+            @response = getDictionary(refreshed)
+            @currentToken = dictionaryValue(@response, "access_token")
+            @expiresIn = dictionaryValue(@response, "expires_in")
+            if !@currentToken || !@expiresIn {
+                openURL("{setupPage}")
+                stop()
+            }
+
+            @newRefresh = dictionaryValue(@response, "refresh_token")
+            if @newRefresh {
+                @account = setValue(@account, "refresh_token", "{@newRefresh}")
+            }
+            @newLifetime = number(@expiresIn)
+            @newExpiry = unixTime + @newLifetime
+            @account = setValue(@account, "token", "{@currentToken}")
+            @account = setValue(@account, "expires", "{@newExpiry}")
+            @latestSettingsFile = readSettings("fediverse.json", false)
+            if !@latestSettingsFile {
+                @latestSettingsFile = readSettings("fediverse.txt", true)
+            }
+            @latestSettings = getDictionary(@latestSettingsFile)
+            @latestAccounts = dictionaryValue(@latestSettings, "accounts")
+            @latestAccounts = setValue(@latestAccounts, "{@handle}", "{@account}")
+            @latestSettings = setValue(@latestSettings, "accounts", "{@latestAccounts}")
+            @latestSettingsText = getText(@latestSettings)
+            const namedRefreshSettings = setName(@latestSettingsText, "fediverse.json", true)
+            writeSettings(namedRefreshSettings)
+        }
+    }
+    @access = dictionaryValue(@account, "token")
+    if @requestStep == 1 {
+        const sharedURL = getFirstItem(sharedURLs)
+        const resolved = formRequest("{@proxy}", 'POST', {"id": "{sharedURL}"}, {
+            "Authorization": "Bearer {@access}",
+            "Accept": "application/activity+json"
+        })
+        @object = getDictionary(resolved)
+        @objectID = dictionaryValue(@object, "id")
+        @objectType = dictionaryValue(@object, "type")
+        if !@objectID || !@objectType {
+            alert("Your server couldn’t resolve this ActivityPub link.")
+            stop()
+        }
+
+        const context = "https://www.w3.org/ns/activitystreams"
+        const public = "https://www.w3.org/ns/activitystreams#Public"
+        @actorTypes = ["Person", "Service", "Group", "Organization", "Application"]
+        @activity = getDictionary(emptyJSON)
+        if @actorTypes contains "{@objectType}" {
+            @followOptions = ["Follow"]
+            @choice = chooseFromList(@followOptions, "FediTap")
+            @activity = {
+                "@context": "{context}",
+                "type": "Follow",
+                "object": "{@objectID}",
+                "to": ["{@objectID}"]
+            }
+        } else {
+            @attributedTo = dictionaryValue(@object, "attributedTo")
+            @authorText = getText(@attributedTo)
+            const authorIDs = matchText('https://[^"\s<>,]+', @authorText)
+            if !authorIDs {
+                alert("This post has no ActivityPub author URL.")
+                stop()
+            }
+            @author = getFirstItem(authorIDs)
+            @postOptions = ["Like", "Repost", "Reply", "Follow author"]
+            @choice = chooseFromList(@postOptions, "FediTap")
+            if @choice.text == "Like" {
+                @activity = {
+                    "@context": "{context}",
+                    "type": "Like",
+                    "object": "{@objectID}",
+                    "to": ["{@author}"],
+                    "cc": ["{public}"]
+                }
+            } else if @choice.text == "Repost" {
+                @activity = {
+                    "@context": "{context}",
+                    "type": "Announce",
+                    "object": "{@objectID}",
+                    "to": ["{public}"],
+                    "cc": ["{@followers}"]
+                }
+            } else if @choice.text == "Reply" {
+                const reply = prompt("Write a public reply")
+                const amp = replaceText("&", "&amp;", "{reply}")
+                const lt = replaceText("<", "&lt;", amp)
+                const html = replaceText(">", "&gt;", lt)
+                @activity = {
+                    "@context": "{context}",
+                    "type": "Create",
+                    "to": ["{@author}"],
+                    "cc": ["{public}"],
+                    "object": {
+                        "type": "Note",
+                        "inReplyTo": "{@objectID}",
+                        "content": "<p>{html}</p>",
+                        "to": ["{@author}"],
+                        "cc": ["{public}"]
+                    }
+                }
+            } else if @choice.text == "Follow author" {
+                @activity = {
+                    "@context": "{context}",
+                    "type": "Follow",
+                    "object": "{@author}",
+                    "to": ["{@author}"]
+                }
+            }
+        }
+
+        if !@choice {
+            stop()
+        }
+    } else {
+        @body = getText(@activity)
+        fileRequest("{@outbox}", 'POST', @body, {
+            "Authorization": "Bearer {@access}",
+            "Content-Type": "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""
+        })
+        showNotification("Sent from {@handle}.", "FediTap")
+    }
+}
