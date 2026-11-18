@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-pYpeH+V3YU/y5MJlfiI0CxY/XqVXeuSReJrn5+g7LTI='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'"
+      content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-zkYd8wkxHMqefEwgzYlH+u2SC50QZDuPZqwalGNG8/8='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'"
     >
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -12,7 +12,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="FediTap">
-    <title>FediTap shortcut for iPhone</title>
+    <title>FediTap</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icon-192.png" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -21,19 +21,22 @@
   <body>
     <main data-state="signed-out">
       <header class="row">
-        <h1 id="title">Sign in</h1>
-        <button type="button" id="account-chip" aria-haspopup="dialog" hidden></button>
+        <a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>
+        <select id="account-select" aria-label="Account" hidden></select>
       </header>
+      <h1 id="title">Sign in</h1>
+      <p data-views="signed-out">
+        Like, repost, reply to or follow a Fediverse post from your own account.
+      </p>
 
       <section id="pending-card">
-        <h2>Link waiting</h2>
+        <h2>Shared link</h2>
         <p id="pending-link" class="quiet"></p>
       </section>
 
       <form id="sign-in" data-views="signed-out">
         <p id="setup-unavailable" role="alert">
-          <strong>Sign-in isn’t available.</strong> It needs JavaScript and the published HTTPS
-          page.
+          <strong>Sign-in isn’t available.</strong> Turn on JavaScript and use the https page.
         </p>
         <fieldset id="sign-in-controls" disabled>
           <legend>Account sign-in</legend>
@@ -43,21 +46,22 @@
               id="account-input"
               name="account"
               type="text"
-              placeholder="you@example.com"
+              placeholder="@you@example.com"
               autocomplete="off"
               autocapitalize="none"
               spellcheck="false"
               required
             >
-            <button type="submit" id="continue" class="primary">Continue</button>
+            <button type="submit" id="continue" class="primary">Sign in</button>
           </div>
           <p id="status" role="status"></p>
           <section id="error"></section>
-          <p class="quiet" data-standalone-only>
-            This app keeps its own sign-in, separate from Safari.
-          </p>
+          <p class="quiet" data-standalone-only>Signed in separately from Safari.</p>
         </fieldset>
       </form>
+      <p class="quiet" data-views="signed-out">
+        Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.
+      </p>
 
       <section id="unsupported" data-views="unsupported">
         <p role="alert">
@@ -66,8 +70,8 @@
         <button type="button" id="reset-data" class="primary" hidden>Reset</button>
         <h2>Try this</h2>
         <ul>
-          <li>Turn off Private Browsing, or allow website data.</li>
-          <li>Use the current version of Safari.</li>
+          <li>Allow website data for this page.</li>
+          <li>Use a current browser.</li>
           <li>Use the published https address.</li>
           <li>Clear this site’s data in your browser settings.</li>
         </ul>
@@ -75,8 +79,8 @@
 
       <section id="reauth">
         <fieldset id="reauth-controls" disabled>
-          <legend>Session ended</legend>
-          <p role="alert"><strong>Session ended.</strong> <span id="reauth-text"></span></p>
+          <legend>Sign-in expired</legend>
+          <p role="alert"><strong>Sign-in expired.</strong> <span id="reauth-text"></span></p>
           <button type="button" id="reauth-sign-in" class="primary">Sign in</button>
           <button type="button" id="reauth-other">Add account</button>
         </fieldset>
@@ -93,7 +97,7 @@
               <input
                 id="post-url"
                 type="url"
-                placeholder="https://"
+                placeholder="Post or profile link"
                 autocomplete="off"
                 spellcheck="false"
                 required
@@ -113,7 +117,7 @@
         <p id="target-excerpt"></p>
         <footer class="row quiet">
           <a id="target-link" href="#target-card" target="_blank" rel="noopener noreferrer"
-            >Original post</a
+            >View original</a
           >
         </footer>
       </article>
@@ -122,71 +126,61 @@
         <legend>Actions</legend>
         <div class="group">
           <button type="button" data-act="like">Like</button>
-          <button type="button" data-undo="like" hidden>Undo like</button>
+          <button type="button" data-undo="like" aria-label="Undo like" hidden>Undo</button>
           <button type="button" data-act="repost">Repost</button>
-          <button type="button" data-undo="repost" hidden>Undo repost</button>
+          <button type="button" data-undo="repost" aria-label="Undo repost" hidden>Undo</button>
           <button type="button" data-act="reply" id="write-reply" aria-haspopup="dialog">
             Reply
           </button>
-          <button type="button" data-act="follow">Follow</button>
-          <button type="button" data-undo="follow" hidden>Undo follow</button>
+          <button type="button" data-act="follow">Follow author</button>
+          <button type="button" data-undo="follow" aria-label="Undo follow" hidden>Undo</button>
         </div>
       </fieldset>
       <p id="action-status" role="status"></p>
+      <p id="action-announce" role="status"></p>
       <section id="action-error"></section>
 
-      <section id="shortcut-card" data-views="signed-out ready">
-        <h2>Share from any app</h2>
-        <p class="quiet" data-browser-only>
-          Send links here from the share sheet.
-          <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source</a>
-        </p>
-        <p class="quiet" data-standalone-only>
-          The Shortcut opens Safari, where you sign in too.
-          <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source</a>
+      <section id="shortcut-card" data-views="ready loaded">
+        <h2>Add Shortcut for iOS</h2>
+        <p class="quiet" data-standalone-only>The Shortcut opens Safari, not this app.</p>
+        <p class="quiet">
+          <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source code</a>
         </p>
         <a class="button" id="add-shortcut" href="FediTap.shortcut" download>Add Shortcut</a>
-        <button type="button" id="shortcut-have">Hide</button>
+        <button type="button" id="shortcut-have">Dismiss</button>
       </section>
 
       <details data-views="signed-out">
-        <summary>Server not working?</summary>
+        <summary>Supported servers</summary>
         <p class="quiet">
-          Your server needs an ActivityPub client API.
-          <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/"
-            >WordPress setup instructions</a
-          >
+          The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin
+          and turn on the API.
+          <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">Setup instructions</a>
         </p>
+        <p class="quiet">Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p>
       </details>
 
       <details id="a2hs" data-views="ready">
         <summary>Add to Home Screen</summary>
-        <p class="quiet">
-          In Safari, tap Share, then Add to Home Screen. The app keeps its own sign-in.
-        </p>
+        <p class="quiet">Safari: Share, then Add to Home Screen.</p>
       </details>
     </main>
 
     <dialog id="accounts-sheet" class="sheet" aria-labelledby="sheet-title">
-      <div class="row">
-        <h2 id="sheet-title">Accounts</h2>
-        <button type="button" id="sheet-edit">Edit</button>
-      </div>
+      <h2 id="sheet-title">Accounts</h2>
       <fieldset id="sheet-controls" disabled>
         <legend>Accounts</legend>
         <ul id="account-list" class="list"></ul>
       </fieldset>
       <p id="sheet-status" role="status"></p>
       <section id="sheet-error"></section>
-      <button type="button" id="add-account">Add account</button>
       <button type="button" id="sheet-done">Done</button>
-      <button type="button" id="sheet-cancel" hidden>Cancel</button>
     </dialog>
 
     <dialog id="remove-sheet" aria-labelledby="remove-title" aria-describedby="remove-text">
       <h2 id="remove-title">Remove account?</h2>
       <p id="remove-text" class="quiet">
-        This only signs out on this device. To end access, revoke it on your server.
+        Signs out here only. Revoke FediTap under connected apps on your server.
       </p>
       <div class="row">
         <button type="button" id="remove-cancel">Cancel</button>
@@ -200,11 +194,8 @@
       <fieldset id="reply-controls" disabled>
         <legend>Write a reply</legend>
         <label for="reply-text">Your reply</label>
-        <textarea id="reply-text" rows="5" aria-describedby="reply-count"></textarea>
-        <div class="row quiet">
-          <p>Replies are public.</p>
-          <p id="reply-count">0 / 500</p>
-        </div>
+        <textarea id="reply-text" rows="5" aria-describedby="reply-note"></textarea>
+        <p id="reply-note" class="quiet">Replies are public.</p>
         <p id="reply-status" role="status"></p>
         <section id="reply-error"></section>
         <div class="row">
@@ -213,6 +204,6 @@
         </div>
       </fieldset>
     </dialog>
-    <script src="app.js" integrity="sha256-pYpeH+V3YU/y5MJlfiI0CxY/XqVXeuSReJrn5+g7LTI="></script>
+    <script src="app.js" integrity="sha256-zkYd8wkxHMqefEwgzYlH+u2SC50QZDuPZqwalGNG8/8="></script>
   </body>
 </html>

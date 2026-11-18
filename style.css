@@ -1,6 +1,7 @@
 /* FediTap components (see components.md, section Scale). System fonts and colours only; light and dark
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
    cannot do the job: .row .field .group .list .post .quiet .primary .destructive .button .sheet
+   plus the header (see Header)
    The last block holds the app's view states (data-state, data-views and flags on main).
    Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
 
@@ -105,6 +106,7 @@ fieldset {
   min-inline-size: 0;
 }
 legend,
+#action-announce,
 :is([role="status"], [role="alert"]):empty {
   position: absolute;
   inline-size: 1px;
@@ -121,6 +123,7 @@ label {
 }
 input,
 textarea,
+select,
 button,
 .button,
 summary {
@@ -130,6 +133,10 @@ input,
 textarea {
   display: block;
   inline-size: 100%;
+}
+input,
+textarea,
+select {
   min-block-size: var(--target);
   padding: var(--space-1) var(--space-2);
   border: var(--rule);
@@ -147,7 +154,7 @@ label + :is(input, textarea, .row),
 ::placeholder {
   color: var(--quiet);
 }
-:is(input, textarea):disabled {
+:is(input, textarea, select):disabled {
   color: var(--quiet);
 }
 [aria-invalid="true"] {
@@ -222,8 +229,8 @@ button[aria-pressed="true"]:disabled {
   cursor: progress;
 }
 
-/* List: a plain stack of choices; a row is a button, optionally followed by a second button.
-   <ul class="list"><li><button aria-current="true">@me</button></li><li><button>@other</button><button class="destructive">Remove</button></li></ul> */
+/* List: a plain stack of rows; a row is text or a button, optionally followed by a second button.
+   <ul class="list"><li><span>@me</span><button class="destructive">Remove</button></li></ul> */
 .list {
   display: flex;
   flex-direction: column;
@@ -235,8 +242,12 @@ button[aria-pressed="true"]:disabled {
   display: flex;
   gap: var(--space-1);
 }
+.list > li {
+  align-items: center;
+}
 .list > li > :first-child {
   flex: 1;
+  min-inline-size: 0;
   justify-content: flex-start;
   text-align: start;
 }
@@ -272,6 +283,31 @@ button[aria-pressed="true"]:disabled {
   display: inline-flex;
   align-items: center;
   min-block-size: var(--target);
+}
+
+/* Header: the same on every screen. The product name as a plain link to the page start, and the account
+   switcher (a native select, hidden until an account exists) at the trailing end. One line, never wraps;
+   the select shrinks and clips its text instead of pushing the name off at 320 px.
+   <header class="row"><a href="./">FediTap</a><select aria-label="Account">...</select></header> */
+header.row {
+  flex-wrap: nowrap;
+  padding-block-end: var(--space-1);
+  border-block-end: var(--rule);
+}
+header.row > a {
+  flex: none;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+header.row abbr {
+  text-decoration: none;
+}
+header select {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  max-inline-size: 70%;
+  text-overflow: ellipsis;
 }
 
 /* Field: an input with a button inside its trailing end. The wrapper draws the border (an inset outline, so
@@ -352,9 +388,6 @@ dialog.sheet {
 section:empty {
   display: none;
 }
-[data-over] {
-  color: var(--danger);
-}
 #target-excerpt {
   white-space: pre-line;
 }
@@ -380,6 +413,7 @@ main[data-reauth] #reauth {
 main[data-standalone] [data-browser-only],
 main[data-standalone] #a2hs,
 main:not([data-shortcut]) #shortcut-card,
+main:not([data-ios]) :is(#a2hs, #shortcut-card),
 main[data-reauth] :is(#a2hs, #shortcut-card) {
   display: none;
 }

@@ -8,24 +8,24 @@ const PUBLIC = `${AS_PROFILE}#Public`;
 const ACTIVITY_TYPE = `application/ld+json; profile="${AS_PROFILE}"`;
 const ACTOR_TYPES = new Set(["Person", "Service", "Group", "Organization", "Application"]);
 const ACTIONS = {
-  like: { idle: "Like", done: "Liked", noun: "like", sent: "Liked", undone: "Like undone" },
+  like: { idle: "Like", done: "Liked", sent: "Liked", noun: "Like", verb: "like", quiet: true },
   repost: {
     idle: "Repost",
     done: "Reposted",
-    noun: "repost",
     sent: "Reposted",
-    undone: "Repost undone",
+    noun: "Repost",
+    verb: "repost",
+    quiet: true,
   },
-  reply: { idle: "Reply", done: "Replied", noun: "reply", sent: "Reply sent" },
+  reply: { idle: "Reply", done: "Replied", sent: "Reply sent.", noun: "Reply", verb: "reply" },
   follow: {
     idle: "Follow",
     done: "Follow requested",
-    noun: "follow request",
-    sent: "Follow request sent",
-    undone: "Follow request withdrawn",
+    sent: "Follow request sent.",
+    noun: "Follow request",
+    verb: "follow",
   },
 };
-const REPLY_LIMIT = 500;
 const ACTOR_ACCEPT = `application/activity+json, application/ld+json; profile="${AS_PROFILE}"`;
 const WP_SETTING = "On WordPress, turn on Settings › ActivityPub › Advanced › ActivityPub API.";
 const MAX_RESPONSE = 1000000;
@@ -42,6 +42,10 @@ const CORS_HELP = {
 const SHORTCUT_KEY = "feditap.shortcut";
 const standalone =
   matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+// The Shortcut and the Home Screen hint are for iPhone and iPad (iPadOS reports itself as a Mac with touch).
+const ios =
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const $ = (id) => document.getElementById(id);
 const main = document.querySelector("main");
 const form = $("sign-in");
@@ -49,7 +53,8 @@ const input = $("account-input");
 const targetInput = $("post-url");
 const lookup = $("lookup");
 const actionControls = $("action-controls");
-const chip = $("account-chip");
+const switcher = $("account-select");
+const ADD_VALUE = "add";
 const sheet = $("accounts-sheet");
 const removeSheet = $("remove-sheet");
 const replySheet = $("reply-sheet");
@@ -61,9 +66,8 @@ const controls = [
   $("reauth-controls"),
   $("sheet-controls"),
   $("reply-controls"),
-  $("sheet-edit"),
   $("sheet-done"),
-  $("sheet-cancel"),
+  switcher,
 ];
 const gated = [$("sign-in-controls"), $("lookup-controls")];
 const FIELD_LOCKS = {
@@ -82,7 +86,6 @@ let busy = false;
 let resolved = null;
 let accounts = [];
 let current = null;
-let sheetMode = "list";
 let removing = null;
 let shortcut = readShortcut();
 let unsupported = null;
@@ -109,7 +112,7 @@ function problemOf(failure, title, actions) {
 }
 
 function apiOff(detail, steps = `Ask the site administrator to turn it on. ${WP_SETTING}`) {
-  return new Problem("This server isn’t ready", "Its ActivityPub API is off.", {
+  return new Problem("Server not supported", "It has no ActivityPub API.", {
     steps,
     link: WORDPRESS_HELP,
     detail,
@@ -120,12 +123,12 @@ function corsProblem(title, detail) {
   const cause =
     navigator.onLine === false
       ? "You appear to be offline."
-      : "Your server blocked this page (CORS), or the connection failed.";
+      : "It may block this page, or you’re offline.";
   return new Problem(title, cause, {
     steps:
       "Ask the server administrator to allow this page. If you’re offline, reconnect and try again.",
     link: CORS_HELP,
-    detail,
+    detail: `Possible CORS block. ${detail}`,
   });
 }
 
@@ -241,7 +244,7 @@ async function fetchActor(url) {
   }
   throw new Problem(
     "Couldn’t read your profile",
-    "Your server returned no matching profile, or blocked this page (CORS).",
+    "Your server returned no matching profile, or blocked this page.",
     {
       steps:
         "Enter the canonical HTTPS profile URL, and allow requests from this page on the server.",
@@ -318,7 +321,9 @@ async function discover(value) {
       input.setAttribute("aria-describedby", "error-text");
       throw new Problem(
         "Check the account",
-        input.type === "url" ? "Enter an https link." : "Use you@example.com or a profile link.",
+        input.type === "url"
+          ? "Enter a link that starts with https://."
+          : "Use @you@example.com or a profile link.",
         { actions: [] },
       );
     }
@@ -404,7 +409,7 @@ function oauthProblem(error, description) {
     .slice(0, 500);
   if (error === "access_denied") {
     return new Problem("Sign-in cancelled", "Your server didn’t allow access.", {
-      steps: "Try again and choose Allow on your server’s page.",
+      steps: "Try again and approve FediTap on your server.",
       detail,
     });
   }
@@ -434,7 +439,7 @@ async function requestToken(endpoint, params) {
       signal: AbortSignal.timeout(20000),
     });
   } catch (error) {
-    throw corsProblem("Couldn’t reach your server", error.message);
+    throw corsProblem("Couldn’t reach your server.", error.message);
   }
   if (response.type === "opaqueredirect") {
     throw new Problem(
@@ -527,19 +532,15 @@ async function completeSignIn(params) {
   const result = await exchange(tokenEndpoint, { ...client, code: codes[0], code_verifier });
   const authenticatedActor = result.activitypub_actor_id ?? result.me;
   if (authenticatedActor !== undefined && httpsUrl(authenticatedActor)?.href !== id.href) {
-    throw new Problem(
-      "Wrong account",
-      `Your server signed in another profile. Sign in as ${handle}.`,
-      {
-        detail: `Authorized: ${String(authenticatedActor).slice(0, 200)}`,
-      },
-    );
+    throw new Problem("Wrong account", "Your server signed you in as a different account.", {
+      detail: `Authorized: ${String(authenticatedActor).slice(0, 200)}`,
+    });
   }
   const credentials = renewableCredentials(result);
   if (!credentials) {
     throw signInProblem(
       "Your server sent no renewable token.",
-      "Update the WordPress ActivityPub plugin.",
+      "Update your ActivityPub plugin or server.",
     );
   }
   await useStore((store) => {
@@ -629,7 +630,7 @@ function requireReconnect(store, account) {
 }
 
 function sessionEnded(account) {
-  return new Problem("Session ended", `Sign in again as @${account.handle}.`, {
+  return new Problem("Sign-in expired", `Sign in again as @${account.handle}.`, {
     sessionEnded: true,
   });
 }
@@ -689,7 +690,7 @@ async function activityRequest(account, endpoint, body, contentType) {
       signal: AbortSignal.timeout(20000),
     });
   } catch (error) {
-    throw corsProblem("Couldn’t reach your server", error.message);
+    throw corsProblem("Couldn’t reach your server.", error.message);
   }
 }
 
@@ -725,6 +726,15 @@ function plainText(html, limit) {
     .replace(/\s*\n\s*/g, "\n")
     .trim()
     .slice(0, limit);
+}
+
+// The @user@host that names an author in a mention: from the actor when it has one, else from the
+// author's address (last path segment and host).
+function mentionOf(handle, authorId) {
+  if (handle.startsWith("@")) return handle;
+  const url = new URL(authorId);
+  const name = url.pathname.split("/").filter(Boolean).pop()?.replace(/^@/, "") || url.hostname;
+  return `@${name}@${url.hostname}`;
 }
 
 function actorHandle(actor, id) {
@@ -801,6 +811,7 @@ async function resolveTarget(account, target, renew) {
   return {
     id,
     author: verified ? claimed : null,
+    mention: verified ? mentionOf(handle, claimed) : "",
     isActor,
     handle,
     name: verified
@@ -817,12 +828,13 @@ async function resolveTarget(account, target, renew) {
 }
 
 // Blank lines separate paragraphs, single newlines become line breaks, and every character is escaped.
-function replyHtml(text) {
+function replyHtml(text, mention = "") {
   return text
     .replace(/\r\n?/g, "\n")
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
+    .map((paragraph, index) => (index === 0 && mention ? `${mention} ${paragraph}` : paragraph))
     .map((paragraph) => {
       const escaped = paragraph
         .replaceAll("&", "&amp;")
@@ -833,7 +845,7 @@ function replyHtml(text) {
     .join("");
 }
 
-function makeActivity(action, { id, author, isActor }, account, reply) {
+function makeActivity(action, { id, author, isActor, mention }, account, reply) {
   const context = { "@context": AS_PROFILE };
   if (action === "follow") {
     if (!author) throw new Error("The author couldn’t be verified, so there is no one to follow.");
@@ -846,12 +858,16 @@ function makeActivity(action, { id, author, isActor }, account, reply) {
     return { ...context, type: "Announce", object: id, to: [PUBLIC], cc: [account.followers] };
   }
   if (!reply) throw new Error("Write a reply first.");
-  return {
-    ...context,
-    type: "Create",
-    ...addressing,
-    object: { type: "Note", inReplyTo: id, content: replyHtml(reply), ...addressing },
+  // A reply is public and mentions the author, so the author is notified.
+  const replying = author ? { to: [PUBLIC], cc: [author] } : { to: [PUBLIC], cc: [] };
+  const note = {
+    type: "Note",
+    inReplyTo: id,
+    content: replyHtml(reply, author ? mention : ""),
+    ...replying,
   };
+  if (author) note.tag = [{ type: "Mention", href: author, name: mention }];
+  return { ...context, type: "Create", ...replying, object: note };
 }
 
 function uncertain(detail) {
@@ -883,8 +899,8 @@ async function postActivity(account, activity, renew) {
     response = await send();
   }
   if (response.status === 401) {
-    throw new Problem("Sign-in refused", "Your server refused the renewed sign-in.", {
-      steps: "Open Accounts at the top and sign in again.",
+    throw new Problem("Sign-in refused", "Sign in again from the account menu.", {
+      steps: "Choose Add account in the account menu and sign in again.",
       detail: "HTTP 401",
     });
   }
@@ -939,7 +955,7 @@ function checkSupport() {
     return {
       heading: "Browser not supported",
       title: "This browser isn’t supported.",
-      message: "Open the published https page in the current Safari.",
+      message: "Open the published https page in a current browser.",
     };
   }
   const blocked = {
@@ -983,6 +999,7 @@ function render() {
   flag("data-reauth", reauth);
   flag("data-shortcut", !shortcut);
   flag("data-standalone", standalone);
+  flag("data-ios", ios);
   $("title").textContent =
     state === "unsupported"
       ? unsupported.heading
@@ -1000,8 +1017,8 @@ function render() {
     $("unsupported-text").textContent = unsupported.message;
     $("reset-data").hidden = !unsupported.reset;
   }
-  chip.hidden = !current;
-  chip.textContent = current ? `@${current.handle}` : "";
+  $("open-link").classList.toggle("primary", !reauth);
+  renderSwitcher();
   renderActions();
   renderReply();
   renderSheet();
@@ -1022,7 +1039,11 @@ function renderActions() {
   for (const button of actionControls.querySelectorAll("button[data-act]")) {
     const act = button.dataset.act;
     const finished = Boolean(sentFor(act));
-    button.textContent = finished ? ACTIONS[act].done : ACTIONS[act].idle;
+    button.textContent = finished
+      ? ACTIONS[act].done
+      : act === "follow" && !resolved.isActor
+        ? "Follow author"
+        : ACTIONS[act].idle;
     button.disabled = finished;
     if (finished) button.setAttribute("aria-pressed", "true");
     else button.removeAttribute("aria-pressed");
@@ -1035,10 +1056,7 @@ function renderActions() {
 }
 
 function renderReply() {
-  const length = [...replyText.value].length;
-  $("reply-count").textContent = `${length} / ${REPLY_LIMIT}`;
-  $("reply-count").toggleAttribute("data-over", length > REPLY_LIMIT);
-  $("reply-send").disabled = !replyText.value.trim() || length > REPLY_LIMIT;
+  $("reply-send").disabled = !replyText.value.trim();
   $("reply-context").textContent = !current
     ? ""
     : resolved?.name
@@ -1060,68 +1078,67 @@ function refresh() {
   return selected;
 }
 
+// The header's account switcher: a native select. Its last option opens the Accounts dialog; an account
+// that needs signing in again says so in its option text.
+function renderSwitcher() {
+  switcher.hidden = !current;
+  if (!current) {
+    switcher.replaceChildren();
+    delete switcher.dataset.signature;
+    return;
+  }
+  const signature = JSON.stringify(
+    accounts.map((a) => [a.actor, a.handle, Boolean(a.needsReauth)]),
+  );
+  if (switcher.dataset.signature !== signature) {
+    const options = accounts.map((account) => {
+      const option = element(
+        "option",
+        `@${account.handle}${account.needsReauth ? " (sign in again)" : ""}`,
+      );
+      option.value = account.actor;
+      return option;
+    });
+    const add = element("option", "Add account");
+    add.value = ADD_VALUE;
+    switcher.replaceChildren(...options, add);
+    switcher.dataset.signature = signature;
+  }
+  switcher.value = current.actor;
+}
+
 function accountRow(account) {
   const item = document.createElement("li");
-  const select = element(
-    "button",
-    `@${account.handle}${account.needsReauth ? " · sign in again" : ""}`,
-  );
-  select.type = "button";
-  select.dataset.action = "select";
-  select.dataset.actor = account.actor;
-  if (account.actor === current?.actor) select.setAttribute("aria-current", "true");
-  item.append(select);
-  if (sheetMode === "edit") {
-    const remove = element("button", "Remove", "destructive");
-    remove.type = "button";
-    remove.setAttribute("aria-label", `Remove @${account.handle}`);
-    remove.dataset.action = "remove";
-    remove.dataset.actor = account.actor;
-    item.append(remove);
-  }
+  const remove = element("button", "Remove", "destructive");
+  remove.type = "button";
+  remove.setAttribute("aria-label", `Remove @${account.handle}`);
+  remove.dataset.actor = account.actor;
+  item.append(element("span", `@${account.handle}`), remove);
   return item;
 }
 
 function renderSheet() {
-  const adding = sheet.open && sheetMode === "add";
-  // The sign-in form lives in the page and moves into the sheet while an account is being added.
-  // Outside the page the view rules don't apply, so it drops its data-views there.
-  if (adding) {
+  // The sign-in form lives in the page and moves into the Accounts dialog while it is open. Outside the
+  // page the view rules don't apply, so it drops its data-views there.
+  if (sheet.open) {
     form.removeAttribute("data-views");
-    if (form.parentElement !== sheet) sheet.insertBefore(form, $("sheet-cancel"));
+    if (form.parentElement !== sheet) sheet.insertBefore(form, $("sheet-status"));
+    $("account-list").replaceChildren(...accounts.map(accountRow));
   } else {
     form.dataset.views = "signed-out";
     if (form.parentElement !== main) main.insertBefore(form, $("unsupported"));
   }
-  $("sheet-title").textContent = adding ? "Add account" : "Accounts";
-  $("sheet-edit").textContent = sheetMode === "edit" ? "Done" : "Edit";
-  $("sheet-edit").hidden = adding;
-  $("sheet-controls").hidden = adding;
-  $("add-account").hidden = sheetMode !== "list";
-  $("sheet-done").hidden = sheetMode !== "list";
-  $("sheet-cancel").hidden = !adding;
-  if (sheet.open) {
-    $("account-list").replaceChildren(...accounts.map(accountRow));
-  }
 }
 
-function openSheet(mode = "list", keepMessages = false) {
-  sheetMode = mode;
+function openSheet(keepMessages = false) {
   if (!keepMessages) clearSheetMessages();
   if (!sheet.open) sheet.showModal();
   render();
-  if (mode === "add" && !keepMessages) input.focus();
+  if (!keepMessages) input.focus();
 }
 
 function clearSheetMessages() {
   for (const section of ["sheet", "auth"]) clearMessages(section);
-}
-
-function setSheetMode(mode) {
-  sheetMode = mode;
-  clearSheetMessages();
-  render();
-  if (mode === "add") input.focus();
 }
 
 // Messages: each section has a status line (role=status, always in the page so it is announced) and
@@ -1129,6 +1146,7 @@ function setSheetMode(mode) {
 function clearMessages(section) {
   const [statusId, errorId] = MESSAGE_IDS[section];
   $(statusId).textContent = "";
+  if (section === "actions") $("action-announce").textContent = "";
   $(errorId).replaceChildren();
 }
 
@@ -1232,7 +1250,7 @@ function showPreview(object) {
   $("target-excerpt").hidden = !object.excerpt;
   const host = $("target-link");
   host.href = object.id;
-  host.textContent = new URL(object.id).hostname;
+  host.textContent = `View on ${new URL(object.id).hostname}`;
   render();
 }
 
@@ -1313,7 +1331,7 @@ async function findTarget() {
   clearInvalid(targetInput);
   const target = httpsUrl(targetInput.value.trim());
   if (!target) {
-    fail("lookup", "That isn’t a link.", "Use a full address that starts with https://.");
+    fail("lookup", "That isn’t a link.", "Enter a link that starts with https://.");
     markInvalid(targetInput, "lookup-error");
     targetInput.focus();
     return;
@@ -1354,7 +1372,7 @@ function settleFocus() {
   if (replySheet.open) focusFirst(replyText);
   else if (!sheet.open && !removeSheet.open) {
     const enabled = [...actionControls.querySelectorAll("button:not(:disabled)")];
-    focusFirst(...enabled, targetInput, chip);
+    focusFirst(...enabled, targetInput, switcher);
   }
 }
 
@@ -1364,7 +1382,6 @@ async function perform(action, text = "") {
   if (!resolved || !current || busy) return;
   const actorId = current.actor;
   const object = resolved;
-  const handle = current.handle;
   const labels = ACTIONS[action];
   const inSheet = action === "reply";
   const section = inSheet ? "reply" : "actions";
@@ -1379,15 +1396,18 @@ async function perform(action, text = "") {
       );
       done.set(doneKey(actorId, object, action), result);
       const same = current?.actor === actorId && resolved === object;
-      message = same
-        ? `${labels.sent} as @${handle}.`
-        : `Sent: your ${labels.noun} on the previous link.`;
+      message = same ? labels.sent : `${labels.noun} sent for the earlier link.`;
+      // Like and Repost are confirmed by the button itself; screen readers get a hidden line.
+      if (same && labels.quiet) {
+        $("action-announce").textContent = labels.sent;
+        return "";
+      }
       return inSheet ? "" : message;
     },
     {
       button: inSheet ? $("reply-send") : actionControls.querySelector(`[data-act="${action}"]`),
       busyLabel: "Sending…",
-      title: `Couldn’t send the ${labels.noun}`,
+      title: `Couldn’t ${labels.verb}.`,
       actions: (failure) =>
         failure.sessionEnded && inSheet ? [{ label: "Sign in", run: signInFromReply }] : [],
     },
@@ -1413,12 +1433,15 @@ async function undoLast(action) {
     async () => {
       await withAccount(actorId, (account, renew) => postActivity(account, makeUndo(sent), renew));
       done.delete(doneKey(actorId, object, action));
-      return current?.actor === actorId && resolved === object ? `${ACTIONS[action].undone}.` : "";
+      if (current?.actor === actorId && resolved === object) {
+        $("action-announce").textContent = `${ACTIONS[action].noun} undone`;
+      }
+      return "";
     },
     {
       button: actionControls.querySelector(`[data-undo="${action}"]`),
       busyLabel: "Undoing…",
-      title: "Couldn’t undo",
+      title: "Couldn’t undo.",
     },
   );
   if (!undone) focusProblem("actions");
@@ -1541,52 +1564,26 @@ actionControls.addEventListener("click", (event) => {
   else if (button.dataset.act && button.dataset.act !== "reply") void perform(button.dataset.act);
 });
 
-chip.addEventListener("click", () => openSheet("list"));
-
-sheet.addEventListener("close", () => {
-  sheetMode = "list";
-  render();
-  (current ? chip : input).focus();
+// Choosing the last option opens the Accounts dialog and leaves the active account selected; choosing an
+// account switches to it, and one that needs signing in goes straight to its sign-in.
+switcher.addEventListener("change", () => {
+  const value = switcher.value;
+  if (value === ADD_VALUE) {
+    switcher.value = current?.actor ?? "";
+    openSheet();
+  } else {
+    void switchAccount(value);
+  }
 });
 
-$("sheet-done").addEventListener("click", () => sheet.close());
-
-$("sheet-edit").addEventListener("click", () =>
-  setSheetMode(sheetMode === "list" ? "edit" : "list"),
-);
-
-$("sheet-cancel").addEventListener("click", () => setSheetMode("list"));
-
-$("add-account").addEventListener("click", () => setSheetMode("add"));
-
-$("account-list").addEventListener("click", async (event) => {
-  const button = event.target.closest("button");
-  if (!button) return;
-  const actorId = button.dataset.actor;
-  const action = button.dataset.action;
-  if (action === "remove") {
-    const account = accounts.find((item) => item.actor === actorId);
-    if (!account) {
-      // Removed in another tab: show what is left instead of asking about a ghost.
-      try {
-        refresh();
-      } catch {
-        resetPreview();
-      }
-      return;
-    }
-    removing = actorId;
-    $("remove-title").textContent = `Remove @${account.handle}?`;
-    removeSheet.showModal();
-    return;
-  }
-  if (actorId === current?.actor) {
-    sheet.close();
+async function switchAccount(actorId) {
+  if (busy || !actorId || actorId === current?.actor) {
+    renderSwitcher();
     return;
   }
   resetPreview();
-  const selected = await runTask(
-    "sheet",
+  const switched = await runTask(
+    "lookup",
     "",
     async () => {
       await useStore((store) => {
@@ -1598,9 +1595,34 @@ $("account-list").addEventListener("click", async (event) => {
     },
     { title: "Couldn’t switch accounts" },
   );
-  if (!selected) return;
-  sheet.close();
-  if (targetInput.value) await findTarget();
+  if (!switched) return;
+  if (current?.needsReauth) reauthenticate();
+  else if (targetInput.value) await findTarget();
+}
+
+sheet.addEventListener("close", () => {
+  render();
+  (current ? switcher : input).focus();
+});
+
+$("sheet-done").addEventListener("click", () => sheet.close());
+
+$("account-list").addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const account = accounts.find((item) => item.actor === button.dataset.actor);
+  if (!account) {
+    // Removed in another tab: show what is left instead of asking about a ghost.
+    try {
+      refresh();
+    } catch {
+      resetPreview();
+    }
+    return;
+  }
+  removing = account.actor;
+  $("remove-title").textContent = `Remove @${account.handle}?`;
+  removeSheet.showModal();
 });
 
 $("remove-cancel").addEventListener("click", () => removeSheet.close());
@@ -1629,7 +1651,7 @@ $("remove-confirm").addEventListener("click", async () => {
   );
   if (!removed) return;
   if (!current) sheet.close();
-  else $("account-list").querySelector('[data-action="remove"]')?.focus();
+  else $("account-list").querySelector("button")?.focus();
 });
 
 function reauthenticate() {
@@ -1645,7 +1667,7 @@ function reauthenticate() {
 
 $("reauth-sign-in").addEventListener("click", reauthenticate);
 
-$("reauth-other").addEventListener("click", () => openSheet("add"));
+$("reauth-other").addEventListener("click", () => openSheet());
 
 $("reset-data").addEventListener("click", () => {
   try {
@@ -1667,7 +1689,7 @@ window.addEventListener("storage", (event) => {
     const selected = refresh();
     if (previous !== selected?.actor || selected?.needsReauth) resetPreview();
     // No account left (removed in another tab): an open list of accounts has nothing to show.
-    if (!selected && sheet.open && sheetMode !== "add") sheet.close();
+    if (!selected && sheet.open) sheet.close();
   } catch (error) {
     resetPreview();
     unsupported = checkSupport();
@@ -1724,7 +1746,7 @@ async function start() {
   if (params) {
     // With an account already connected the sign-in form lives in the accounts sheet, so a failed
     // return opens it there with the error beside the form.
-    if (current) openSheet("add", true);
+    if (current) openSheet(true);
     const signedIn = await runTask(
       "auth",
       "",
@@ -1742,7 +1764,6 @@ async function start() {
       return;
     }
     if (sheet.open) sheet.close();
-    $("lookup-status").textContent = current ? `Signed in as @${current.handle}.` : "";
   }
   if (targetInput.value && current && !current.needsReauth) await findTarget();
   restoreDraft();
