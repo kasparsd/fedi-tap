@@ -1,6 +1,6 @@
 {
   "client_id": "https://kasparsd.github.io/fedi-tap/client.json",
-  "client_name": "FediTap",
+  "client_name": "⁂tap",
   "client_uri": "https://kasparsd.github.io/fedi-tap/",
   "redirect_uris": ["https://kasparsd.github.io/fedi-tap/"],
   "grant_types": ["authorization_code", "refresh_token"],

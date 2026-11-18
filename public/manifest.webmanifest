@@ -1,6 +1,6 @@
 {
-  "name": "FediTap",
-  "short_name": "FediTap",
+  "name": "⁂tap",
+  "short_name": "⁂tap",
   "description": "Like, repost, reply to or follow a Fediverse post from your own account.",
   "start_url": "./",
   "scope": "./",
