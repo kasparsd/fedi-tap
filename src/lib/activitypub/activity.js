@@ -1,14 +1,8 @@
-import {
-  ACTIVITY_TYPE,
-  ACTOR_ACCEPT,
-  ACTOR_TYPES,
-  AS_PROFILE,
-  MAX_HTML,
-  PUBLIC,
-} from "./constants.js";
-import { readJson } from "./http.js";
-import { corsProblem, Problem, uncertain } from "./problem.js";
-import { httpsUrl, parseHandle } from "./url.js";
+import { ACTIVITY_TYPE, ACTOR_ACCEPT, ACTOR_TYPES, AS_PROFILE, PUBLIC } from "../constants.js";
+import { readJson } from "../http.js";
+import { corsProblem, Problem, refused, uncertain } from "../problem.js";
+import { plainText, shortDate } from "../text.js";
+import { httpsUrl, parseHandle } from "../url.js";
 
 async function activityRequest(account, endpoint, body, contentType) {
   const headers = { Authorization: `Bearer ${account.token}`, Accept: ACTOR_ACCEPT };
@@ -38,17 +32,6 @@ async function proxyRequest(account, id, renew) {
   if (response.status !== 401) return response;
   await renew();
   return activityRequest(account, account.proxy, body);
-}
-
-export function plainText(html, limit) {
-  if (typeof html !== "string") return "";
-  const markup = html.slice(0, MAX_HTML).replace(/<\/p>|<br\s*\/?>/gi, "\n");
-  const text = new DOMParser().parseFromString(markup, "text/html").body.textContent;
-  return text
-    .replace(/[ \t]+/g, " ")
-    .replace(/\s*\n\s*/g, "\n")
-    .trim()
-    .slice(0, limit);
 }
 
 /**
@@ -133,7 +116,6 @@ export async function resolveTarget(account, target, renew) {
   const actor = isActor ? object : await fetchAuthor(account, claimed, renew);
   const verified = Boolean(actor);
   const handle = verified ? actorHandle(actor, claimed) : idUrl.hostname;
-  const published = new Date(object.published);
   return {
     id,
     author: verified ? claimed : null,
@@ -147,9 +129,7 @@ export async function resolveTarget(account, target, renew) {
       isActor ? object.summary : object.content || object.summary || object.name,
       600,
     ),
-    date: Number.isNaN(published.getTime())
-      ? ""
-      : published.toLocaleDateString(undefined, { dateStyle: "medium" }),
+    date: shortDate(object.published),
   };
 }
 
@@ -216,10 +196,7 @@ async function postActivity(account, activity, renew) {
     response = await send();
   }
   if (response.status === 401) {
-    throw new Problem("Sign-in refused", "Sign in again from the account menu.", {
-      steps: "Choose Add account in the account menu and sign in again.",
-      detail: "HTTP 401",
-    });
+    throw refused();
   }
   if (response.status >= 500 || response.status === 408) throw uncertain(`HTTP ${response.status}`);
   if (!response.ok) {
@@ -232,18 +209,10 @@ async function postActivity(account, activity, renew) {
   return id && id.origin === new URL(account.outbox).origin && !id.hash ? id.href : null;
 }
 
-/**
- * What identifies a finished action: account, target and kind. Following goes to the author, so it
- * is keyed by the author, not the post.
- */
-export function activityKey(actorId, object, action) {
-  return `${actorId} ${action === "follow" ? object.author : object.id} ${action}`;
-}
-
 export async function sendActivity(account, action, target, reply, renew) {
   const activity = makeActivity(action, target, account, reply);
   const id = await postActivity(account, activity, renew);
-  return { id, to: activity.to, cc: activity.cc };
+  return { id, to: activity.to, cc: activity.cc, undo: Boolean(id) };
 }
 
 export function undoActivity(account, sent, renew) {

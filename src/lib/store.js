@@ -1,6 +1,6 @@
 import { Problem, sessionEnded } from "./problem.js";
 import { renewableCredentials, requestToken } from "./token.js";
-import { homeEndpoint, httpsUrl } from "./url.js";
+import { httpsUrl } from "./url.js";
 
 // One saved record per page address, so copies of the app on one origin keep separate accounts.
 export const STORE_KEY = `feditap.accounts:${new URL("./", location.href).pathname}`;
@@ -24,11 +24,14 @@ export function readStore() {
   } catch {
     throw new StoreError("blocked");
   }
-  if (raw === null) return { accounts: {}, selectedActorId: null };
+  if (raw === null) return { accounts: {}, clients: {}, selectedActorId: null };
   try {
     const store = JSON.parse(raw);
-    if (store?.accounts && typeof store.accounts === "object" && !Array.isArray(store.accounts))
+    if (store?.accounts && typeof store.accounts === "object" && !Array.isArray(store.accounts)) {
+      // OAuth apps registered on Mastodon-compatible servers, by origin.
+      if (!store.clients || typeof store.clients !== "object") store.clients = {};
       return store;
+    }
   } catch {
     // Falls through to the same message.
   }
@@ -66,10 +69,14 @@ function requireReconnect(store, account) {
 }
 
 async function refreshAccount(store, account) {
+  // A token without a refresh token (the usual Mastodon kind) can only be replaced by signing in.
+  if (!account.refresh_token) requireReconnect(store, account);
+  const secret = store.clients?.[httpsUrl(account.actor)?.origin]?.client_secret;
   const { response, result } = await requestToken(account.token_endpoint, {
     grant_type: "refresh_token",
     refresh_token: account.refresh_token,
     client_id: account.client_id,
+    ...(secret && { client_secret: secret }),
   });
   if (result?.error === "invalid_grant" || response.status === 401) {
     requireReconnect(store, account);
@@ -87,22 +94,17 @@ async function refreshAccount(store, account) {
 }
 
 /**
- * Runs a task as one account with a fresh token. The task gets the account and a `renew` function
- * that refreshes the token again (after a 401).
+ * Runs a task as one account with a fresh token. `backendFor` says which backend an account uses
+ * and whether its saved addresses are still sound. The task gets the account and a `renew`
+ * function that refreshes the token again (after a 401).
  */
-export function withAccount(actorId, task) {
+export function withAccount(actorId, backendFor, task) {
   return useStore(async (store) => {
     const account = store.accounts[actorId];
     if (!account) throw new Error("That account was removed. Choose another.");
     if (account.needsReauth) throw sessionEnded(account);
     const origin = httpsUrl(actorId)?.origin;
-    if (
-      ![account.token_endpoint, account.proxy, account.outbox].every((url) =>
-        homeEndpoint(url, origin),
-      )
-    ) {
-      requireReconnect(store, account);
-    }
+    if (!backendFor(account)?.valid(account, origin)) requireReconnect(store, account);
     if (account.expires <= Date.now() / 1000 + 60) {
       await refreshAccount(store, account);
     }

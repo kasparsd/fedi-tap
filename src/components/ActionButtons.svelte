@@ -41,7 +41,7 @@
       type="button"
       aria-label="Undo {name}"
       aria-busy={isBusy(`undo:${name}`) ? "true" : undefined}
-      hidden={!sentFor(name)?.id}
+      hidden={!sentFor(name)?.undo}
       onclick={() => undoLast(name)}
     >
       {buttonLabel(`undo:${name}`, "Undo")}

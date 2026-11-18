@@ -29,6 +29,19 @@ export function apiOff(detail, steps = `Ask the site administrator to turn it on
   });
 }
 
+/** Neither the ActivityPub API nor a Mastodon-compatible API answered on the account's server. */
+export function unsupportedServer(detail) {
+  return new Problem(
+    "Server not supported",
+    "It has neither the ActivityPub API nor a Mastodon-compatible API.",
+    {
+      steps: `Use a Mastodon-compatible server (Mastodon, GoToSocial, Pleroma, Akkoma) or one with the ActivityPub API. ${WP_SETTING}`,
+      link: WORDPRESS_HELP,
+      detail,
+    },
+  );
+}
+
 export function corsProblem(title, detail) {
   const cause =
     navigator.onLine === false
@@ -82,6 +95,13 @@ export function signInProblem(cause, detail) {
 export function sessionEnded(account) {
   return new Problem("Sign-in expired", `Sign in again as @${account.handle}.`, {
     sessionEnded: true,
+  });
+}
+
+export function refused() {
+  return new Problem("Sign-in refused", "Sign in again from the account menu.", {
+    steps: "Choose Add account in the account menu and sign in again.",
+    detail: "HTTP 401",
   });
 }
 

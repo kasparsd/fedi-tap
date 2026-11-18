@@ -3,13 +3,19 @@ import { getJson } from "./http.js";
 import { apiOff, corsProblem, oauthProblem, Problem } from "./problem.js";
 import { httpsUrl } from "./url.js";
 
-/** Reads the OAuth client identity (client.json) and checks it matches this page's address. */
-export async function clientIdentity() {
+/** This page's address (where sign-in returns to), which must be HTTPS. */
+export function pageAddress() {
   const page = new URL("./", location.href);
-  const client = new URL("client.json", page);
   if (!httpsUrl(page.href) || !crypto.subtle) {
     throw new Problem("Can’t sign in here", "Open the published HTTPS page.");
   }
+  return page;
+}
+
+/** Reads the OAuth client identity (client.json) and checks it matches this page's address. */
+export async function clientIdentity() {
+  const page = pageAddress();
+  const client = new URL("client.json", page);
   const identity = await getJson(client).catch(() => null);
   if (
     identity?.client_id !== client.href ||
@@ -103,4 +109,15 @@ export function renewableCredentials(result, previousRefreshToken) {
     refresh_token: refreshToken,
     expires: Math.floor(Date.now() / 1000 + expiresIn),
   };
+}
+
+/**
+ * The access token from a token response, with a refresh token and expiry when it came with them.
+ * Mastodon-compatible servers usually issue a token that never expires.
+ */
+export function accessCredentials(result, previousRefreshToken) {
+  const renewable = renewableCredentials(result, previousRefreshToken);
+  if (renewable) return renewable;
+  if (typeof result?.access_token !== "string" || !result.access_token) return null;
+  return { token: result.access_token };
 }

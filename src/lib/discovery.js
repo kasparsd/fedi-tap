@@ -1,4 +1,4 @@
-import { ACTOR_ACCEPT, AS_PROFILE, CORS_HELP, WP_SETTING } from "./constants.js";
+import { ACTOR_ACCEPT, AS_PROFILE, CORS_HELP } from "./constants.js";
 import { getJson } from "./http.js";
 import { apiOff, mismatch, Problem } from "./problem.js";
 import { homeEndpoint, httpsUrl, parseHandle } from "./url.js";
@@ -44,7 +44,12 @@ export async function fetchActor(url) {
   );
 }
 
-async function oauthEndpoints(actor, origin) {
+/**
+ * Reads the server's OAuth metadata and returns the authorization and token addresses, all on the
+ * account's own origin. `fallback` names addresses to use when the metadata has none. The raw
+ * metadata comes back too, for the backend that wants more from it.
+ */
+export async function oauthEndpoints(origin, fallback = {}) {
   const metadata = await getJson(new URL("/.well-known/oauth-authorization-server", origin)).catch(
     () => null,
   );
@@ -56,9 +61,8 @@ async function oauthEndpoints(actor, origin) {
       `Issuer: ${String(advertisedIssuer).slice(0, 200)}`,
     );
   }
-  const authorizeUrl =
-    metadata?.authorization_endpoint ?? actor.endpoints?.oauthAuthorizationEndpoint;
-  const tokenUrl = metadata?.token_endpoint ?? actor.endpoints?.oauthTokenEndpoint;
+  const authorizeUrl = metadata?.authorization_endpoint ?? fallback.authorize;
+  const tokenUrl = metadata?.token_endpoint ?? fallback.token;
   if (!authorizeUrl || !tokenUrl) throw apiOff("No authorization or token endpoint is advertised.");
 
   const authorizeEndpoint = homeEndpoint(authorizeUrl, origin);
@@ -70,43 +74,21 @@ async function oauthEndpoints(actor, origin) {
     );
   }
   return {
-    authorize: authorizeEndpoint.href,
-    token: token.href,
-    issuer: advertisedIssuer ?? origin,
-    requireIssuer: metadata?.authorization_response_iss_parameter_supported === true,
+    endpoints: {
+      authorize: authorizeEndpoint.href,
+      token: token.href,
+      issuer: advertisedIssuer ?? origin,
+      requireIssuer: metadata?.authorization_response_iss_parameter_supported === true,
+    },
+    metadata,
   };
-}
-
-/** The outbox, proxy and followers addresses an account needs, all on its own origin. */
-export function actorSettings(actor, origin) {
-  const endpoints = {
-    outbox: httpsUrl(actor.outbox)?.href,
-    proxy: httpsUrl(actor.endpoints?.proxyUrl)?.href,
-    followers: httpsUrl(actor.followers)?.href,
-  };
-  for (const [key, url] of Object.entries(endpoints)) {
-    if (!url) {
-      const field = key === "proxy" ? "proxyUrl" : key;
-      throw apiOff(
-        `The profile has no HTTPS ${field}.`,
-        `Ask the site administrator to check the ActivityPub API. ${WP_SETTING}`,
-      );
-    }
-  }
-  if (!homeEndpoint(endpoints.outbox, origin) || !homeEndpoint(endpoints.proxy, origin)) {
-    throw mismatch(
-      "The outbox and proxy addresses are on a different site.",
-      "The outbox and proxy must use the account’s HTTPS origin.",
-    );
-  }
-  return endpoints;
 }
 
 /**
- * Finds the profile and OAuth endpoints for a handle or profile link. With `profileLinkOnly` a
- * handle is refused. A Problem with `offerProfileLink` means WebFinger found nothing.
+ * Finds the profile for a handle or profile link. With `profileLinkOnly` a handle is refused. A
+ * Problem with `offerProfileLink` means WebFinger found nothing.
  */
-export async function discover(value, { profileLinkOnly = false } = {}) {
+export async function findActor(value, { profileLinkOnly = false } = {}) {
   let profile = httpsUrl(value);
   let webfinger;
   if (!profile) {
@@ -131,9 +113,6 @@ export async function discover(value, { profileLinkOnly = false } = {}) {
       );
     }
   }
-
   const { actor, id } = await fetchActor(profile);
-  actorSettings(actor, id.origin);
-  const oauth = await oauthEndpoints(actor, id.origin);
-  return { ...oauth, profile: profile.href, actor: id.href, webfinger: webfinger?.href };
+  return { actor, id, profile, webfinger };
 }

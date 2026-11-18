@@ -1,23 +1,19 @@
-import { SCOPE, SIGN_IN_KEY } from "./constants.js";
-import { actorSettings, discover, fetchActor } from "./discovery.js";
-import { oauthProblem, Problem, signInProblem } from "./problem.js";
+import { backendFor, detect } from "./backend.js";
+import { SIGN_IN_KEY } from "./constants.js";
+import { findActor } from "./discovery.js";
+import { oauthProblem, signInProblem } from "./problem.js";
 import { saveStore, useStore } from "./store.js";
-import {
-  base64url,
-  clientIdentity,
-  exchange,
-  randomString,
-  renewableCredentials,
-} from "./token.js";
-import { homeEndpoint, httpsUrl, parseHandle } from "./url.js";
+import { base64url, randomString } from "./token.js";
+import { homeEndpoint, httpsUrl } from "./url.js";
 
 /**
- * Starts sign-in: finds the server, remembers what the callback needs in this tab and sends the
- * browser to the server's authorization page. `target` is a shared link to reopen afterwards.
+ * Starts sign-in: finds the server and its kind, remembers what the callback needs in this tab and
+ * sends the browser to the server's authorization page. `target` is a shared link to reopen afterwards.
  */
 export async function authorize(value, { target, profileLinkOnly } = {}) {
-  const endpoints = await discover(value, { profileLinkOnly });
-  const client = await clientIdentity();
+  const found = await findActor(value, { profileLinkOnly });
+  const backend = await detect(found);
+  const { endpoints, client } = await backend.prepare(found);
   const state = randomString();
   const code_verifier = randomString();
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(code_verifier));
@@ -25,7 +21,6 @@ export async function authorize(value, { target, profileLinkOnly } = {}) {
   const params = {
     ...client,
     response_type: "code",
-    scope: SCOPE,
     state,
     code_challenge: base64url(new Uint8Array(digest)),
     code_challenge_method: "S256",
@@ -33,7 +28,13 @@ export async function authorize(value, { target, profileLinkOnly } = {}) {
   for (const [name, param] of Object.entries(params)) url.searchParams.set(name, param);
   sessionStorage.setItem(
     SIGN_IN_KEY,
-    JSON.stringify({ state, code_verifier, endpoints, target: httpsUrl(target)?.href }),
+    JSON.stringify({
+      type: backend.type,
+      state,
+      code_verifier,
+      endpoints,
+      target: httpsUrl(target)?.href,
+    }),
   );
   location.assign(url.href);
   return "Opening your server…";
@@ -60,10 +61,12 @@ export async function completeSignIn(params, onTarget) {
   if (params.has("error")) throw oauthProblem(params.get("error"), params.get("error_description"));
   const codes = params.getAll("code");
   const { endpoints, code_verifier } = pending;
+  const backend = backendFor(pending);
   const origin = httpsUrl(endpoints?.actor)?.origin;
   const profile = httpsUrl(endpoints?.profile);
   const tokenEndpoint = homeEndpoint(endpoints?.token, origin);
   if (
+    !backend ||
     codes.length !== 1 ||
     !codes[0] ||
     !profile ||
@@ -85,42 +88,17 @@ export async function completeSignIn(params, onTarget) {
     );
   }
 
-  const client = await clientIdentity();
-  const { actor, id } = await fetchActor(profile);
-  if (id.href !== endpoints.actor) {
-    throw signInProblem("The profile changed during sign-in.");
-  }
-  const fields = actorSettings(actor, origin);
-  const handle =
-    parseHandle(actor.webfinger)?.handle ||
-    parseHandle(httpsUrl(endpoints.webfinger)?.searchParams.get("resource"))?.handle ||
-    parseHandle(`${actor.preferredUsername || ""}@${id.hostname}`)?.handle;
-  if (!handle) throw signInProblem("Your profile has no handle. Check it on your server.");
-
-  const result = await exchange(tokenEndpoint, { ...client, code: codes[0], code_verifier });
-  const authenticatedActor = result.activitypub_actor_id ?? result.me;
-  if (authenticatedActor !== undefined && httpsUrl(authenticatedActor)?.href !== id.href) {
-    throw new Problem("Wrong account", "Your server signed you in as a different account.", {
-      detail: `Authorized: ${String(authenticatedActor).slice(0, 200)}`,
-    });
-  }
-  const credentials = renewableCredentials(result);
-  if (!credentials) {
-    throw signInProblem(
-      "Your server sent no renewable token.",
-      "Update your ActivityPub plugin or server.",
-    );
-  }
+  const account = await backend.complete({
+    endpoints,
+    origin,
+    profile,
+    tokenEndpoint,
+    code: codes[0],
+    code_verifier,
+  });
   await useStore((store) => {
-    store.accounts[id.href] = {
-      handle,
-      actor: id.href,
-      ...fields,
-      ...credentials,
-      token_endpoint: tokenEndpoint.href,
-      client_id: client.client_id,
-    };
-    store.selectedActorId = id.href;
+    store.accounts[account.actor] = account;
+    store.selectedActorId = account.actor;
     saveStore(store);
   });
 }

@@ -3,6 +3,14 @@
   import Messages from "./Messages.svelte";
   import Sheet from "./Sheet.svelte";
 
+  // Mastodon-compatible servers keep a reply as visible as the post it answers.
+  const REACH = {
+    unlisted: "Replies are public, but kept out of public timelines.",
+    private: "Replies go to followers only.",
+    direct: "Replies go only to the people mentioned.",
+  };
+  const reach = $derived(REACH[app.resolved?.visibility] ?? "Replies are public.");
+
   const context = $derived(
     !app.current
       ? ""
@@ -25,7 +33,7 @@
     <legend>Write a reply</legend>
     <label for="reply-text">Your reply</label>
     <textarea id="reply-text" rows="5" aria-describedby="reply-note" bind:value={app.replyText}></textarea>
-    <p id="reply-note" class="quiet">Replies are public.</p>
+    <p id="reply-note" class="quiet">{reach}</p>
     <Messages section="reply" />
     <div class="row">
       <button type="button" id="reply-cancel" onclick={() => (app.replyOpen = false)}>Cancel</button>

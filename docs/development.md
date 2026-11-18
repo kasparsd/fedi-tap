@@ -12,11 +12,34 @@ For a different permanent URL, update `client_id`, `client_uri`, and `redirect_u
 
 The build adds a strict policy to `dist/index.html` (`vite.config.js`): `script-src 'self'`, `style-src 'self'`, `connect-src https:`, no inline code and no `data:` URIs. The build emits one script and one stylesheet, so there is no hash to maintain. The policy is not applied by the dev server, because Vite injects styles inline for hot reload; use `npm run preview` to see the page under it. `npm run check` fails if the built page loses the policy or gains anything inline.
 
-## ActivityPub compatibility
+## Server compatibility
 
-FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD, OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
+An account has a `type`, and each type has a backend in `src/lib/` that the page reaches through `backendFor(account)` (`src/lib/backend.js`). A backend resolves a link, acts (like, repost, reply, follow), undoes, says whether the saved addresses are sound, and runs its half of sign-in. `src/state.svelte.js` knows no protocol.
 
-Use the canonical HTTPS profile URL. The actor ID, OAuth authorization and token endpoints, proxy, and outbox must share the profile’s origin. FediTap uses authorization server metadata when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
+Sign-in starts with the profile (a handle through WebFinger, or a profile link) and its actor ID, then chooses the backend:
+
+1. The actor advertises the ActivityPub client API (`endpoints.proxyUrl` or an OAuth endpoint): `activitypub`.
+2. Otherwise `GET <origin>/api/v1/instance` answers with JSON that has a `version` (HTTPS, same origin, size-capped, 20 s): `mastodon`.
+3. Otherwise "Server not supported", which names both options.
+
+The account key is the actor ID for both types. For every type the actor ID, the OAuth endpoints and the API addresses must share the profile's origin. FediTap uses authorization server metadata (`/.well-known/oauth-authorization-server`) when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
+
+### ActivityPub (`src/lib/activitypub/`)
+
+FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD (`public/client.json`), OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
+
+### Mastodon API (`src/lib/mastodon/`)
+
+For Mastodon, GoToSocial, Pleroma, Akkoma and similar servers. There is no CIMD, so the page registers itself:
+
+- **App registration.** `POST /api/v1/apps` (or the metadata's `registration_endpoint`) with the page address as the only redirect URI. The `client_id` and `client_secret` are saved once per server in `store.clients[origin]` and reused for later sign-ins; the secret never goes into session storage and is read from the store at the callback. Registering is visible to the server's administrator, which is why it is cached.
+- **Scopes.** `read:accounts read:search write:favourites write:statuses write:follows`, or `read write follow` when the metadata's `scopes_supported` lacks one of them or registration rejects them. The token response's `scope` must cover everything asked for, else sign-in stops with "Your server allowed less than FediTap asked."
+- **Authorization.** PKCE S256, `state`, the issuer check, and a token exchange that also sends `client_secret` (the app is confidential). Servers before Mastodon 4.3 ignore PKCE; it is sent anyway. The signed-in account must be the one that was discovered (`verify_credentials.uri` equals the actor ID), else "Wrong account".
+- **Tokens.** Mastodon tokens normally never expire and have no refresh token, so an account may have neither `refresh_token` nor `expires`. A 401 then goes straight to "Sign-in expired". Servers that do issue a refresh token (Pleroma, Akkoma) are renewed as usual, with the secret.
+- **Actions.** Resolve is `GET /api/v2/search?q=<link>&resolve=true&limit=1` (first status, else first account). Like, Repost and Follow are `favourite`, `reblog` and `accounts/:id/follow`, undone by `unfavourite`, `unreblog` and `unfollow`; they are idempotent, so a failed one is simply tried again. A reply is `POST /api/v1/statuses` as plain text (no HTML) that opens with the author's `@user@host`, with `in_reply_to_id`, the parent's `visibility` (a reply to a followers-only post stays followers-only; the reply sheet says which) and an `Idempotency-Key`. Servers may ignore that key, so a reply that ends without a clear answer still says it may have gone through.
+- **Verification.** The server vouches for what it returns, so the checks are lighter: the object's `uri` or `url` must be on the opened link's origin, and the author counts as verified only when `account.uri` is an HTTPS address. `content`, `display_name` and `note` pass through the same plain-text conversion and caps as ActivityPub; server HTML is never rendered.
+
+Not supported: Lemmy and Misskey (different APIs).
 
 ## Local dev server with a mock OAuth server
 
@@ -25,7 +48,7 @@ npm install
 npm run dev
 ```
 
-Starts the Vite dev server (hot reload) at `https://localhost:8443/`, with the mock server's index at `https://localhost:8443/_dev/`. The app only runs over HTTPS and checks `client.json` against the page URL, so the server uses HTTPS (a certificate from [mkcert](https://github.com/FiloSottile/mkcert) if installed, otherwise self-signed) and serves a generated `client.json` for its own origin. `tools/mock-server.js` is a Vite plugin that fakes an ActivityPub server and an OAuth 2.0 PKCE provider on the same origin, so the whole flow works offline without a real account. `npm run preview` serves the production build (with its Content Security Policy) and the same mock.
+Starts the Vite dev server (hot reload) at `https://localhost:8443/`, with the mock server's index at `https://localhost:8443/_dev/`. The app only runs over HTTPS and checks `client.json` against the page URL, so the server uses HTTPS (a certificate from [mkcert](https://github.com/FiloSottile/mkcert) if installed, otherwise self-signed) and serves a generated `client.json` for its own origin. `tools/mock-server.js` is a Vite plugin that fakes an ActivityPub server, a Mastodon API (instance, app registration, search, statuses, accounts) and an OAuth 2.0 PKCE provider on the same origin, so the whole flow works offline without a real account. `npm run preview` serves the production build (with its Content Security Policy) and the same mock.
 
 Sign in with a profile URL on the dev index page. Each user exercises a path:
 
@@ -36,8 +59,10 @@ Sign in with a profile URL on the dev index page. Each user exercises a path:
 | `flaky` | First access token is rejected with 401 (refresh and retry) |
 | `erin` | Refresh fails with `invalid_grant` (sign in again) |
 | `mismatch` | Authorizes as a different profile (identity check) |
+| `mario` | Mastodon API account: registers an app, the token never expires |
+| `gone` | Mastodon API account whose token is rejected after sign-in (sign in again) |
 
-The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, missing post, no link with `?via=shortcut`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
+The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, a followers-only post, missing post, no link with `?via=shortcut`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
 
 ### Pinned Node and Docker
 
@@ -59,10 +84,14 @@ src/App.svelte          chooses what to show (signed out, ready, loaded, unsuppo
 src/app.css             the whole stylesheet (see docs/ux/components.md)
 src/state.svelte.js     reactive state and every action that changes it
 src/components/         one Svelte component per screen part
-src/lib/                protocol code with no framework or page access: discovery, OAuth, tokens,
-                        account store, activities (unit-tested)
+src/lib/                protocol code with no framework or page access (unit-tested):
+                        backend.js (backendFor, server detection), signin.js (shared OAuth),
+                        discovery, tokens, account store
+src/lib/activitypub/    the ActivityPub client-to-server backend
+src/lib/mastodon/       the Mastodon API backend (api, discovery, signin, actions)
+src/test-helpers.js     fake fetch for unit tests
 public/                 copied to dist/ as is: client.json, manifest, icons, FediTap.shortcut
-tools/mock-server.js    the mock ActivityPub and OAuth server (Vite plugin)
+tools/mock-server.js    the mock ActivityPub, Mastodon API and OAuth server (Vite plugin)
 tools/scripts/          check.js (static checks), try.js (command-line client)
 ```
 
@@ -83,17 +112,18 @@ npm test             # Vitest unit tests for src/lib
 
 Run `npm run validate` before committing. CI runs the same command before it publishes.
 
-## Test the WordPress flow
+## Test the WordPress and Mastodon flows
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
 2. Paste a post URL (**Paste** inside the field loads it at once) and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
 3. Connect a second account. Switch accounts, verify the next action is sent as that account, then remove one account and check that the other still works.
 4. With a disposable account, expire the saved access token by setting its `expires` field in browser storage to a past time. Open the same link in two tabs and verify that refresh rotation preserves both sessions. Revoke access on the server and check that FediTap asks you to sign in again when the grant can no longer be refreshed.
-5. Install the shortcut on an iPhone, share a Fediverse link, and verify that the browser receives the URL and retains it through sign-in. A successful sign-in can resolve the link, but publishing always requires choosing an action.
+5. Mastodon-compatible server (a disposable account on each of Mastodon, GoToSocial, Pleroma or Akkoma, and Pixelfed for like, reply and follow only): sign in with a handle and with a profile link, and check that the callback clears the code and state. Open a post and a profile (a profile offers only **Follow**). Test Like, Repost, Follow (a locked account says "Follow requested") and **Undo** for each, then Reply: check that the author is mentioned, that a reply to a followers-only post stays followers-only, and that the sheet says so. Sign in a second time and confirm no second app is registered on the server. Try a post on a server that your home server blocks. Pixelfed: check that search with `resolve` finds the link. Then confirm the WordPress account still works.
+6. Install the shortcut on an iPhone, share a Fediverse link, and verify that the browser receives the URL and retains it through sign-in. A successful sign-in can resolve the link, but publishing always requires choosing an action.
 
 ### CORS
 
-The browser must be able to read responses from WebFinger, the actor URL, OAuth discovery when needed, the token endpoint, the proxy, and the outbox. Proxy and outbox preflights need to allow POST with `Authorization` and `Content-Type`. If WebFinger is blocked, enter the HTTPS actor URL. If a token request is blocked, ask the WordPress or reverse-proxy administrator to allow the page origin on the advertised token route. The browser reports some network and TLS failures the same way as CORS.
+The browser must be able to read responses from WebFinger, the actor URL, OAuth discovery when needed, the token endpoint, the proxy, and the outbox. Proxy and outbox preflights need to allow POST with `Authorization` and `Content-Type`. A Mastodon-compatible server must also allow the page for `/api/v1/instance`, `/api/v1/apps`, `/oauth/token` and `/api/*` (the reply preflight includes the `Idempotency-Key` header). Mastodon allows this by default; a reverse proxy in front of another server may not. If WebFinger is blocked, enter the HTTPS actor URL. If a token request is blocked, ask the WordPress or reverse-proxy administrator to allow the page origin on the advertised token route. The browser reports some network and TLS failures the same way as CORS.
 
 Use the page’s origin (scheme and host, without its path) and the token URL advertised by the actor. Check the actual POST as well as OPTIONS. A credential-free POST to a working token route should return an OAuth error with a CORS header.
 
@@ -121,7 +151,7 @@ The shortcut sends only the first URL from the shared input in the query string,
 
 ## Account storage
 
-The page stores accounts in browser local storage by ActivityPub actor ID and remembers the selected actor ID. Reauthorizing an actor replaces that actor’s credentials. Selecting or removing an account leaves other accounts intact. Web Locks serialize account writes and rotating refresh grants across tabs. Release builds should use a dedicated origin because JavaScript elsewhere on the same origin can read the stored credentials.
+The page stores accounts in browser local storage by ActivityPub actor ID, each with its `type`, and remembers the selected actor ID. The same record holds the apps registered on Mastodon-compatible servers (`clients`, by origin) with their `client_secret`; like the tokens, they are readable by any JavaScript on the page's origin, which is a normal trade for a browser client but another reason for a dedicated origin. Reauthorizing an actor replaces that actor’s credentials. Selecting or removing an account leaves other accounts intact. Web Locks serialize account writes and rotating refresh grants across tabs. Release builds should use a dedicated origin because JavaScript elsewhere on the same origin can read the stored credentials.
 
 The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.
 
@@ -129,11 +159,11 @@ The "Add Shortcut for iOS" panel shows on every device, signed out or in, and ha
 
 ## Actions, errors and the Home Screen app
 
-Like, Repost and Follow send one activity to the outbox and then stay disabled for that link and account (the label becomes Liked, Reposted, Follow requested). The page remembers what it sent by account, target and kind until it reloads (the link field and any loaded post stay visible while this happens), so an action that finishes after the person moved on is still recorded and coming back to the link shows it as done. Reply opens a sheet that names the post and account and says replies are public (they are: the Create and its Note are addressed `to` Public with the author in `cc` and a `Mention` tag, and the mention text starts the content, so the author is notified; there is no length limit); blank lines make paragraphs and single newlines line breaks, all escaped. A failed send keeps the draft and shows the error inside the sheet. If the session ends during a reply, the sheet stays open with the draft, and Sign in keeps the draft in session storage for the return. On a 401 from the proxy or outbox the page refreshes the token and retries once, showing "Reconnecting…".
+(This section describes the ActivityPub backend; the Mastodon backend makes the REST calls listed above and has the same interface behaviour.) Like, Repost and Follow send one activity to the outbox and then stay disabled for that link and account (the label becomes Liked, Reposted, Follow requested). The page remembers what it sent by account, target and kind until it reloads (the link field and any loaded post stay visible while this happens), so an action that finishes after the person moved on is still recorded and coming back to the link shows it as done. Reply opens a sheet that names the post and account and says who can see the reply (public on ActivityPub: the Create and its Note are addressed `to` Public with the author in `cc` and a `Mention` tag; on the Mastodon API the reply keeps the parent post's visibility). The mention text starts the content, so the author is notified. On ActivityPub there is no length limit; blank lines make paragraphs and single newlines line breaks, all escaped (the Mastodon API takes the text as plain text instead). A failed send keeps the draft and shows the error inside the sheet. If the session ends during a reply, the sheet stays open with the draft, and Sign in keeps the draft in session storage for the return. On a 401 from the proxy or outbox the page refreshes the token and retries once, showing "Reconnecting…".
 
 A send that ends without a clear answer (timeout, dropped connection, HTTP 5xx or 408) says it may already have gone through; the person checks their account before pressing the action again. No Try again button is offered, because the action button, Send in the reply sheet and Open or Continue beside an input are themselves the retry and re-read the current value.
 
-**Undo** appears as a plain button next to the finished action only when the outbox response carries a readable `Location` header on the page's origin (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed). It sends an `Undo` activity whose `object` is that ID and is offered for Like, Repost and Follow, not Reply. Each action has its own Undo.
+**Undo** appears as a plain button next to the finished action when the backend says it can (`sent.undo`), and is offered for Like, Repost and Follow, not Reply. With ActivityPub that needs a readable `Location` header on the page's origin in the outbox response (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed), and Undo sends an `Undo` activity whose `object` is that ID. With the Mastodon API Undo always exists and calls `unfavourite`, `unreblog` or `unfollow`. Each action has its own Undo.
 
 Proxy responses are read with a 1 MB cap and the HTML in them is cut to 20,000 characters before parsing. A returned post must live on the origin of the opened link (a proxy may resolve an alias address only when the object names that address in `url`). The author counts as verified only when its actor document carries the same id the post names; otherwise the card shows only the host and Follow is hidden, so Follow always targets a verified id.
 
