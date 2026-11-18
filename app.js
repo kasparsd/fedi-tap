@@ -1,21 +1,27 @@
 "use strict";
 
-const SHORTCUT_ICLOUD_URL = "";
-const SHORTCUT_NAME = "FediTap";
 const SCOPE = "read write";
 const SIGN_IN_KEY = "fedishare.sign-in";
-const LAST_HANDLE_KEY = `feditap.last-handle:${new URL("./", location.href).pathname}`;
+const STORE_KEY = `feditap.accounts:${new URL("./", location.href).pathname}`;
 const AS_PROFILE = "https://www.w3.org/ns/activitystreams";
+const PUBLIC = `${AS_PROFILE}#Public`;
+const ACTIVITY_TYPE = `application/ld+json; profile="${AS_PROFILE}"`;
+const ACTOR_TYPES = new Set(["Person", "Service", "Group", "Organization", "Application"]);
+const ACTION_LABELS = new Map([
+  ["like", "Like"], ["repost", "Repost"], ["reply", "Reply"], ["follow", "Follow request"]
+]);
 const ACTOR_ACCEPT = `application/activity+json, application/ld+json; profile="${AS_PROFILE}"`;
 const API_OFF = "This server doesn't support the ActivityPub API. On WordPress, turn on Settings › ActivityPub › Advanced › ActivityPub API.";
 const CORS_ERROR = "Your server blocked the sign-in from this page (CORS).";
 const $ = (id) => document.getElementById(id);
 const form = $("sign-in");
 const input = $("account-input");
-const submit = $("continue");
-const status = $("status");
-const connect = $("connect");
-let settings = "";
+const targetInput = $("post-url");
+const accountPicker = $("selected-account");
+const actionForm = $("action-form");
+const controls = [$("lookup-controls"), $("action-controls"), $("sign-in-controls")];
+let busy = false;
+let resolved = null;
 
 function httpsUrl(value) {
   if (typeof value !== "string" || !value) return null;
@@ -170,9 +176,10 @@ async function authorize(value) {
     code_challenge_method: "S256"
   };
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
-  sessionStorage.setItem(SIGN_IN_KEY, JSON.stringify({ state, code_verifier, endpoints }));
-  status.textContent = "Opening your server’s sign-in page…";
+  const target = httpsUrl(targetInput.value.trim())?.href;
+  sessionStorage.setItem(SIGN_IN_KEY, JSON.stringify({ state, code_verifier, endpoints, target }));
   location.assign(url.href);
+  return "Opening your server’s sign-in page…";
 }
 
 function oauthMessage(error, description) {
@@ -180,7 +187,7 @@ function oauthMessage(error, description) {
   return detail ? `Sign-in failed. ${detail.slice(0, 500)}. Try again.` : "Sign-in failed. Try again.";
 }
 
-async function exchange(endpoint, params) {
+async function requestToken(endpoint, params) {
   let response;
   try {
     response = await fetch(endpoint, {
@@ -189,7 +196,8 @@ async function exchange(endpoint, params) {
       redirect: "manual",
       cache: "no-store",
       headers: { Accept: "application/json" },
-      body: new URLSearchParams({ grant_type: "authorization_code", ...params })
+      body: new URLSearchParams(params),
+      signal: AbortSignal.timeout(20000)
     });
   } catch {
     throw new Error(CORS_ERROR);
@@ -197,7 +205,11 @@ async function exchange(endpoint, params) {
   if (response.type === "opaqueredirect") {
     throw new Error("The token endpoint redirected the sign-in request. Ask your server administrator to check the advertised token URL.");
   }
-  const result = await response.json().catch(() => null);
+  return { response, result: await response.json().catch(() => null) };
+}
+
+async function exchange(endpoint, params) {
+  const { response, result } = await requestToken(endpoint, { grant_type: "authorization_code", ...params });
   if (result?.error) throw new Error(oauthMessage(result.error, result.error_description));
   if (response.status === 404) {
     throw new Error(`${API_OFF} If it is already on, ask your administrator to check the token URL and clear cached profile responses.`);
@@ -216,6 +228,8 @@ async function completeSignIn(params) {
   if (!pending?.state || states.length !== 1 || states[0] !== pending.state) {
     throw new Error("This sign-in doesn’t match the one started in this tab. Try again.");
   }
+  const target = httpsUrl(pending.target);
+  if (target) setTarget(target);
   if (params.has("error")) throw new Error(oauthMessage(params.get("error"), params.get("error_description")));
   const codes = params.getAll("code");
   const { endpoints, code_verifier } = pending;
@@ -241,82 +255,359 @@ async function completeSignIn(params) {
   if (authenticatedActor !== undefined && httpsUrl(authenticatedActor)?.href !== id.href) {
     throw new Error(`WordPress authorized a different profile. Try again and sign in as ${handle}.`);
   }
-  const expiresIn = Number(result.expires_in);
-  if (typeof result.access_token !== "string" || !result.access_token ||
-      typeof result.refresh_token !== "string" || !result.refresh_token ||
-      !Number.isFinite(expiresIn) || expiresIn <= 0) {
+  const credentials = renewableCredentials(result);
+  if (!credentials) {
     throw new Error("The server didn’t return a renewable token. Check that the WordPress ActivityPub plugin is up to date and try again.");
   }
-  showConnect({
-    fedishare: 3,
-    kind: "activitypub",
-    handle,
-    actor: id.href,
-    ...fields,
+  await useStore((store) => {
+    store.accounts[id.href] = {
+      handle,
+      actor: id.href,
+      ...fields,
+      ...credentials,
+      token_endpoint: tokenEndpoint.href,
+      client_id: client.client_id
+    };
+    store.selectedActorId = id.href;
+    saveStore(store);
+  });
+  renderAccounts();
+}
+
+function renewableCredentials(result, previousRefreshToken) {
+  const expiresIn = Number(result?.expires_in);
+  const refreshToken = result?.refresh_token ?? previousRefreshToken;
+  if (typeof result?.access_token !== "string" || !result.access_token ||
+      typeof refreshToken !== "string" || !refreshToken ||
+      !Number.isFinite(expiresIn) || expiresIn <= 0) return null;
+
+  return {
     token: result.access_token,
-    refresh_token: result.refresh_token,
-    expires: Math.floor(Date.now() / 1000 + expiresIn),
-    token_endpoint: tokenEndpoint.href,
-    client_id: client.client_id
-  }, id.host);
+    refresh_token: refreshToken,
+    expires: Math.floor(Date.now() / 1000 + expiresIn)
+  };
 }
 
-function restoreHandle() {
+function readStore() {
   try {
-    const handle = parseHandle(localStorage.getItem(LAST_HANDLE_KEY));
-    if (handle) {
-      input.value = handle.handle;
-      $("resume").hidden = false;
+    const store = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (!store) return { accounts: {}, selectedActorId: null };
+    if (store.accounts && typeof store.accounts === "object" && !Array.isArray(store.accounts)) return store;
+  } catch {
+    // A blocked or malformed store needs the same recovery.
+  }
+  throw new Error("FediTap couldn’t read browser storage. Enable site storage or clear this site’s saved data.");
+}
+
+function saveStore(store) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  } catch {
+    throw new Error("FediTap couldn’t save your account. Allow this site to use browser storage.");
+  }
+}
+
+function useStore(callback) {
+  return navigator.locks.request(STORE_KEY, () => callback(readStore()));
+}
+
+function renderAccounts() {
+  const store = readStore();
+  const accounts = Object.values(store.accounts);
+  const selected = accounts.find((account) => account.actor === store.selectedActorId) ?? accounts[0];
+  accountPicker.replaceChildren(...accounts.map((account) => new Option(
+    `@${account.handle}${account.needsReauth ? " (sign in again)" : ""}`,
+    account.actor
+  )));
+  accountPicker.value = selected?.actor ?? "";
+  $("account-picker").hidden = !selected;
+  return selected;
+}
+
+function requireReconnect(store, account) {
+  delete account.token;
+  delete account.refresh_token;
+  delete account.expires;
+  account.needsReauth = true;
+  saveStore(store);
+  throw new Error(`Sign in again to use @${account.handle}.`);
+}
+
+async function refreshAccount(store, account) {
+  const { response, result } = await requestToken(account.token_endpoint, {
+    grant_type: "refresh_token",
+    refresh_token: account.refresh_token,
+    client_id: account.client_id
+  });
+  if (result?.error === "invalid_grant" || response.status === 401) {
+    requireReconnect(store, account);
+  }
+  if (!response.ok) {
+    throw new Error(`Your server couldn’t refresh the sign-in (HTTP ${response.status}).`);
+  }
+  const credentials = renewableCredentials(result, account.refresh_token);
+  if (!credentials) requireReconnect(store, account);
+  Object.assign(account, credentials);
+  saveStore(store);
+}
+
+function withAccount(actorId, task) {
+  return useStore(async (store) => {
+    const account = store.accounts[actorId];
+    if (!account) throw new Error("Connect a Fediverse account first.");
+    if (account.needsReauth) throw new Error(`Sign in again to use @${account.handle}.`);
+    if (account.expires <= Date.now() / 1000 + 60) {
+      await refreshAccount(store, account);
     }
-  } catch {
-    // Sign-in also works when browser storage is disabled.
-  }
+    return task(account, () => refreshAccount(store, account));
+  });
 }
 
-function showConnect(payload, server) {
+async function activityRequest(account, endpoint, body, contentType) {
+  const headers = { Authorization: `Bearer ${account.token}`, Accept: ACTOR_ACCEPT };
+  if (contentType) headers["Content-Type"] = contentType;
   try {
-    localStorage.setItem(LAST_HANDLE_KEY, payload.handle);
+    return await fetch(endpoint, {
+      method: "POST",
+      credentials: "omit",
+      redirect: "error",
+      cache: "no-store",
+      headers,
+      body,
+      signal: AbortSignal.timeout(20000)
+    });
   } catch {
-    // Remembering the handle is optional.
+    throw new Error("Couldn’t reach your server. Check its CORS settings and your connection.");
   }
-  input.value = payload.handle;
-  $("resume").hidden = false;
-  form.hidden = false;
-  settings = JSON.stringify(payload);
-  $("account").textContent = `Signed in as @${payload.handle} · ${server}`;
-  connect.href = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=${encodeURIComponent(settings)}`;
-  connect.removeAttribute("aria-disabled");
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-  $("desktop").hidden = isIOS;
-  status.textContent = "";
-  $("connection-details").hidden = false;
-  $("connected-title").focus();
 }
 
-function showError(error, callback = false) {
-  status.textContent = "";
-  $("error").textContent = error.message || "Something went wrong. Try again.";
-  $("cors-help").hidden = error.message !== CORS_ERROR;
-  $("retry").hidden = !callback;
-  $("failure").hidden = false;
+function activityId(value) {
+  return httpsUrl(typeof value === "string" ? value : value?.id)?.href;
 }
+
+async function resolveTarget(account, target, refresh) {
+  const body = new URLSearchParams({ id: target });
+  let response = await activityRequest(account, account.proxy, body);
+  if (response.status === 401) {
+    await refresh();
+    response = await activityRequest(account, account.proxy, body);
+  }
+  if (!response.ok) {
+    throw new Error(`Your server couldn’t resolve this Fediverse link (HTTP ${response.status}).`);
+  }
+  const object = await response.json().catch(() => null);
+  const id = activityId(object);
+  const types = Array.isArray(object?.type) ? object.type : [object?.type];
+  const isActor = types.some((type) => ACTOR_TYPES.has(type));
+  const authors = Array.isArray(object?.attributedTo) ? object.attributedTo : [object?.attributedTo];
+  const author = isActor ? id : authors.map(activityId).find(Boolean);
+  if (!id || !types.some((type) => typeof type === "string" && type) || !author) {
+    throw new Error("Your server did not return an ActivityPub profile or post with an HTTPS author URL.");
+  }
+  return { id, author, isActor };
+}
+
+function makeActivity(action, { id, author, isActor }, account, reply) {
+  const context = { "@context": AS_PROFILE };
+  if (action === "follow") return { ...context, type: "Follow", object: author, to: [author] };
+  if (isActor) throw new Error("Only Follow is available for a profile.");
+  const addressing = { to: [author], cc: [PUBLIC] };
+  if (action === "like") return { ...context, type: "Like", object: id, ...addressing };
+  if (action === "repost") {
+    return { ...context, type: "Announce", object: id, to: [PUBLIC], cc: [account.followers] };
+  }
+  if (!reply) throw new Error("Write a reply before sending it.");
+  const escaped = reply.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  return {
+    ...context,
+    type: "Create",
+    ...addressing,
+    object: { type: "Note", inReplyTo: id, content: `<p>${escaped}</p>`, ...addressing }
+  };
+}
+
+async function sendActivity(account, action, target, reply, refresh) {
+  const body = JSON.stringify(makeActivity(action, target, account, reply));
+  const response = await activityRequest(account, account.outbox, body, ACTIVITY_TYPE);
+  if (response.status === 401) {
+    await refresh();
+    throw new Error("Your sign-in was refreshed. Choose the action again to send it.");
+  }
+  if (!response.ok) throw new Error(`Your server rejected the activity (HTTP ${response.status}).`);
+}
+
+function setTarget(target) {
+  const url = new URL(location.href);
+  url.hash = new URLSearchParams({ url: target.href }).toString();
+  history.replaceState(null, "", url);
+  targetInput.value = target.href;
+}
+
+function readSharedTarget() {
+  return httpsUrl(new URLSearchParams(location.hash.slice(1)).get("url"));
+}
+
+function resetPreview() {
+  resolved = null;
+  actionForm.hidden = true;
+  $("reply").hidden = true;
+  $("write-reply").setAttribute("aria-expanded", "false");
+  $("reply-text").value = "";
+}
+
+function showPreview(object) {
+  resolved = object;
+  const link = $("target-link");
+  link.href = object.id;
+  link.textContent = object.id;
+  for (const button of actionForm.querySelectorAll("[value=like], [value=repost], #write-reply")) {
+    button.hidden = object.isActor;
+  }
+  actionForm.querySelector("[value=follow]").textContent = object.isActor ? "Follow" : "Follow author";
+  actionForm.hidden = false;
+}
+
+async function runTask(section, message, task) {
+  if (busy) return false;
+  const auth = section === "auth";
+  const status = $(auth ? "status" : "action-status");
+  const error = $(auth ? "error" : "action-error");
+  busy = true;
+  for (const fieldset of controls) fieldset.disabled = true;
+  status.textContent = message;
+  error.textContent = "";
+  $("cors-help").hidden = true;
+  try {
+    status.textContent = await task() ?? "";
+    return true;
+  } catch (failure) {
+    status.textContent = "";
+    error.textContent = failure.message;
+    $("cors-help").hidden = !failure.message.includes("CORS");
+    const previous = accountPicker.value;
+    try {
+      const selected = renderAccounts();
+      if (selected?.needsReauth) input.value = selected.handle;
+      if (selected?.needsReauth || previous !== accountPicker.value) resetPreview();
+    } catch {
+      resetPreview();
+    }
+    return false;
+  } finally {
+    busy = false;
+    for (const fieldset of controls) fieldset.disabled = false;
+  }
+}
+
+async function findTarget() {
+  if (busy) return;
+  resetPreview();
+  const target = httpsUrl(targetInput.value.trim());
+  if (!target || !accountPicker.value) {
+    $("action-status").textContent = "";
+    $("action-error").textContent = target ? "Connect a Fediverse account first." : "Enter an HTTPS post or profile URL.";
+    (target ? input : targetInput).focus();
+    return;
+  }
+  setTarget(target);
+  const actorId = accountPicker.value;
+  await runTask("actions", "Looking up the link…", async () => {
+    const object = await withAccount(actorId, (account, refresh) => resolveTarget(account, target.href, refresh));
+    if (accountPicker.value !== actorId || targetInput.value !== target.href) return;
+    showPreview(object);
+    return "Link found. Choose an action.";
+  });
+}
+
+$("lookup").addEventListener("submit", (event) => {
+  event.preventDefault();
+  void findTarget();
+});
+
+targetInput.addEventListener("input", () => {
+  resetPreview();
+  $("action-status").textContent = "";
+  $("action-error").textContent = "";
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+});
+
+$("write-reply").addEventListener("click", () => {
+  $("reply").hidden = false;
+  $("write-reply").setAttribute("aria-expanded", "true");
+  $("reply-text").focus();
+});
+
+actionForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const action = event.submitter?.value;
+  const label = ACTION_LABELS.get(action);
+  if (!label || !resolved || busy) return;
+  const actorId = accountPicker.value;
+  const object = resolved;
+  const reply = $("reply-text").value.trim();
+  void runTask("actions", "Sending to your server…", async () => {
+    await withAccount(actorId, (account, refresh) => sendActivity(account, action, object, reply, refresh));
+    if (action === "reply") $("reply-text").value = "";
+    return `${label} sent.`;
+  });
+});
+
+accountPicker.addEventListener("change", async () => {
+  const actorId = accountPicker.value;
+  resetPreview();
+  const selected = await runTask("actions", "", async () => {
+    await useStore((store) => {
+      if (!store.accounts[actorId]) throw new Error("That account was removed in another tab.");
+      store.selectedActorId = actorId;
+      saveStore(store);
+    });
+    renderAccounts();
+  });
+  if (selected && targetInput.value) await findTarget();
+});
+
+$("forget").addEventListener("click", () => {
+  const actorId = accountPicker.value;
+  resetPreview();
+  void runTask("actions", "", async () => {
+    await useStore((store) => {
+      delete store.accounts[actorId];
+      if (store.selectedActorId === actorId) {
+        store.selectedActorId = Object.keys(store.accounts)[0] ?? null;
+      }
+      saveStore(store);
+    });
+    renderAccounts();
+    return "Account removed from this browser.";
+  });
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key !== STORE_KEY && event.key !== null) return;
+  const previous = accountPicker.value;
+  try {
+    const selected = renderAccounts();
+    if (previous !== accountPicker.value || selected?.needsReauth) resetPreview();
+  } catch (error) {
+    resetPreview();
+    $("action-error").textContent = error.message;
+  }
+});
+
+window.addEventListener("hashchange", () => {
+  const target = readSharedTarget();
+  if (!target) return;
+  targetInput.value = target.href;
+  resetPreview();
+  if (accountPicker.value) void findTarget();
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   input.removeAttribute("aria-invalid");
   input.removeAttribute("aria-describedby");
-  submit.disabled = true;
-  $("failure").hidden = true;
-  $("error").textContent = "";
-  status.textContent = "Looking up your account…";
-  try {
-    await authorize(input.value.trim());
-  } catch (error) {
-    showError(error);
-    submit.disabled = false;
-    if (input.hasAttribute("aria-invalid")) input.focus();
-  }
+  await runTask("auth", "Looking up your account…", () => authorize(input.value.trim()));
+  if (input.hasAttribute("aria-invalid") || input.type === "url") input.focus();
 });
 
 input.addEventListener("input", () => {
@@ -326,55 +617,36 @@ input.addEventListener("input", () => {
   $("error").textContent = "";
 });
 
-$("retry").addEventListener("click", () => {
-  $("failure").hidden = true;
-  $("error").textContent = "";
-  form.hidden = false;
-  input.focus();
-});
-
-$("copy").addEventListener("click", async () => {
-  if (!settings) return;
-  try {
-    await navigator.clipboard.writeText(settings);
-    $("copy-status").textContent = "Settings copied.";
-  } catch {
-    $("copy-status").textContent = "Clipboard access was blocked. Allow clipboard access and try again.";
+async function start() {
+  if (!navigator.locks || !AbortSignal.timeout) {
+    throw new Error("Open the HTTPS page in a current browser to connect an account.");
   }
-});
+  renderAccounts();
+  $("setup-unavailable").hidden = true;
+  for (const fieldset of controls) fieldset.disabled = false;
 
-window.addEventListener("pagehide", () => {
-  submit.disabled = false;
-  status.textContent = "";
-  if (!settings) return;
-  settings = "";
-  connect.removeAttribute("href");
-  connect.setAttribute("aria-disabled", "true");
-  $("connection-details").hidden = true;
-  $("copy-status").textContent = "";
-  restoreHandle();
-  form.hidden = false;
-});
-
-const shortcut = httpsUrl(SHORTCUT_ICLOUD_URL);
-if (shortcut?.hostname === "www.icloud.com" && shortcut.pathname.startsWith("/shortcuts/")) {
-  const download = $("get-shortcut");
-  download.href = shortcut.href;
-  download.removeAttribute("download");
-  download.target = "_blank";
-  download.rel = "noopener noreferrer";
+  const callback = new URL(location.href);
+  const shared = readSharedTarget();
+  if (shared) setTarget(shared);
+  const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
+  if (["code", "state", "error"].some((key) => callback.searchParams.has(key))) {
+    const params = new URLSearchParams(callback.search);
+    for (const key of oauthParams) callback.searchParams.delete(key);
+    history.replaceState(null, "", callback.href);
+    const signedIn = await runTask("auth", "Finishing sign-in…", async () => {
+      await completeSignIn(params);
+      input.value = "";
+      input.type = "text";
+      input.placeholder = "you@example.com";
+      $("account-label").textContent = "Fediverse handle or profile URL";
+      return "Account connected.";
+    });
+    if (!signedIn) return;
+  }
+  if (targetInput.value && accountPicker.value) await findTarget();
+  else if (targetInput.value) $("action-status").textContent = "Connect a Fediverse account to use this link.";
 }
 
-restoreHandle();
-submit.disabled = false;
-$("setup-unavailable").hidden = true;
-const callback = new URL(location.href);
-const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
-if (["code", "state", "error"].some((key) => callback.searchParams.has(key))) {
-  form.hidden = true;
-  const params = new URLSearchParams(callback.search);
-  for (const key of oauthParams) callback.searchParams.delete(key);
-  history.replaceState(null, "", callback.href);
-  status.textContent = "Finishing sign-in…";
-  completeSignIn(params).catch((error) => showError(error, true));
-}
+void start().catch((error) => {
+  $("error").textContent = error.message;
+});

@@ -4,9 +4,9 @@
 
 Publish the root of the `main` branch of `kasparsd/fedi-tap` using **Settings › Pages › Deploy from a branch**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. GitHub Pages serves the checked-in `index.html`, `app.js`, `client.json`, and signed `FediTap.shortcut` directly. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
-For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `client.json` together, and update `setupPage` in `FediTap.cherri` before signing another copy. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
+For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `client.json` together, and update `page` in `FediTap.cherri` before signing another copy. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
 
-After editing `app.js`, update its script integrity attribute and Content Security Policy hash in `index.html` from the repository root. If you distribute the shortcut through iCloud, set `SHORTCUT_ICLOUD_URL` in `app.js` and update the hash. Hosting requires no build step.
+After editing `app.js`, update its script integrity attribute and Content Security Policy hash in `index.html` from the repository root. Hosting requires no build step.
 
 ```sh
 node --input-type=module <<'JS'
@@ -27,26 +27,15 @@ FediTap uses the client-to-server ActivityPub API described in the [Social API B
 
 ## Test the WordPress flow
 
-1. Open the published page, enter `kaspars@kaspars.net` or another WordPress ActivityPub handle, and approve access as the same WordPress user. Repeat with the HTTPS actor URL to check direct discovery.
-2. On the Connect screen, verify the handle and server. Check that the address bar no longer contains the OAuth code or state and that browser storage contains no tokens or pending OAuth transaction.
-3. On desktop, click **Copy settings** and save the copied JSON to a private `settings.json`. With Node.js 22 or later, run `npm run try -- settings.json https://example.org/path/to/a/fediverse-post` with a real federated post URL. The default action reads through the account’s proxy and should print the resolved object type and ID. Run `npm run try -- --help` for the other actions and `--dry-run`.
-4. Use the refresh grant below on a disposable test connection. Check that the response includes a new token pair and that the previous refresh token is rejected. The refresh call can be made before the access token expires. To exercise automatic refresh on an iPhone, set the saved account’s `expires` to less than 60 seconds from now, then run a shortcut action.
-5. On an iPhone, open the page in Safari and install **FediTap** using **Download Shortcut**. Return to the page, sign in, and tap **Connect FediTap**. Confirm that Shortcuts receives JSON as text and writes the account to `fediverse.json`. Repeat with the same handle, then a different handle, to check replacement and addition.
-
-```sh
-umask 077
-jq -r '"grant_type=refresh_token&refresh_token=\(.refresh_token | @uri)&client_id=\(.client_id | @uri)"' settings.json |
-  tr -d '\n' |
-  curl -sS -X POST "$(jq -r .token_endpoint settings.json)" \
-    -H 'Content-Type: application/x-www-form-urlencoded' \
-    --data-binary @- > refreshed.json
-```
-
-Keep the token files private and delete them after testing.
+1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
+2. Paste a post URL and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
+3. Connect a second account. Switch accounts, verify the next action is sent as that account, then remove one account and check that the other still works.
+4. With a disposable account, expire the saved access token by setting its `expires` field in browser storage to a past time. Open the same link in two tabs and verify that refresh rotation preserves both sessions. Revoke access on the server and check that FediTap asks you to sign in again when the grant can no longer be refreshed.
+5. Install the shortcut on an iPhone, share a Fediverse link, and verify that the browser receives the URL and retains it through sign-in. A successful sign-in can resolve the link, but publishing always requires choosing an action.
 
 ### CORS
 
-The browser must be able to read responses from WebFinger, the actor URL, OAuth discovery when needed, and the token endpoint. If WebFinger is blocked, enter the HTTPS actor URL. If a token request is blocked, ask the WordPress or reverse-proxy administrator to allow the page origin on the advertised token route. The browser reports some network and TLS failures the same way as CORS.
+The browser must be able to read responses from WebFinger, the actor URL, OAuth discovery when needed, the token endpoint, the proxy, and the outbox. Proxy and outbox preflights need to allow POST with `Authorization` and `Content-Type`. If WebFinger is blocked, enter the HTTPS actor URL. If a token request is blocked, ask the WordPress or reverse-proxy administrator to allow the page origin on the advertised token route. The browser reports some network and TLS failures the same way as CORS.
 
 Use the page’s origin (scheme and host, without its path) and the token URL advertised by the actor. Check the actual POST as well as OPTIONS. A credential-free POST to a working token route should return an OAuth error with a CORS header.
 
@@ -70,31 +59,10 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
-The shortcut opens the setup page when it has no saved account or needs fresh credentials.
+The shortcut sends only the first URL from the shared input in the page fragment, `#url=<encoded URL>`. With no URL, it opens the page directly. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
-Import the signed file as **FediTap** and test the setup handoff on iPhone before sharing it. The connection confirmation and the help shown when you run FediTap without a shared link display the installed version. Update `shortcutVersion` in `FediTap.cherri` for each release. Check account replacement, then share a post and exercise the actions and refresh. In particular, verify that Shortcuts preserves the ActivityPub content type on outbox requests and passes OAuth error responses from the refresh endpoint to the reconnect branch.
+## Account storage
 
-## Shortcut payload and refresh
+The page stores accounts in browser local storage by ActivityPub actor ID and remembers the selected actor ID. Reauthorizing an actor replaces that actor’s credentials. Selecting or removing an account leaves other accounts intact. Web Locks serialize account writes and rotating refresh grants across tabs. Release builds should use a dedicated origin because JavaScript elsewhere on the same origin can read the stored credentials.
 
-The page passes a URL-encoded JSON string as the `text` parameter of `shortcuts://run-shortcut?name=FediTap&input=text`. Access and refresh tokens stay in page memory while the Connect screen is open and are cleared on navigation. The page remembers only the last handle in localStorage. Reloading prefills that handle. The setup form stays available on the Connect screen so you can sign in again for fresh settings. **Copy settings** explicitly copies the same JSON to the clipboard.
-
-```json
-{
-  "fedishare": 3,
-  "kind": "activitypub",
-  "handle": "kaspars@kaspars.net",
-  "actor": "https://kaspars.net/blog/author/kaspars",
-  "outbox": "https://kaspars.net/wp-json/activitypub/1.0/actors/1/outbox",
-  "followers": "https://kaspars.net/wp-json/activitypub/1.0/actors/1/followers",
-  "proxy": "https://kaspars.net/wp-json/activitypub/1.0/proxy",
-  "token": "<access_token>",
-  "refresh_token": "<refresh_token>",
-  "expires": 1795005600,
-  "token_endpoint": "https://kaspars.net/wp-json/activitypub/1.0/oauth/token",
-  "client_id": "https://kasparsd.github.io/fedi-tap/client.json"
-}
-```
-
-FediTap accepts setup versions 2 and 3. Both use the `fedishare` version field. FediTap saves or updates each account in `fediverse.json` under its `handle`. It also reads `fediverse.txt` from earlier builds when the JSON file is missing. Install or rename the shortcut as **FediTap** so the Connect link can find it.
-
-For a version 3 ActivityPub account, before an authenticated request, compare `expires` (Unix seconds) with the current Unix time. When it is less than 60 seconds away, POST `grant_type=refresh_token`, `refresh_token` and `client_id` as form fields to `token_endpoint`. Replace `token` with `access_token`, save the new `refresh_token` when supplied, and recompute `expires` as current Unix time plus `expires_in`. Save the updated account before continuing. When Shortcuts returns the OAuth error response for HTTP 400 or 401, open the setup page and stop. Version 2 payloads have no refresh fields and keep their existing behavior.
+The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.

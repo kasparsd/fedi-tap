@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JDm8aMb80FcvAtIHwuMgMSeFLHWHnIczIb9y8sfkp78='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l1HYddEL43M2rKmHh5CCRo83fQtCNHJPAnip7a8V58g='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FediTap shortcut for iPhone</title>
@@ -11,53 +11,75 @@
 <body>
   <main>
     <header>
-      <h1>Enter your Fediverse account to set up an Apple Shortcut for liking, reposting and replying to content on the Fediverse from your own Fediverse server, such as a WordPress site with the ActivityPub plugin.</h1>
+      <h1>Use your Fediverse account to like, repost, and reply to posts or follow their authors.</h1>
     </header>
-    <section class="step" aria-labelledby="download-title">
-      <h2 id="download-title">Step 1: Download Shortcut</h2>
-      <div class="download-actions">
-        <a id="get-shortcut" class="button-link" href="FediTap.shortcut" download>Download Shortcut</a>
-        <span class="shortcut-source">(<a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">View source on GitHub</a>)</span>
-      </div>
-    </section>
-    <section class="step" aria-labelledby="open-title">
-      <h2 id="open-title">Step 2: Open the downloaded file in Apple Shortcuts</h2>
-      <p>Choose <strong>Add Shortcut</strong>.</p>
+    <section class="step" aria-labelledby="action-title">
+      <h2 id="action-title">Fediverse actions</h2>
+      <form id="lookup">
+        <fieldset id="lookup-controls" disabled>
+          <legend class="visually-hidden">Find a Fediverse post or profile</legend>
+          <div id="account-picker" hidden>
+            <label for="selected-account">Act as</label>
+            <div class="form-row">
+              <select id="selected-account"></select>
+              <button type="button" id="forget">Remove account</button>
+            </div>
+          </div>
+          <label for="post-url">Fediverse post or profile URL</label>
+          <div class="form-row">
+            <input id="post-url" type="url" autocomplete="off" spellcheck="false" required>
+            <button type="submit">Find</button>
+          </div>
+        </fieldset>
+      </form>
+      <form id="action-form" hidden>
+        <p id="target">Selected object <a id="target-link"></a></p>
+        <fieldset id="action-controls" disabled>
+          <legend class="visually-hidden">Actions for the selected link</legend>
+          <div class="form-row">
+            <button type="submit" name="action" value="like">Like</button>
+            <button type="submit" name="action" value="repost">Repost</button>
+            <button type="button" id="write-reply" aria-expanded="false" aria-controls="reply">Reply</button>
+            <button type="submit" name="action" value="follow">Follow author</button>
+          </div>
+          <div id="reply" hidden>
+            <label for="reply-text">Public reply</label>
+            <textarea id="reply-text" rows="3"></textarea>
+            <button type="submit" name="action" value="reply">Send reply</button>
+          </div>
+        </fieldset>
+      </form>
+      <p id="action-status" role="status"></p>
+      <p id="action-error" role="alert"></p>
     </section>
     <section class="step" aria-labelledby="authorize-title">
-      <h2 id="authorize-title">Step 3: Authorize Shortcut</h2>
+      <h2 id="authorize-title">Connect an account</h2>
       <form id="sign-in">
         <p id="setup-unavailable">Sign-in requires JavaScript and the published HTTPS page.</p>
-        <p id="resume" hidden>Sign in again to get fresh shortcut settings.</p>
-        <label for="account-input" id="account-label">Fediverse handle or profile URL</label>
-        <div class="form-row">
-          <input id="account-input" name="account" type="text" placeholder="you@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" required>
-          <button type="submit" id="continue" disabled>Set up</button>
-        </div>
+        <fieldset id="sign-in-controls" disabled>
+          <legend class="visually-hidden">Account sign-in</legend>
+          <label for="account-input" id="account-label">Fediverse handle or profile URL</label>
+          <div class="form-row">
+            <input id="account-input" name="account" type="text" placeholder="you@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+            <button type="submit" id="continue">Sign in</button>
+          </div>
+        </fieldset>
       </form>
       <p id="status" role="status"></p>
       <p id="error" role="alert"></p>
-      <div id="failure" hidden>
-        <p id="cors-help" hidden><a href="https://github.com/kasparsd/fedi-tap/blob/main/docs/development.md#cors">Troubleshoot CORS</a></p>
-        <button type="button" id="retry" hidden>Try again</button>
-      </div>
+      <p id="cors-help" hidden><a href="https://github.com/kasparsd/fedi-tap/blob/main/docs/development.md#cors">Troubleshoot CORS</a></p>
+      <p class="help">This browser stores each connected account and its sign-in tokens. Requests go directly to your Fediverse server.</p>
+      <p class="help">Your server needs an ActivityPub client API. <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">WordPress setup instructions</a></p>
     </section>
-    <section id="connected" class="step" aria-labelledby="connected-title">
-      <h2 id="connected-title" tabindex="-1">Step 4: Connect Shortcut</h2>
-      <p class="privacy-note">After you sign in to your Fediverse server, choose <strong>Connect FediTap</strong> to pass your tokens to the shortcut. This page holds the tokens only in memory. Your browser remembers your Fediverse handle, and the shortcut saves the tokens in iCloud Drive.</p>
-      <p><a id="connect" class="button-link" role="link" aria-disabled="true">Connect FediTap</a></p>
-      <div id="connection-details" hidden>
-        <p id="account"></p>
-        <p>Keep these one-time settings private. They contain a sign-in token.</p>
-        <div id="desktop" hidden>
-          <p>To connect on your iPhone, sign in there.</p>
-          <button type="button" id="copy">Copy settings</button>
-          <p id="copy-status" role="status"></p>
-        </div>
+    <section class="step" aria-labelledby="download-title">
+      <h2 id="download-title">Use from the Apple share sheet</h2>
+      <div class="download-actions">
+        <a class="button-link" href="FediTap.shortcut" download>Download Shortcut</a>
+        <span class="help">(<a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">View source on GitHub</a>)</span>
       </div>
+      <p class="help">Open the file in Apple Shortcuts and choose <strong>Add Shortcut</strong>. Share a Fediverse link to FediTap to open it here.</p>
     </section>
-    <p class="compatibility">Your server needs an ActivityPub client API. <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">WordPress setup instructions</a></p>
   </main>
-  <script src="app.js" integrity="sha256-JDm8aMb80FcvAtIHwuMgMSeFLHWHnIczIb9y8sfkp78="></script>
+  <script src="app.js" integrity="sha256-l1HYddEL43M2rKmHh5CCRo83fQtCNHJPAnip7a8V58g="></script>
 </body>
 </html>

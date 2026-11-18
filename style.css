@@ -38,8 +38,7 @@ h2 {
   margin-block-end: 0.5rem;
 }
 
-.step,
-.compatibility {
+.step {
   margin-block-start: 1.75rem;
 }
 
@@ -58,28 +57,39 @@ h2 {
   align-items: center;
 }
 
-.shortcut-source {
-  flex: 1 1 6rem;
+fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 label {
   font-weight: 650;
 }
 
-#resume,
 #setup-unavailable,
-.shortcut-source,
-.privacy-note,
-.compatibility {
+.help {
   color: var(--muted);
 }
 
-#resume,
-#setup-unavailable {
+#setup-unavailable,
+#account-picker {
   margin-block-end: 0.75rem;
 }
 
 input,
+select,
+textarea,
 button,
 .button-link {
   min-block-size: 2.75rem;
@@ -89,11 +99,24 @@ button,
   font: inherit;
 }
 
-input {
+input,
+select {
   flex: 1 1 7rem;
   min-inline-size: 0;
+}
+
+input,
+select,
+textarea {
   background: Field;
   color: FieldText;
+}
+
+textarea {
+  display: block;
+  inline-size: 100%;
+  margin-block: 0.5rem;
+  resize: vertical;
 }
 
 input::placeholder {
@@ -125,8 +148,7 @@ button:hover:not(:disabled),
   border-color: ButtonText;
 }
 
-button:disabled,
-.button-link[aria-disabled="true"] {
+button:disabled {
   color: var(--muted);
   cursor: default;
 }
@@ -136,34 +158,27 @@ a {
   text-underline-offset: 0.18em;
 }
 
-:focus-visible,
-#connected-title:focus {
+:focus-visible {
   outline: 2px solid CanvasText;
   outline-offset: 3px;
 }
 
 #status:not(:empty),
 #error:not(:empty),
-#failure > :not([hidden]),
-#connection-details p,
-#copy {
+#action-status:not(:empty),
+#action-error:not(:empty),
+#target,
+#reply,
+#cors-help,
+p.help {
   margin-block-start: 0.75rem;
 }
 
-.privacy-note {
-  margin-block-end: 0.5rem;
-}
-
-#error {
+#error,
+#action-error {
   font-weight: 600;
 }
 
-#copy-status:empty {
-  margin: 0;
-}
-
-.shortcut-source,
-.privacy-note,
-.compatibility {
+.help {
   font-size: 0.9375rem;
 }
