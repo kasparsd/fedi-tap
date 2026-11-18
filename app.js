@@ -35,13 +35,22 @@ function httpsUrl(value) {
   }
 }
 
+function homeEndpoint(value, origin) {
+  const url = httpsUrl(value);
+  return url && url.origin === origin && !url.hash ? url : null;
+}
+
 async function getJson(url, accept = "application/json") {
   const response = await fetch(url, {
     headers: { Accept: accept },
     credentials: "omit",
-    cache: "no-store"
+    cache: "no-store",
+    signal: AbortSignal.timeout(20000)
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (httpsUrl(response.url)?.origin !== url.origin) {
+    throw new Error("Discovery redirected to a different server.");
+  }
   return response.json();
 }
 
@@ -72,29 +81,39 @@ async function fetchActor(url) {
   try {
     const actor = await getJson(url, ACTOR_ACCEPT);
     const id = httpsUrl(actor?.id);
-    if (id) return { actor, id };
+    if (id?.origin === url.origin) return { actor, id };
   } catch {
     // The browser reports CORS and other network failures the same way.
   }
-  throw new Error("Couldn't read this ActivityPub profile. Check the profile URL and make sure the site allows cross-origin requests.");
+  throw new Error("Couldn't verify this ActivityPub profile. Enter its canonical HTTPS URL and make sure the site allows cross-origin requests.");
 }
 
 async function oauthEndpoints(actor, origin) {
-  let authorize = httpsUrl(actor.endpoints?.oauthAuthorizationEndpoint);
-  let token = httpsUrl(actor.endpoints?.oauthTokenEndpoint);
-  if (authorize && token) return { authorize: authorize.href, token: token.href };
-
   const metadata = await getJson(new URL("/.well-known/oauth-authorization-server", origin))
     .catch(() => null);
-  authorize = httpsUrl(metadata?.authorization_endpoint);
-  token = httpsUrl(metadata?.token_endpoint);
-  if (authorize && token) {
-    return { authorize: authorize.href, token: token.href, issuer: httpsUrl(metadata.issuer)?.href };
+  const advertisedIssuer = metadata?.issuer;
+  const issuerUrl = homeEndpoint(advertisedIssuer, origin);
+  if (advertisedIssuer !== undefined && (!issuerUrl || issuerUrl.search)) {
+    throw new Error("The OAuth issuer doesn’t match your account’s server.");
   }
-  throw new Error(API_OFF);
+  const authorizeUrl = metadata?.authorization_endpoint ?? actor.endpoints?.oauthAuthorizationEndpoint;
+  const tokenUrl = metadata?.token_endpoint ?? actor.endpoints?.oauthTokenEndpoint;
+  if (!authorizeUrl || !tokenUrl) throw new Error(API_OFF);
+
+  const authorize = homeEndpoint(authorizeUrl, origin);
+  const token = homeEndpoint(tokenUrl, origin);
+  if (!authorize || !token) {
+    throw new Error("The authorization and token endpoints must use your account’s HTTPS origin.");
+  }
+  return {
+    authorize: authorize.href,
+    token: token.href,
+    issuer: advertisedIssuer ?? origin,
+    requireIssuer: metadata?.authorization_response_iss_parameter_supported === true
+  };
 }
 
-function actorSettings(actor) {
+function actorSettings(actor, origin) {
   const endpoints = {
     outbox: httpsUrl(actor.outbox)?.href,
     proxy: httpsUrl(actor.endpoints?.proxyUrl)?.href,
@@ -105,6 +124,9 @@ function actorSettings(actor) {
       const field = key === "proxy" ? "proxyUrl" : key;
       throw new Error(`The profile is missing an HTTPS ${field}. On WordPress, check Settings › ActivityPub › Advanced › ActivityPub API.`);
     }
+  }
+  if (!homeEndpoint(endpoints.outbox, origin) || !homeEndpoint(endpoints.proxy, origin)) {
+    throw new Error("The outbox and proxy must use your account’s HTTPS origin.");
   }
   return endpoints;
 }
@@ -133,9 +155,8 @@ async function discover(value) {
   }
 
   const { actor, id } = await fetchActor(profile);
-  if (!httpsUrl(actor.outbox)) actorSettings(actor);
+  actorSettings(actor, id.origin);
   const oauth = await oauthEndpoints(actor, id.origin);
-  actorSettings(actor);
   return { ...oauth, profile: profile.href, actor: id.href, webfinger: webfinger?.href };
 }
 
@@ -235,18 +256,25 @@ async function completeSignIn(params) {
   if (params.has("error")) throw new Error(oauthMessage(params.get("error"), params.get("error_description")));
   const codes = params.getAll("code");
   const { endpoints, code_verifier } = pending;
-  const tokenEndpoint = httpsUrl(endpoints?.token);
-  if (codes.length !== 1 || !codes[0] || !tokenEndpoint || !code_verifier ||
-      (params.has("iss") && endpoints.issuer && httpsUrl(params.get("iss"))?.href !== endpoints.issuer)) {
+  const origin = httpsUrl(endpoints?.actor)?.origin;
+  const profile = httpsUrl(endpoints?.profile);
+  const tokenEndpoint = homeEndpoint(endpoints?.token, origin);
+  if (codes.length !== 1 || !codes[0] || !profile || profile.origin !== origin || !tokenEndpoint ||
+      !homeEndpoint(endpoints.authorize, origin) || !code_verifier) {
     throw new Error("The server returned an incomplete or invalid sign-in. Try again.");
+  }
+  const issuers = params.getAll("iss");
+  if ((endpoints.requireIssuer || issuers.length) &&
+      (issuers.length !== 1 || issuers[0] !== (endpoints.issuer ?? origin))) {
+    throw new Error("The sign-in response didn’t match your server’s OAuth issuer. Try again.");
   }
 
   const client = await clientIdentity();
-  const { actor, id } = await fetchActor(httpsUrl(endpoints.profile));
+  const { actor, id } = await fetchActor(profile);
   if (id.href !== endpoints.actor) {
     throw new Error("The account profile changed during sign-in. Try again.");
   }
-  const fields = actorSettings(actor);
+  const fields = actorSettings(actor, origin);
   const handle = parseHandle(actor.webfinger)?.handle ||
     parseHandle(httpsUrl(endpoints.webfinger)?.searchParams.get("resource"))?.handle ||
     parseHandle(`${actor.preferredUsername || ""}@${id.hostname}`)?.handle;
@@ -368,6 +396,10 @@ function withAccount(actorId, task) {
     const account = store.accounts[actorId];
     if (!account) throw new Error("Connect a Fediverse account first.");
     if (account.needsReauth) throw new Error(`Sign in again to use @${account.handle}.`);
+    const origin = httpsUrl(actorId)?.origin;
+    if (![account.token_endpoint, account.proxy, account.outbox].every((url) => homeEndpoint(url, origin))) {
+      requireReconnect(store, account);
+    }
     if (account.expires <= Date.now() / 1000 + 60) {
       await refreshAccount(store, account);
     }
@@ -450,7 +482,8 @@ async function sendActivity(account, action, target, reply, refresh) {
 
 function setTarget(target) {
   const url = new URL(location.href);
-  url.hash = new URLSearchParams({ url: target.href }).toString();
+  url.searchParams.set("url", target.href);
+  if (url.hash.startsWith("#url=")) url.hash = "";
   history.replaceState(null, "", url);
   targetInput.value = target.href;
   updateSharedLinkNotice();
@@ -460,7 +493,8 @@ function updateSharedLinkNotice() {
   $("shared-link-notice").hidden = Boolean(accountPicker.value) || !targetInput.value;
 }
 
-function readSharedTarget() {
+function readLegacyTarget() {
+  if (!location.hash.startsWith("#url=")) return null;
   return httpsUrl(new URLSearchParams(location.hash.slice(1)).get("url"));
 }
 
@@ -574,7 +608,12 @@ targetInput.addEventListener("input", () => {
   resetPreview();
   $("action-status").textContent = "";
   $("action-error").textContent = "";
-  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  const url = new URL(location.href);
+  if (url.searchParams.has("url") || url.hash.startsWith("#url=")) {
+    url.searchParams.delete("url");
+    if (url.hash.startsWith("#url=")) url.hash = "";
+    history.replaceState(null, "", url);
+  }
 });
 
 $("write-reply").addEventListener("click", () => {
@@ -643,7 +682,7 @@ window.addEventListener("storage", (event) => {
 });
 
 window.addEventListener("hashchange", () => {
-  const target = readSharedTarget();
+  const target = readLegacyTarget();
   if (!target) return;
   setTarget(target);
   resetPreview();
@@ -674,13 +713,19 @@ async function start() {
   for (const fieldset of controls) fieldset.disabled = false;
 
   const callback = new URL(location.href);
-  const shared = readSharedTarget();
-  if (shared) setTarget(shared);
+  const shared = callback.searchParams.has("url")
+    ? httpsUrl(callback.searchParams.get("url"))
+    : readLegacyTarget();
   const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
-  if (["code", "state", "error"].some((key) => callback.searchParams.has(key))) {
-    const params = new URLSearchParams(callback.search);
+  const params = ["code", "state", "error"].some((key) => callback.searchParams.has(key))
+    ? new URLSearchParams(callback.search)
+    : null;
+  if (params) {
     for (const key of oauthParams) callback.searchParams.delete(key);
     history.replaceState(null, "", callback.href);
+  }
+  if (shared) setTarget(shared);
+  if (params) {
     const signedIn = await runTask("auth", "Finishing sign-in…", async () => {
       await completeSignIn(params);
       showAccountManagement(false);

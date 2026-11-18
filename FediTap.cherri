@@ -11,7 +11,7 @@ const urls = getURLs(sharedText)
 if urls {
     const sharedURL = getFirstItem(urls)
     const encoded = urlEncode("{sharedURL}")
-    openURL("{page}#url={encoded}")
+    openURL("{page}?url={encoded}")
 } else {
     openURL(page)
 }

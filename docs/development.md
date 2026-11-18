@@ -25,6 +25,8 @@ JS
 
 FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD, OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
 
+Use the canonical HTTPS profile URL. The actor ID, OAuth authorization and token endpoints, proxy, and outbox must share the profile’s origin. FediTap uses authorization server metadata when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
+
 ## Test the WordPress flow
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
@@ -59,7 +61,7 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
-The shortcut sends only the first URL from the shared input in the page fragment, `#url=<encoded URL>`. With no URL, it opens the page directly. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
+The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. Older shortcuts that use `#url=` still work. With no URL, the shortcut opens the page directly. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
 ## Account storage
 
