@@ -227,12 +227,14 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
 } /* a toggle that is on keeps its look when it can't be pressed */
 /* The button that is working keeps its look and its width: the label changes in place.
    .swap holds the label and, invisibly, every text the button may show. */
-:is(button, .button)[aria-busy="true"] {
+/* These match the disabled rule above in weight and come after it, so a working button (which is
+   aria-disabled) is not greyed. A toggle that is on keeps its own look. */
+:is(button, .button)[aria-busy="true"]:not([aria-pressed="true"]) {
   cursor: progress;
   color: CanvasText;
   border-color: CanvasText;
 }
-.primary[aria-busy="true"] {
+:is(button, .button).primary[aria-busy="true"] {
   border-color: transparent;
   background: var(--accent);
   color: Canvas;

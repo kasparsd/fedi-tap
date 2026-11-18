@@ -10,6 +10,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium",
     "svelte-check": "svelte-check --fail-on-warnings",
     "try": "node tools/scripts/try.js",
     "certs": "mkdir -p .local/dev-certs && mkcert -cert-file .local/dev-certs/localhost.pem -key-file .local/dev-certs/localhost-key.pem localhost 127.0.0.1 ::1",
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
+    "@playwright/test": "^1.65.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "svelte": "^5.58.0",
     "svelte-check": "^4.7.8",

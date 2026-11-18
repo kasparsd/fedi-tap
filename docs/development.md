@@ -93,6 +93,8 @@ src/test-helpers.js     fake fetch for unit tests
 public/                 copied to dist/ as is: client.json, manifest, icons, FediTap.shortcut
 tools/mock-server.js    the mock ActivityPub, Mastodon API and OAuth server (Vite plugin)
 tools/scripts/          check.js (static checks), try.js (command-line client)
+e2e/                    Playwright end-to-end tests, one folder per mock server (normal, fast, slow, built)
+playwright.config.js    the four mock servers and the browser setup for the tests
 ```
 
 Components read `app` from `state.svelte.js` and call its functions. Views are `{#if}` blocks on `app.view`. A running task (`runTask`) sets `app.task`, which turns off the controls, shows the progress bar and the slow notice, and labels the pressed button through the `BusyLabel` component; `app.busy` is true while it runs. See "Loading" in `docs/ux/components.md`. Only read-only requests can be cancelled: they take their signal from `src/lib/signal.js`. Message sections (`status` line plus one problem) are the `Messages` component and must stay mounted so screen readers announce them. Dialogs are the `Sheet` component, a native `<dialog>` driven by an `open` flag; its content exists only while open.
@@ -104,6 +106,7 @@ npm install
 npm run validate     # Biome + svelte-check + unit tests + build + static checks
 npm run lint:fix     # apply safe lint fixes and format
 npm test             # Vitest unit tests for src/lib
+npm run e2e          # Playwright end-to-end tests (see below)
 ```
 
 - **[Biome](https://biomejs.dev)** (`biome.json`) lints and formats JS, CSS, HTML and JSON in one tool. Rules: the recommended set plus `const`, no `var`, strict equality, no unused variables and no shadowed names. A GritQL plugin (`tools/biome/no-html-sinks.grit`) bans `innerHTML`, `outerHTML`, `insertAdjacentHTML` and `document.write`, so remote data can only reach the page as text. Biome does not read `.svelte` files.
@@ -111,6 +114,23 @@ npm test             # Vitest unit tests for src/lib
 - **Static checks** (`tools/scripts/check.js`, after `npm run build`): the built page has the strict Content Security Policy and nothing inline; local files and manifest icons exist; `client.json` is consistent; no source uses `{@html}` or inline styles.
 
 Run `npm run validate` before committing. CI runs the same command before it publishes.
+
+### End-to-end tests
+
+`npm run e2e` drives the real page in Chromium against the mock server, through whole user flows: signing in (ActivityPub and Mastodon, wrong account, API off, shared links), opening links, every action and its undo, replies and their draft, several accounts and tabs, expired and renewed tokens, damaged storage, and the loading states. The first time, install the browser with `npm run e2e:install`. It is not part of `validate`, which stays fast; the `E2E` workflow runs it on every pull request and push to `main`.
+
+`playwright.config.js` starts one mock server per project, because the mock's response delay decides what a test can see:
+
+| Project | Server | Tests |
+|---|---|---|
+| `normal` | 400 ms per request | The flows, and the loading states (progress, placeholder, dimmed post, button widths) |
+| `fast` | no delay | Quick responses add nothing to the page |
+| `slow` | 6.5 s per request | The slow notice and Cancel |
+| `built` | the production build and its Content Security Policy | The page works and the browser blocks nothing |
+
+The servers use ports 8461 to 8464 (`E2E_PORT` changes the first) and are reused when already running. The page needs HTTPS, so Chromium trusts the development certificate by its public key and checks every other certificate as usual; there is no switch that turns certificate checks off. The mock keeps its state per server, so tests run one at a time and each starts with `resetMock`. A failed test leaves a trace and a screenshot in `test-results/` (`npx playwright show-trace <trace.zip>`). The whole run takes about two and a half minutes, most of it the slow server.
+
+When you add a screen or a state, add or extend a test next to the similar one, and prefer what a person sees (roles, names, text) to ids. Button text includes a hidden copy that keeps the button's width, so read it with `shownText` or check the accessible name, not `toHaveText`.
 
 ## Test the WordPress and Mastodon flows
 

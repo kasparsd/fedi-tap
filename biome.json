@@ -17,7 +17,9 @@
       "public/client.json",
       "package.json",
       "biome.json",
-      "tools/**/*.js"
+      "tools/**/*.js",
+      "e2e/**/*.js",
+      "playwright.config.js"
     ]
   },
   "formatter": {

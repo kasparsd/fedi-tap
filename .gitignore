@@ -11,3 +11,7 @@
 # Dependencies.
 /node_modules/
 /dist/
+
+# End-to-end test output.
+/test-results/
+/playwright-report/
