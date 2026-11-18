@@ -1,26 +1,75 @@
+/* System fonts and colours only. Hex values are the fallback; where the browser knows the
+   -apple-system-* keywords (Safari) the live system colours replace them and follow
+   light and dark by themselves. Custom properties are never redeclared as fallbacks. */
 :root {
   color-scheme: light dark;
-  font: 100%/1.6 system-ui, sans-serif;
-  --muted: color-mix(in srgb, CanvasText 70%, Canvas);
-  --control-border: color-mix(in srgb, CanvasText 52%, Canvas);
-  --control-fill: color-mix(in srgb, CanvasText 9%, Canvas);
-  --control-pressed: color-mix(in srgb, CanvasText 18%, Canvas);
+  font: 100%/1.4 system-ui, sans-serif;
+  --bg: #f2f2f7;
+  --card: #fff;
+  --label: #000;
+  --secondary: #6c6c70;
+  --sep: #c6c6c8;
+  --fill: #7676801f;
+  --tint: #007aff;
+  --red: #ff3b30;
+  --orange: #ff9500;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000;
+    --card: #1c1c1e;
+    --label: #fff;
+    --secondary: #98989f;
+    --sep: #38383a;
+    --fill: #7676803d;
+    --tint: #0a84ff;
+    --red: #ff453a;
+    --orange: #ff9f0a;
+  }
+}
+
+@supports (color: -apple-system-label) {
+  :root {
+    --bg: -apple-system-grouped-background;
+    --card: -apple-system-secondary-grouped-background;
+    --label: -apple-system-label;
+    --secondary: -apple-system-secondary-label;
+    --sep: -apple-system-separator;
+    --fill: -apple-system-tertiary-fill;
+    --tint: -apple-system-blue;
+    --red: -apple-system-red;
+    --orange: -apple-system-orange;
+  }
+}
+
+@supports (font: -apple-system-body) {
+  :root {
+    font: -apple-system-body;
+    line-height: 1.4;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
+  min-block-size: 100dvh;
   margin: 0;
-  background: Canvas;
-  color: CanvasText;
+  background: var(--bg);
+  color: var(--label);
 }
 
 main {
   max-inline-size: 40rem;
   margin-inline: auto;
-  padding: clamp(2rem, 8vw, 5rem) 1.25rem 3rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    calc(3rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   overflow-wrap: anywhere;
 }
 
@@ -30,52 +79,265 @@ p {
   margin: 0;
 }
 
+/* Views: one data-state on main decides what is visible. */
+[data-views],
+#pending-card,
+#reauth,
+#loading-card,
+#shortcut-card,
+.standalone-only {
+  display: none;
+}
+
+main[data-state="signed-out"] [data-views~="signed-out"],
+main[data-state="ready"] [data-views~="ready"],
+main[data-state="loaded"] [data-views~="loaded"],
+main[data-state="unsupported"] [data-views~="unsupported"] {
+  display: block;
+}
+
+main[data-standalone] .standalone-only {
+  display: block;
+}
+
+main[data-standalone] .browser-only,
+main[data-standalone] #a2hs {
+  display: none;
+}
+
+main[data-state="signed-out"][data-pending] #pending-card,
+main[data-reauth] #reauth,
+main[data-loading] #loading-card {
+  display: block;
+}
+
+main[data-reauth] #action-error,
+main[data-reauth] #lookup,
+main[data-loading] #lookup {
+  display: none;
+}
+
+main[data-shortcut][data-state="signed-out"] #shortcut-card,
+main[data-shortcut][data-state="ready"]:not([data-reauth], [data-loading]) #shortcut-card {
+  display: block;
+}
+
+main > * + *,
+#sign-in-panel > * + *,
+.card > * + * {
+  margin-block-start: 0.75rem;
+}
+
+#stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#stage > * {
+  margin: 0;
+}
+
+main[data-state="ready"] #action-error {
+  order: -1;
+}
+
+#action-next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.5rem;
+}
+
+#action-next .text-button {
+  padding-inline: 0;
+  min-inline-size: 0;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-block-size: 2.75rem;
+}
+
 h1 {
-  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1.2;
 }
 
 h2 {
-  font-size: 1.125rem;
-  line-height: 1.35;
-  margin-block-end: 0.5rem;
+  font-size: 1rem;
 }
 
-.step {
-  margin-block-start: 1.75rem;
+.chip,
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--tint);
+  font-weight: 400;
 }
 
-.form-row,
-.lookup-buttons,
-.download-actions,
-.account-heading {
+.chip {
+  min-inline-size: 0;
+  max-inline-size: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip::after {
+  content: " ›";
+  content: " ›" / "";
+}
+
+.chip[data-warn] {
+  color: var(--orange);
+}
+
+.card {
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.625rem;
+  background: var(--card);
+}
+
+.card.centered {
+  text-align: center;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.meta,
+.help,
+.card small,
+#setup-unavailable {
+  color: var(--secondary);
+}
+
+.meta,
+.help,
+small {
+  font-size: 0.8125rem;
+}
+
+.help {
+  font-size: 0.9375rem;
+}
+
+#target-excerpt {
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  overflow: hidden;
+}
+
+.card-foot {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
+#target-date:not(:empty)::before {
+  content: " · ";
+}
+
 .form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-block-start: 0.25rem;
+}
+
+.paste-card {
+  text-align: center;
+  padding-block: 1.5rem;
+  margin-block-end: 1rem;
+}
+
+.banner {
+  padding: 0.625rem 0.75rem;
+  margin-block-end: 0.75rem;
+  border-radius: 0.625rem;
+  border-inline-start: 3px solid var(--orange);
+  background: var(--card);
+}
+
+.banner.err {
+  border-inline-start-color: var(--red);
+}
+
+.banner strong {
+  display: block;
+}
+
+.problem > * + *,
+.problem details > * + * {
   margin-block-start: 0.5rem;
 }
 
-.download-actions,
-.account-heading {
-  align-items: center;
+.problem summary {
+  color: var(--secondary);
+  font-size: 0.9375rem;
 }
 
-.account-heading {
-  justify-content: space-between;
+.problem button {
+  display: block;
+  inline-size: 100%;
+  background: var(--fill);
+}
+
+.problem .primary {
+  background: var(--tint);
+}
+
+.steps {
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.25rem;
+}
+
+#unsupported > * + * {
+  margin-block-start: 0.75rem;
+}
+
+#reauth button + button {
+  margin-block-start: 0.5rem;
 }
 
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
+  margin-block-start: 0.75rem;
 }
 
-@media (min-width: 36rem) {
-  .action-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.action-grid [data-act="follow"] {
+  grid-column: 1 / -1;
+}
+
+#action-form[data-kind="profile"] [data-act="follow"] {
+  background: var(--tint);
+  color: #fff;
+}
+
+/* Used actions stay readable: filled for the three post actions, plain for Follow. */
+.action-grid button[data-done]:disabled {
+  opacity: 1;
+  background: var(--tint);
+  color: #fff;
+}
+
+#action-form .action-grid [data-act="follow"][data-done]:disabled {
+  background: var(--card);
+  color: var(--tint);
+}
+
+#action-hint:not(:empty) {
+  margin-block-start: 0.5rem;
+  text-align: center;
 }
 
 fieldset {
@@ -83,6 +345,10 @@ fieldset {
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+fieldset > * + * {
+  margin-block-start: 0.5rem;
 }
 
 .visually-hidden {
@@ -95,138 +361,373 @@ fieldset {
 }
 
 label {
-  font-weight: 650;
-}
-
-#setup-unavailable,
-.help {
-  color: var(--muted);
-}
-
-#setup-unavailable,
-#shared-link-notice {
-  margin-block-end: 0.75rem;
-}
-
-#account-picker:not([hidden]) ~ #sign-in {
-  margin-block-start: 0.75rem;
+  display: block;
+  margin-block-end: 0.25rem;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  color: var(--secondary);
 }
 
 input,
-select,
 textarea,
 button,
-.button-link {
+.button {
   min-block-size: 2.75rem;
-  border: 1px solid var(--control-border);
-  border-radius: 0.375rem;
+  border-radius: 0.625rem;
   padding: 0.5rem 0.75rem;
   font: inherit;
+  touch-action: manipulation;
 }
 
 input,
-select {
+textarea {
+  border: 1px solid var(--sep);
+  background: var(--card);
+  color: var(--label);
+}
+
+input {
   flex: 1 1 7rem;
   min-inline-size: 0;
-}
-
-input,
-select,
-textarea {
-  background: Canvas;
-  color: CanvasText;
-}
-
-select {
   inline-size: 100%;
+}
+
+.form-row input {
+  inline-size: auto;
 }
 
 textarea {
   display: block;
   inline-size: 100%;
-  margin-block: 0.5rem;
   resize: vertical;
 }
 
 input::placeholder {
-  color: var(--muted);
+  color: var(--secondary);
   opacity: 1;
 }
 
 input[aria-invalid="true"] {
-  border-color: CanvasText;
+  border-color: var(--red);
 }
 
 button,
-.button-link {
-  min-inline-size: 2.75rem;
-  max-inline-size: 100%;
-  background: var(--control-fill);
-  color: CanvasText;
-  font-weight: 650;
+.button {
+  display: inline-block;
+  border: 0;
+  background: var(--card);
+  color: var(--tint);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
-.button-link {
-  display: inline-block;
-  text-align: center;
-  text-decoration: none;
+.card button,
+.card .button {
+  background: var(--fill);
 }
 
-button:hover:not(:disabled),
-.button-link[href]:hover {
-  border-color: CanvasText;
+#sign-in button,
+#reauth button,
+#shortcut-card .button,
+#shortcut-have,
+.sheet .card button,
+.action-sheet button {
+  display: block;
+  inline-size: 100%;
+}
+
+.primary,
+.card .primary {
+  background: var(--tint);
+  color: #fff;
+}
+
+.destructive,
+.card .destructive {
+  background: transparent;
+  color: var(--red);
+}
+
+.chip,
+.text-button,
+.card .text-button {
+  background: transparent;
+  min-inline-size: 2.75rem;
+  font-weight: 400;
 }
 
 button:active:not(:disabled),
-.button-link[href]:active {
-  background: var(--control-pressed);
-}
-
-.text-button {
-  padding-inline: 0.25rem;
-  border-color: transparent;
-  background: Canvas;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
-
-#forget {
-  margin-block-start: 0.375rem;
+.button:active {
+  opacity: 0.7;
 }
 
 button:disabled {
-  color: var(--muted);
+  opacity: 0.4;
   cursor: default;
 }
 
+summary,
 a {
-  color: inherit;
+  touch-action: manipulation;
+}
+
+a {
+  color: var(--tint);
   text-underline-offset: 0.18em;
 }
 
-:focus-visible {
-  outline: 2px solid CanvasText;
-  outline-offset: 3px;
+summary {
+  min-block-size: 2.75rem;
+  display: flex;
+  align-items: center;
+  color: var(--secondary);
+  cursor: pointer;
 }
 
-#status:not(:empty),
-#error:not(:empty),
-#action-status:not(:empty),
-#action-error:not(:empty),
-#target,
-#reply,
-#cors-help,
-p.help {
+:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
+}
+
+[role="status"]:not(:empty),
+[role="alert"]:not(:empty) {
   margin-block-start: 0.75rem;
 }
 
-#error,
-#action-error {
+#stage > [role="alert"]:not(:empty) {
+  margin-block-start: 0;
+}
+
+[role="status"] {
+  color: var(--secondary);
+}
+
+[role="status"][data-busy]::before,
+button[data-busy]::before {
+  content: "";
+  display: inline-block;
+  inline-size: 0.75em;
+  block-size: 0.75em;
+  margin-inline-end: 0.5em;
+  border: 2px solid currentColor;
+  border-block-start-color: transparent;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+  opacity: 0.6;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [role="status"][data-busy]::before,
+  button[data-busy]::before {
+    animation: none;
+  }
+}
+
+#stage > [role="alert"]:empty,
+#feedback:has(#action-status:empty):has(#action-next[hidden]) {
+  display: none;
+}
+
+.count {
+  text-align: end;
+}
+
+.count[data-over] {
+  color: var(--red);
+}
+
+.strong {
   font-weight: 600;
 }
 
-.help {
-  font-size: 0.9375rem;
+#reply-text {
+  margin-block-start: 0.5rem;
+  min-block-size: 8rem;
+}
+
+/* Sheets: native dialogs pinned to the bottom edge. */
+.sheet {
+  inline-size: 100%;
+  max-inline-size: 40rem;
+  max-block-size: 85dvh;
+  margin: auto auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.75rem 0.75rem 0 0;
+  border-block-start: 1px solid var(--sep);
+  background: var(--bg);
+  color: var(--label);
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.sheet-body {
+  padding: 0.5rem max(1rem, env(safe-area-inset-right)) calc(1.5rem + env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+
+.sheet-body > * + * {
+  margin-block-start: 0.75rem;
+}
+
+.sheet-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sheet-nav button {
+  inline-size: 5rem;
+}
+
+.sheet-nav button:first-child {
+  text-align: start;
+  padding-inline-start: 0;
+}
+
+.sheet-nav button:last-child {
+  text-align: end;
+  padding-inline-end: 0;
+}
+
+.sheet-nav h2 {
+  text-align: center;
+}
+
+.action-sheet {
+  background: transparent;
+}
+
+.action-sheet .card {
+  padding-block-end: 0;
+}
+
+.action-sheet .card button {
+  margin-block-start: 0.75rem;
+  border-block-start: 1px solid var(--sep);
+  border-radius: 0;
+  margin-inline: -0.875rem;
+  inline-size: calc(100% + 1.75rem);
+}
+
+.group {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 0.625rem;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.group + .group,
+.group + .help,
+#sheet-list-view > .help {
+  margin-block-start: 0.75rem;
+}
+
+.group li {
+  display: flex;
+  align-items: center;
+  border-block-end: 1px solid var(--sep);
+}
+
+.group li:last-child {
+  border-block-end: 0;
+}
+
+.row-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-block-size: 3rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--label);
+  font-weight: 400;
+  text-align: start;
+}
+
+.row-main:disabled {
+  opacity: 1;
+}
+
+.row-main .grow {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.row-main small {
+  display: block;
+  color: var(--secondary);
+}
+
+.row-main small.warn {
+  color: var(--orange);
+}
+
+.add-row {
+  color: var(--tint);
+}
+
+.check {
+  inline-size: 0.5rem;
+  block-size: 0.9rem;
+  border: solid var(--tint);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  visibility: hidden;
+}
+
+.row-main[aria-current="true"] .check {
+  visibility: visible;
+}
+
+.row-remove {
+  background: transparent;
+  color: var(--red);
+  border-radius: 0;
+}
+
+.sheet:not([data-mode="edit"]) .row-remove,
+.sheet[data-mode="edit"] .check,
+.sheet[data-mode="edit"] .add-group,
+.sheet[data-mode="edit"] #sheet-list-view > .help,
+.sheet[data-mode="add"] #sheet-list-view {
+  display: none;
+}
+
+.sheet:not([data-mode="list"]) #sheet-right {
+  visibility: hidden;
+}
+
+.sheet:not([data-mode="add"]) #sheet-sign-in {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet[open] {
+    animation: sheet-in 0.2s ease-out;
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(1.5rem);
+      opacity: 0;
+    }
+  }
 }

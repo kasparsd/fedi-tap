@@ -141,7 +141,7 @@ function issueTokens(user) {
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8", ".json": "application/json", ".md": "text/markdown; charset=utf-8",
+  ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".md": "text/markdown; charset=utf-8",
   ".shortcut": "application/octet-stream", ".png": "image/png", ".svg": "image/svg+xml"
 };
 
@@ -198,7 +198,7 @@ function devIndex() {
     ["Shared remote-style post URL", share("https://social.example/@dana/1")],
     ["Shared profile", share(`${ORIGIN}/users/zed`)],
     ["Shared missing post (404)", share(`${ORIGIN}/notes/404`)],
-    ["Legacy #url= link", `/#url=${encodeURIComponent(`${ORIGIN}/notes/1`)}`],
+    ["Opened from the Shortcut, no link", "/?via=shortcut"],
     ["No link", "/"]
   ].map(([label, href]) => `<li><a href="${href}">${label}</a></li>`).join("");
   return page("FediTap dev", `<h1>FediTap dev server</h1>

@@ -13,5 +13,5 @@ if urls {
     const encoded = urlEncode("{sharedURL}")
     openURL("{page}?url={encoded}")
 } else {
-    openURL(page)
+    openURL("{page}?via=shortcut")
 }
