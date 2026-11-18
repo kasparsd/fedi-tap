@@ -92,7 +92,7 @@ Every screen starts with the same `header` (a `.row`, one line, a `--rule` line 
 | `.post` | The post or profile being acted on, set off by one rule above it | `<article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">…</footer></article>` |
 | `.sheet` | Dialog modifier: docked to the bottom edge, full width up to 36rem | `<dialog class="sheet" aria-labelledby="t"><form method="dialog"><h2 id="t">Reply</h2>…</form></dialog>` |
 
-Attributes the CSS also reads: `aria-pressed="true"` (a finished action, filled, readable even when disabled), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; the label says what is happening).
+Attributes the CSS also reads: `aria-pressed="true"` (a finished action, filled, readable even when disabled), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; a busy button keeps its fill and says what it is doing, see Loading).
 
 ## Copy
 
@@ -135,11 +135,22 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 - **The legend is hidden, the label is visible.** A `fieldset` names a group for assistive technology; the visible name is a heading or a label.
 - **Links keep a 44 px target where they stand alone.** A link inside a `.row` is a 2.75rem flex item. A link inside running text is exempt.
 - **Residual exceptions.** The disclosure summary is 2.75rem tall with its text near the top, because `display: flex` would remove its marker. The dialog backdrop and the mock frame's scrim use `--line` at 50%, not a fifth colour.
-- **No empty-state, spinner or placeholder components.** A busy control says what it is doing in its label (Looking up…, Sending…); the post area says Loading…. Nothing shimmers.
+- **No empty-state or skeleton components.** Waiting is shown by the one pattern under Loading; nothing shimmers.
 - **Server consent and system sheets are drawn with the same components.** They are not our pages (A5, B1, I1, I3, I5), but the mock draws them with the same elements so the flow reads as one system.
 - **Mock-only styling stays in `mocks.html`.** The frame, the scrim behind an open dialog and the `data-force` rules that show hover, pressed and focus on a static page live in its inline style.
 - **Not adopted:** Dynamic Type through `font: -apple-system-body`, a toggle for the colour scheme, transitions, and per-component colours.
 
 ## App states and live regions
 
-`src/app.css` holds only the components. Which parts of the page show is decided by the Svelte components (`{#if}` on `app.view`: `signed-out`, `ready`, `loaded`, `unsupported`), not by CSS, and copy for the Home Screen app or Safari is chosen the same way. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. There are no animations, so no reduced-motion rule is needed.
+`src/app.css` holds only the components. Which parts of the page show is decided by the Svelte components (`{#if}` on `app.view`: `signed-out`, `ready`, `loaded`, `unsupported`), not by CSS, and copy for the Home Screen app or Safari is chosen the same way. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. The only motion is the browser's own indeterminate `progress` bar, so there is no reduced-motion rule to keep.
+
+## Loading
+
+Every task that waits on a server (opening a link, sending an action, undoing, signing in, renewing a token) looks the same. `runTask` in `src/state.svelte.js` is the one place that does it.
+
+1. **The pressed control owns the message.** It says what it is doing (Opening…, Sending…, Undoing…, Looking up…, Signing in…) with `aria-busy`, keeps its fill (a primary button stays primary) and keeps its width, because `BusyLabel` reserves the widest text it can show (idle, working and done, the done one in bold). Everything else dims through the disabled fieldsets. There is no second status line for it.
+2. **One progress cue.** A native indeterminate `<progress>` is drawn over the header's rule (no space of its own), labelled with what is happening. A hidden live region (`#task-announce`) tells screen readers the same. Both start after 150 ms, so a quick response shows nothing extra.
+3. **Nothing on screen is thrown away early.** While another link opens, the loaded post and its actions stay, dimmed and `inert`, and the title does not change; nothing below them moves. With no post yet, a placeholder card says "Opening {host}…". The post is replaced in one step when the new one arrives. A link that fails leaves nothing on screen for it.
+4. **A slow task says so.** After 5 s a notice under the title says "Still waiting for your server…". Opening a link and the sign-in lookup add Cancel, which aborts the request and says "Canceled." Sending, undoing and token requests are never cancellable, because they may already have gone through (or, for a token, must be saved).
+
+Only read-only requests listen for Cancel (`src/lib/signal.js`): discovery, the Mastodon instance probe, opening a link through the proxy or the Mastodon search. The ActivityPub proxy, the Mastodon `GET` calls and WebFinger are cancellable; every `POST` is not.

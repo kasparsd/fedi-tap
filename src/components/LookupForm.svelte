@@ -1,13 +1,13 @@
 <script>
   import {
     app,
-    buttonLabel,
     findTarget,
     isBusy,
     locked,
     onTargetInput,
     pasteLink,
   } from "../state.svelte.js";
+  import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
 </script>
 
@@ -52,7 +52,7 @@
         aria-busy={isBusy("open") ? "true" : undefined}
         aria-disabled={locked("lookup") ? "true" : undefined}
       >
-        {buttonLabel("open", "Open")}
+        <BusyLabel key="open" idle="Open" busy="Opening…" />
       </button>
     </div>
     <Messages section="lookup" />

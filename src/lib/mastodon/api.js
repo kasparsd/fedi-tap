@@ -1,5 +1,6 @@
 import { readJson } from "../http.js";
 import { corsProblem, Problem, refused } from "../problem.js";
+import { requestSignal } from "../signal.js";
 
 async function send(account, path, { method = "GET", form, headers } = {}) {
   try {
@@ -10,7 +11,8 @@ async function send(account, path, { method = "GET", form, headers } = {}) {
       cache: "no-store",
       headers: { Authorization: `Bearer ${account.token}`, Accept: "application/json", ...headers },
       body: form ? new URLSearchParams(form) : undefined,
-      signal: AbortSignal.timeout(20000),
+      // Reads (opening a link) can be cancelled; writes never are, as they may already have gone through.
+      signal: method === "GET" ? requestSignal() : AbortSignal.timeout(20000),
     });
   } catch (error) {
     throw corsProblem("Couldn’t reach your server.", error.message);

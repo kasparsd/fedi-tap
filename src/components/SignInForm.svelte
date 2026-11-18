@@ -1,13 +1,7 @@
 <script>
   import { standalone } from "../lib/support.js";
-  import {
-    app,
-    buttonLabel,
-    isBusy,
-    locked,
-    onAccountInput,
-    submitSignIn,
-  } from "../state.svelte.js";
+  import { app, isBusy, locked, onAccountInput, submitSignIn } from "../state.svelte.js";
+  import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
 </script>
 
@@ -46,7 +40,7 @@
         aria-busy={isBusy("continue") ? "true" : undefined}
         aria-disabled={locked("auth") ? "true" : undefined}
       >
-        {buttonLabel("continue", "Sign in")}
+        <BusyLabel key="continue" idle="Sign in" busy="Looking up…" reserve={["Signing in…"]} />
       </button>
     </div>
     <Messages section="auth" />

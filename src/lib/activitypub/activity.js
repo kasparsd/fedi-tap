@@ -1,10 +1,17 @@
 import { ACTIVITY_TYPE, ACTOR_ACCEPT, ACTOR_TYPES, AS_PROFILE, PUBLIC } from "../constants.js";
 import { readJson } from "../http.js";
 import { corsProblem, Problem, refused, uncertain } from "../problem.js";
+import { requestSignal } from "../signal.js";
 import { plainText, shortDate } from "../text.js";
 import { httpsUrl, parseHandle } from "../url.js";
 
-async function activityRequest(account, endpoint, body, contentType) {
+async function activityRequest(
+  account,
+  endpoint,
+  body,
+  contentType,
+  signal = AbortSignal.timeout(20000),
+) {
   const headers = { Authorization: `Bearer ${account.token}`, Accept: ACTOR_ACCEPT };
   if (contentType) headers["Content-Type"] = contentType;
   try {
@@ -15,7 +22,7 @@ async function activityRequest(account, endpoint, body, contentType) {
       cache: "no-store",
       headers,
       body,
-      signal: AbortSignal.timeout(20000),
+      signal,
     });
   } catch (error) {
     throw corsProblem("Couldn’t reach your server.", error.message);
@@ -28,10 +35,11 @@ function activityId(value) {
 
 async function proxyRequest(account, id, renew) {
   const body = new URLSearchParams({ id });
-  const response = await activityRequest(account, account.proxy, body);
+  // Opening a link only reads, so the person may cancel it.
+  const response = await activityRequest(account, account.proxy, body, undefined, requestSignal());
   if (response.status !== 401) return response;
   await renew();
-  return activityRequest(account, account.proxy, body);
+  return activityRequest(account, account.proxy, body, undefined, requestSignal());
 }
 
 /**

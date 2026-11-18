@@ -1,6 +1,7 @@
 <script>
   import { standalone, ios } from "./lib/support.js";
-  import { app, start } from "./state.svelte.js";
+  import { httpsUrl } from "./lib/url.js";
+  import { app, cancelTask, start } from "./state.svelte.js";
   import AccountsSheet from "./components/AccountsSheet.svelte";
   import ActionButtons from "./components/ActionButtons.svelte";
   import Header from "./components/Header.svelte";
@@ -18,12 +19,20 @@
   void start();
 
   const usable = $derived(app.view === "ready" || app.view === "loaded");
+  const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
   const showHomeScreenHint = $derived(app.view === "ready" && !standalone && ios && !app.reauth);
 </script>
 
 <main>
   <Header />
   <h1 id="title">{app.title}</h1>
+  <p id="task-announce" role="status">{app.task?.announce ?? ""}</p>
+  {#if app.slow}
+    <section id="slow">
+      <p role="status">Still waiting for your server…</p>
+      {#if app.task?.cancellable}<button type="button" onclick={cancelTask}>Cancel</button>{/if}
+    </section>
+  {/if}
 
   {#if app.view === "signed-out"}
     <section>
@@ -51,9 +60,19 @@
 
   {#if app.reauth && app.view !== "unsupported"}<ReauthCard />{/if}
   {#if usable}<LookupForm />{/if}
+  <!-- What is on screen waits, dimmed and not clickable, while another link opens. -->
   {#if app.view === "loaded"}
-    <TargetCard object={app.resolved} />
-    <ActionButtons />
+    <section
+      id="post"
+      inert={app.opening}
+      aria-busy={app.opening ? "true" : undefined}
+      data-loading={app.opening && app.showProgress ? "" : undefined}
+    >
+      <TargetCard object={app.resolved} />
+      <ActionButtons />
+    </section>
+  {:else if usable && app.opening && app.showProgress}
+    <TargetCard host={openingHost} />
   {/if}
 
   <Messages section="actions">

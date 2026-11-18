@@ -1,5 +1,6 @@
 <script>
-  import { app, buttonLabel, isBusy, sendReply, settleFocus } from "../state.svelte.js";
+  import { app, isBusy, sendReply, settleFocus } from "../state.svelte.js";
+  import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
   import Sheet from "./Sheet.svelte";
 
@@ -45,7 +46,7 @@
         aria-busy={isBusy("reply-send") ? "true" : undefined}
         onclick={sendReply}
       >
-        {buttonLabel("reply-send", "Send")}
+        <BusyLabel key="reply-send" idle="Send" busy="Sending…" />
       </button>
     </div>
   </fieldset>

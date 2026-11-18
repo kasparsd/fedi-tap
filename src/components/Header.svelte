@@ -20,4 +20,6 @@
     {/each}
     <option value="add">Add account</option>
   </select>
+  <!-- One progress cue for every task, laid over the header's rule so it takes no space. -->
+  {#if app.showProgress}<progress aria-label={app.task?.announce}></progress>{/if}
 </header>

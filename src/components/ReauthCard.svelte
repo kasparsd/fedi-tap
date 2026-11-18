@@ -1,11 +1,6 @@
 <script>
-  import {
-    app,
-    buttonLabel,
-    isBusy,
-    openAccountsSheet,
-    reauthenticate,
-  } from "../state.svelte.js";
+  import { app, isBusy, openAccountsSheet, reauthenticate } from "../state.svelte.js";
+  import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
 </script>
 
@@ -22,7 +17,7 @@
       aria-busy={isBusy("reauth-sign-in") ? "true" : undefined}
       onclick={reauthenticate}
     >
-      {buttonLabel("reauth-sign-in", "Sign in")}
+      <BusyLabel key="reauth-sign-in" idle="Sign in" busy="Looking up…" />
     </button>
     <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Add account</button>
   </fieldset>

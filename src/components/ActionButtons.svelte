@@ -1,14 +1,7 @@
 <script>
   import { ACTIONS } from "../lib/constants.js";
-  import {
-    app,
-    buttonLabel,
-    isBusy,
-    openReply,
-    perform,
-    sentFor,
-    undoLast,
-  } from "../state.svelte.js";
+  import { app, isBusy, openReply, perform, sentFor, undoLast } from "../state.svelte.js";
+  import BusyLabel from "./BusyLabel.svelte";
 
   const object = $derived(app.resolved);
 
@@ -34,7 +27,12 @@
     hidden={hidden(name)}
     onclick={() => (name === "reply" ? openReply() : perform(name))}
   >
-    {buttonLabel(`act:${name}`, finished ? ACTIONS[name].done : idle(name))}
+    <BusyLabel
+      key={`act:${name}`}
+      idle={finished ? ACTIONS[name].done : idle(name)}
+      busy={name === "reply" ? "" : "Sending…"}
+      reserve={[idle(name), ACTIONS[name].done]}
+    />
   </button>
   {#if undoable}
     <button
@@ -44,7 +42,7 @@
       hidden={!sentFor(name)?.undo}
       onclick={() => undoLast(name)}
     >
-      {buttonLabel(`undo:${name}`, "Undo")}
+      <BusyLabel key={`undo:${name}`} idle="Undo" busy="Undoing…" />
     </button>
   {/if}
 {/snippet}

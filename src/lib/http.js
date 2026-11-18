@@ -1,5 +1,6 @@
 import { MAX_RESPONSE } from "./constants.js";
 import { tooLarge } from "./problem.js";
+import { requestSignal } from "./signal.js";
 import { httpsUrl } from "./url.js";
 
 /** Reads a JSON body without trusting its size: refuses anything over the limit before parsing. */
@@ -38,7 +39,7 @@ export async function getJson(url, accept = "application/json") {
     headers: { Accept: accept },
     credentials: "omit",
     cache: "no-store",
-    signal: AbortSignal.timeout(20000),
+    signal: requestSignal(),
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   if (httpsUrl(response.url)?.origin !== url.origin) {

@@ -5,6 +5,7 @@ import { tick } from "svelte";
 import { activityKey, backendFor } from "./lib/backend.js";
 import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
 import { Problem, problemOf } from "./lib/problem.js";
+import { setRequestSignal } from "./lib/signal.js";
 import { authorize, completeSignIn } from "./lib/signin.js";
 import { readStore, resetStore, STORE_KEY, saveStore, useStore, withAccount } from "./lib/store.js";
 import { checkSupport } from "./lib/support.js";
@@ -39,11 +40,11 @@ class AppState {
   profileLinkMode = $state.raw(false);
   replyText = $state.raw("");
 
-  // A task is running: controls are off, the pressed button says what it is doing.
-  busy = $state.raw(false);
-  busySection = $state.raw(null);
-  busyKey = $state.raw(null);
-  busyLabel = $state.raw("");
+  // The running task, if any: controls are off and the pressed button says what it is doing.
+  // `showProgress` and `slow` turn on after a delay, so a quick request shows nothing extra.
+  task = $state.raw(null);
+  showProgress = $state.raw(false);
+  slow = $state.raw(false);
 
   messages = $state.raw(Object.fromEntries(Object.keys(SLOTS).map((name) => [name, EMPTY])));
   announce = $state.raw("");
@@ -54,6 +55,27 @@ class AppState {
   removeOpen = $state.raw(false);
   replyOpen = $state.raw(false);
   removing = $state.raw(null);
+
+  get busy() {
+    return this.task !== null;
+  }
+
+  get busySection() {
+    return this.task?.section ?? null;
+  }
+
+  get busyKey() {
+    return this.task?.key ?? null;
+  }
+
+  get busyLabel() {
+    return this.task?.label ?? "";
+  }
+
+  // Opening a link: what is on screen waits (dimmed, not clickable) until the new link arrives.
+  get opening() {
+    return this.task?.key === "open";
+  }
 
   get reauth() {
     return Boolean(this.current?.needsReauth);
@@ -90,9 +112,6 @@ const byId = (id) => document.getElementById(id);
 
 /** True while the pressed button with this key is the one that is working. */
 export const isBusy = (key) => app.busyKey === key;
-
-/** A button's label: what it says while its own task runs, else its normal text. */
-export const buttonLabel = (key, idle) => (isBusy(key) && app.busyLabel ? app.busyLabel : idle);
 
 /** True while a task of this section runs, so its field keeps its value but can't be edited. */
 export const locked = (section) => app.busy && app.busySection === section;
@@ -194,25 +213,63 @@ function resetPreview(keepMessages = false) {
 
 // --- Running a task ----------------------------------------------------------------------------------
 
+const PROGRESS_DELAY = 150;
+const SLOW_DELAY = 5000;
+
+/** Stops the running task if it can be cancelled (opening a link, looking up an account). */
+export function cancelTask() {
+  if (app.task?.cancellable) app.task.controller.abort();
+}
+
 /**
- * Runs one task with the page's controls off. The pressed button (`key`) says what it is doing, and
- * a failure becomes an alert in the section. The input of a form keeps its value and focus: it turns
- * read-only and its buttons aria-disabled while the request is in flight, never disabled.
+ * Runs one task with the page's controls off. Every task shows itself the same way: the pressed
+ * button (`key`) says what it is doing in `busyLabel`, a thin progress bar under the header appears
+ * after a short delay, screen readers hear `announce`, and after a few seconds a notice says the
+ * server is slow (with Cancel when `cancellable`). A failure becomes an alert in the section. The
+ * input of a form keeps its value and focus: it turns read-only and its buttons aria-disabled while
+ * the request is in flight, never disabled. `task` gets `{ signal }`, aborted when cancelled.
  */
-async function runTask(section, message, task, { key, busyLabel, title, actions } = {}) {
+async function runTask(
+  section,
+  message,
+  task,
+  { key, busyLabel, announce, title, actions, cancellable = false } = {},
+) {
   if (app.busy) return false;
-  app.busy = true;
-  app.busySection = section;
-  app.busyKey = key ?? null;
-  app.busyLabel = busyLabel ?? "";
+  const controller = new AbortController();
+  app.task = {
+    section,
+    key: key ?? null,
+    label: busyLabel ?? "",
+    announce: announce ?? busyLabel ?? "",
+    cancellable,
+    controller,
+  };
+  setRequestSignal(cancellable ? controller.signal : null);
+  const timers = [
+    setTimeout(() => {
+      app.showProgress = true;
+    }, PROGRESS_DELAY),
+    setTimeout(() => {
+      app.slow = true;
+    }, SLOW_DELAY),
+  ];
   clearMessages(section);
   setMessage(section, { status: message });
   liveSection = section;
   liveMessage = message;
+  // Cancelled by the person: no problem to show, and a request that still finished is dropped.
+  const cancelled = () => {
+    setMessage(section, { status: "Canceled." });
+    return false;
+  };
   try {
-    setMessage(section, { status: (await task()) ?? "" });
+    const result = await task({ signal: controller.signal });
+    if (controller.signal.aborted) return cancelled();
+    setMessage(section, { status: result ?? "" });
     return true;
   } catch (failure) {
+    if (controller.signal.aborted) return cancelled();
     setMessage(section, { status: "" });
     showProblem(section, failure, title, actions);
     const previous = app.current?.actor;
@@ -232,10 +289,11 @@ async function runTask(section, message, task, { key, busyLabel, title, actions 
     }
     return false;
   } finally {
-    app.busy = false;
-    app.busySection = null;
-    app.busyKey = null;
-    app.busyLabel = "";
+    for (const timer of timers) clearTimeout(timer);
+    setRequestSignal(null);
+    app.showProgress = false;
+    app.slow = false;
+    app.task = null;
     liveSection = null;
   }
 }
@@ -283,6 +341,7 @@ export async function submitSignIn() {
     {
       key: "continue",
       busyLabel: "Looking up…",
+      cancellable: true,
       title: "Couldn’t sign in",
       actions: (problem) =>
         problem.offerProfileLink ? [{ label: "Use profile link", run: useProfileLink }] : [],
@@ -299,6 +358,7 @@ export function reauthenticate() {
   void runTask("reauth", "", () => authorize(account.actor, { target: app.targetValue.trim() }), {
     key: "reauth-sign-in",
     busyLabel: "Looking up…",
+    cancellable: true,
     title: "Couldn’t start sign-in",
     actions: [{ label: "Try again", run: reauthenticate }],
   });
@@ -338,7 +398,7 @@ async function switchAccount(actorId, select) {
     if (select) select.value = app.current?.actor ?? "";
     return;
   }
-  resetPreview();
+  clearMessages("actions");
   const switched = await runTask(
     "lookup",
     "",
@@ -424,11 +484,16 @@ export async function findTarget() {
     focusFirst(byId("reauth-sign-in"));
     return;
   }
-  resetPreview();
+  // What is on screen stays until the new link arrives; only the answers about it are dropped.
+  clearMessages("actions");
+  clearMessages("reply");
+  app.replyOpen = false;
+  app.replyText = "";
   app.targetInvalid = false;
   app.targetDescribedBy = null;
   const target = httpsUrl(app.targetValue.trim());
   if (!target) {
+    app.resolved = null;
     fail("lookup", "That isn’t a link.", "Enter a link that starts with https://.");
     markTargetInvalid();
     byId("post-url")?.focus();
@@ -438,17 +503,27 @@ export async function findTarget() {
   const actorId = app.current.actor;
   const found = await runTask(
     "lookup",
-    "Loading…",
-    async () => {
+    "",
+    async ({ signal }) => {
       const object = await withSession(actorId, (account, renew) =>
         backendFor(account).resolve(account, target.href, renew),
       );
-      if (app.current?.actor !== actorId || app.targetValue !== target.href) return;
+      if (signal.aborted || app.current?.actor !== actorId || app.targetValue !== target.href) {
+        return;
+      }
       app.resolved = object;
     },
-    { key: "open", busyLabel: "Opening…", title: "Couldn’t open this link" },
+    {
+      key: "open",
+      busyLabel: "Opening…",
+      announce: `Opening ${target.hostname}…`,
+      cancellable: true,
+      title: "Couldn’t open this link",
+    },
   );
   if (found) return;
+  // A link that didn't open leaves nothing on screen that belongs to the link in the field.
+  app.resolved = null;
   if (app.current && !app.current.needsReauth) {
     markTargetInvalid();
     byId("post-url")?.focus();

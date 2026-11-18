@@ -1,4 +1,5 @@
 import { readJson } from "../http.js";
+import { requestSignal } from "../signal.js";
 import { httpsUrl } from "../url.js";
 
 /**
@@ -11,7 +12,7 @@ export async function probeInstance(origin) {
       headers: { Accept: "application/json" },
       credentials: "omit",
       cache: "no-store",
-      signal: AbortSignal.timeout(20000),
+      signal: requestSignal(),
     });
     if (!response.ok || httpsUrl(response.url)?.origin !== origin) return null;
     const instance = await readJson(response, 500000);
