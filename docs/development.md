@@ -113,11 +113,11 @@ npm run e2e          # Playwright end-to-end tests (see below)
 - **[svelte-check](https://svelte.dev/docs/svelte/svelte-check)** compiles every component and fails on any warning, including accessibility warnings.
 - **Static checks** (`tools/scripts/check.js`, after `npm run build`): the built page has the strict Content Security Policy and nothing inline; local files and manifest icons exist; `client.json` is consistent; no source uses `{@html}` or inline styles.
 
-Run `npm run validate` before committing. CI runs the same command before it publishes.
+Run `npm run validate` before committing. The `CI` workflow runs it on every pull request and push to `main`, and the Pages workflow runs it again before it publishes.
 
 ### End-to-end tests
 
-`npm run e2e` drives the real page in Chromium against the mock server, through whole user flows: signing in (ActivityPub and Mastodon, wrong account, API off, shared links), opening links, every action and its undo, replies and their draft, several accounts and tabs, expired and renewed tokens, damaged storage, and the loading states. The first time, install the browser with `npm run e2e:install`. It is not part of `validate`, which stays fast; the `E2E` workflow runs it on every pull request and push to `main`.
+`npm run e2e` drives the real page in Chromium against the mock server, through whole user flows: signing in (ActivityPub and Mastodon, wrong account, API off, shared links), opening links, every action and its undo, replies and their draft, several accounts and tabs, expired and renewed tokens, damaged storage, and the loading states. The first time, install the browser with `npm run e2e:install`. It is not part of `validate`, which stays fast; the `CI` workflow runs it, next to `validate`, on every pull request and push to `main`. The Pages workflow publishes without waiting for `CI`, so a failing check never blocks a release (keep the `CI` jobs out of required status checks until that is wanted).
 
 `playwright.config.js` starts one mock server per project, because the mock's response delay decides what a test can see:
 

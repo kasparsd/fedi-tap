@@ -16,7 +16,7 @@ Evidence for the Playwright suite. How to run and extend it is in [`../developme
 
 ## Not checked
 
-- The `E2E` workflow on GitHub: `npx playwright install --with-deps chromium` and the ports on a hosted runner have not run yet.
+- The `CI` workflow on GitHub (its `validate` and `e2e` jobs): `npx playwright install --with-deps chromium` and the ports on a hosted runner have not run yet.
 - Browsers other than Chromium (WebKit would be the next one, for the iOS-only behavior).
 - Accessibility rules beyond the semantics the tests assert (no axe run); the review findings about the stale invalid field in the Accounts sheet, focus after an expired connection, and the native URL validation bubble have no tests yet because they are not fixed.
 
