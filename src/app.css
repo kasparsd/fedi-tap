@@ -1,6 +1,6 @@
 /* FediTap components (see components.md, section Scale). System fonts and colours only; light and dark
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
-   cannot do the job: .row .field .group .list .post .quiet .primary .destructive .button .sheet
+   cannot do the job: .row .field .actions .list .post .quiet .primary .destructive .button .sheet
    plus the header (see Header)
    Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
 
@@ -105,7 +105,6 @@ fieldset {
   min-inline-size: 0;
 }
 legend,
-#action-announce,
 #task-announce,
 :is([role="status"], [role="alert"]):empty {
   position: absolute;
@@ -184,10 +183,10 @@ button,
   display: flex;
   inline-size: 100%;
 }
-:is(button, .button):hover {
+:is(button, .button):hover:not([aria-disabled="true"]) {
   border-color: CanvasText;
 }
-:is(button, .button):active {
+:is(button, .button):active:not([aria-disabled="true"]) {
   background: var(--line);
 }
 .primary {
@@ -210,23 +209,23 @@ button,
   border-color: var(--accent);
 } /* the current choice */
 button[aria-pressed="true"] {
-  border-color: transparent;
-  background: var(--accent);
-  color: Canvas;
-} /* a finished action */
-:is(button, .button):is(:disabled, [aria-disabled="true"]) {
+  border-color: var(--accent);
+  color: var(--accent);
+} /* an action that is on: outlined in the accent colour, never a solid fill */
+button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--accent) 15%, Canvas);
+}
+:is(button, .button):is(:disabled, [aria-disabled="true"]):not([aria-pressed="true"]) {
   border-color: var(--line);
   background: Canvas;
   color: var(--quiet);
   cursor: default;
 }
-button[aria-pressed="true"]:disabled {
-  border-color: transparent;
-  background: var(--accent);
-  color: Canvas;
-}
-/* The button that is working keeps its look (a primary one stays filled) and its width: the label
-   changes in place. .swap holds the label and, invisibly, every text the button may show. */
+[aria-disabled="true"] {
+  cursor: default;
+} /* a toggle that is on keeps its look when it can't be pressed */
+/* The button that is working keeps its look and its width: the label changes in place.
+   .swap holds the label and, invisibly, every text the button may show. */
 :is(button, .button)[aria-busy="true"] {
   cursor: progress;
   color: CanvasText;
@@ -272,11 +271,30 @@ button[aria-pressed="true"]:disabled {
   text-align: start;
 }
 
-/* Group: buttons side by side that wrap, from the start edge. <div class="group"><button>Like</button>...</div> */
-.group {
-  display: flex;
-  flex-wrap: wrap;
+/* Actions: two columns of equal buttons, so a label such as "Follow author" never crowds. Each is a toggle (Like, Repost,
+   Follow: aria-pressed, an outline icon that fills when on) or a plain button (Reply). The icon is an inline
+   svg, so state is shown by more than colour. <div class="actions"><button aria-pressed="false"><svg>…</svg>Like</button></div> */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-1);
+}
+.actions button {
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+.actions svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.actions [aria-pressed="true"] svg {
+  fill: currentColor;
 }
 
 /* Row: items side by side that wrap, spread to the edges. A row that holds an input never wraps: the

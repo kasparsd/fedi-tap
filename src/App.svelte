@@ -75,9 +75,7 @@
     <TargetCard host={openingHost} />
   {/if}
 
-  <Messages section="actions">
-    <p id="action-announce" role="status">{app.announce}</p>
-  </Messages>
+  <Messages section="actions" />
 
   {#if app.view !== "unsupported"}<ShortcutCard />{/if}
 
