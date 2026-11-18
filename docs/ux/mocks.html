@@ -90,7 +90,7 @@ figcaption b { color: CanvasText; }
 <section>
 <h2>Group and list</h2>
 <div class="frame">
-<p class="quiet">Actions: toggles and a plain button in one row</p>
+<p class="quiet">Actions: toggles and a plain button in three columns</p>
 <div class="actions"><button aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button><button data-force="pressed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button><button aria-pressed="true" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button><button><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div>
 <p class="quiet">List: choices, with a second button</p>
 <ul class="list"><li><button aria-current="true">@me@example.social</button></li><li><button>@alex@other.example</button><button class="destructive">Remove</button></li></ul>
@@ -99,7 +99,7 @@ figcaption b { color: CanvasText; }
 <section>
 <h2>Post and feedback</h2>
 <div class="frame">
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#components">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#components">social.example</a></footer></article>
 <p class="quiet">Status and alert</p>
 <p role="status">Reply sent as @me@example.social.</p>
 <p role="alert"><strong>Couldn’t like.</strong> Your server didn’t answer. Try again.</p>
@@ -195,26 +195,24 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="b3-in">Link</label>
 <div class="row"><div class="field"><input id="b3-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <section><h2>Add Shortcut for iOS</h2><p class="quiet"><a href="#">Source code</a></p><a class="button" href="#">Add Shortcut</a><button>Dismiss</button></section>
-</main></div><figcaption><b>B3 Loaded.</b> The field stays at the top with the link in it; the post appears below it and is replaced when another link is submitted. Like, Repost, Reply and Follow author are icon buttons in two columns. There is no Change link: the field is always there. The Shortcut panel shows on iOS only.</figcaption></figure>
+</main></div><figcaption><b>B3 Loaded.</b> The field stays at the top with the link in it; the post appears below it and is replaced when another link is submitted. Follow sits at the end of the author line, since it acts on the person; Like, Repost and Reply are icon buttons in one row under the post. There is no Change link: the field is always there. The Shortcut panel shows on iOS only.</figcaption></figure>
 <figure id="B4"><p class="quiet">Safari</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Add account</option></select></header>
 <h1>Post</h1>
 <form><fieldset><legend>Open a link</legend>
 <label for="b4-in">Link</label>
 <div class="row"><div class="field"><input id="b4-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <p role="status">Liked as @me@example.social. Press Like again to undo.</p>
 </main></div><figcaption><b>B4 After Like.</b> The button keeps its place and label; the icon fills and the border and text take the accent colour (aria-pressed). Pressing it again undoes. The status line names the account and says how to undo; where the server cannot undo it says so instead and the button is aria-disabled. B4a and B4b show sending and no undo.</figcaption></figure>
 <figure id="B4a"><p class="quiet">Safari</p><div class="frame"><main>
@@ -223,12 +221,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="b4a-in">Link</label>
 <div class="row"><div class="field"><input id="b4a-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false" aria-busy="true" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Liking…</button>
 <button type="button" aria-pressed="false" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <p role="status"></p>
 </main></div><figcaption><b>B4a Sending.</b> The pressed button says what it is doing (Liking…, Undoing…, Sending…); the others are aria-disabled, not disabled, so focus stays on the button.</figcaption></figure>
 <figure id="B4b"><p class="quiet">Safari</p><div class="frame"><main>
@@ -237,12 +234,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="b4b-in">Link</label>
 <div class="row"><div class="field"><input id="b4b-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="true" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <p role="status">Liked as @me@example.social. This server doesn’t allow undo from here.</p>
 </main></div><figcaption><b>B4b No undo.</b> The server did not expose the activity ID, so the button keeps its on look, loses hover and press feedback (aria-disabled) and the status line says why.</figcaption></figure>
 <figure id="B5"><p class="quiet">Safari</p><div class="frame"><main>
@@ -309,12 +305,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="e1-u">Link</label>
 <div class="row"><div class="field"><input id="e1-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 </main><dialog open class="sheet" aria-labelledby="e1-t"><h2 id="e1-t">Reply</h2>
 <p class="quiet">To Anna Ruiz, as @me@example.social.</p>
 <fieldset><legend>Write a reply</legend>
@@ -328,12 +323,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="e2-u">Link</label>
 <div class="row"><div class="field"><input id="e2-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 </main><dialog open class="sheet" aria-labelledby="e2-t"><h2 id="e2-t">Reply</h2>
 <p class="quiet">To Anna Ruiz, as @me@example.social.</p>
 <fieldset disabled><legend>Write a reply</legend>
@@ -347,12 +341,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="e3-in">Link</label>
 <div class="row"><div class="field"><input id="e3-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <p role="status">Reply sent as @me@example.social.</p>
 </main></div><figcaption><b>E3 Sent.</b> The dialog closes and the status says who the reply was sent as. Reply stays a plain button, since more than one reply is fine. The link field above still holds the link.</figcaption></figure>
 </div>
@@ -363,19 +356,15 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="f1-in">Link</label>
 <div class="row"><div class="field"><input id="f1-in" type="url" value="https://social.example/@anna"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-<fieldset><legend>Actions</legend>
-<div class="actions"><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div></fieldset>
-</main></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so they’re absent. One button, labelled Follow on a profile (Follow author on a post).</figcaption></figure>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so the action row is absent. Follow is in the byline, as on a post.</figcaption></figure>
 <figure id="F2"><p class="quiet">Safari</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Add account</option></select></header>
 <h1>Profile</h1>
 <form><fieldset><legend>Open a link</legend>
 <label for="f2-in">Link</label>
 <div class="row"><div class="field"><input id="f2-in" type="url" value="https://social.example/@anna"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-<fieldset><legend>Actions</legend>
-<div class="actions"><button type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div></fieldset>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <p role="status">Follow request sent as @me@example.social. Press Follow again to undo.</p>
 </main></div><figcaption><b>F2 Requested.</b> Follow is a toggle like the others. The status line says “request sent”, the honest word: a request is all the client knows. Press Follow again to undo, if the server exposes the ID.</figcaption></figure>
 </div>
@@ -387,7 +376,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="g1-u">Link</label>
 <div class="row"><div class="field"><input id="g1-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main><dialog open class="sheet" aria-labelledby="g1-t"><h2 id="g1-t">Accounts</h2>
 <ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
 <form><fieldset><legend>Account sign-in</legend>
@@ -407,7 +396,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="g3-u">Link</label>
 <div class="row"><div class="field"><input id="g3-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main><dialog open class="sheet" aria-labelledby="g3-t"><h2 id="g3-t">Accounts</h2>
 <ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
 <form><fieldset><legend>Account sign-in</legend>
@@ -422,7 +411,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="g4-u">Link</label>
 <div class="row"><div class="field"><input id="g4-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main><dialog open aria-labelledby="g4-t" aria-describedby="g4-d"><h2 id="g4-t">Remove @alex@other.example?</h2>
 <p id="g4-d" class="quiet">Signs out here only. Revoke FediTap under connected apps on your server.</p>
 <div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></dialog></div><figcaption><b>G4 Confirm.</b> The same dialog element, centred, with a heading, one sentence and a button row. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
@@ -441,7 +430,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="g6-u">Link</label>
 <div class="row"><div class="field"><input id="g6-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main><dialog open class="sheet" aria-labelledby="g6-t"><h2 id="g6-t">Accounts</h2>
 <ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
 <form><fieldset><legend>Account sign-in</legend>
@@ -462,12 +451,11 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="h2-in">Link</label>
 <div class="row"><div class="field"><input id="h2-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span><span>2 Nov</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
 <div class="actions"><button type="button" aria-pressed="false" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"/></svg>Like</button>
 <button type="button" aria-pressed="false" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></svg>Repost</button>
-<button type="button" aria-haspopup="dialog" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button>
-<button type="button" aria-pressed="false" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow author</button></div></fieldset>
+<button type="button" aria-haspopup="dialog" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"/></svg>Reply</button></div></fieldset>
 <p role="status">Reconnecting…</p>
 </main></div><figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly, with the action buttons aria-disabled so focus stays put.</figcaption></figure>
 <figure id="H3"><p class="quiet">Safari</p><div class="frame"><main>
@@ -529,7 +517,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Open a link</legend>
 <label for="i5-in">Link</label>
 <div class="row"><div class="field"><input id="i5-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main><dialog open class="sheet" aria-labelledby="i5-t"><div class="row"><h2 id="i5-t">social.example</h2><button>Done</button></div>
 <p class="quiet">The original post opens here.</p></dialog></div><figcaption><b>I5 Leaving the app.</b> The post link is the only link to another site. In standalone mode it opens in a system sheet with a Done button, so the person can return.</figcaption></figure>
 </div></div>

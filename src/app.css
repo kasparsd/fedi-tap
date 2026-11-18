@@ -1,6 +1,6 @@
 /* FediTap components (see components.md, section Scale). System fonts and colours only; light and dark
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
-   cannot do the job: .row .field .actions .list .post .quiet .primary .destructive .button .sheet
+   cannot do the job: .row .field .actions .byline .list .post .quiet .primary .destructive .button .sheet
    plus the header (see Header)
    Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
 
@@ -276,14 +276,17 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
    svg, so state is shown by more than colour. <div class="actions"><button aria-pressed="false"><svg>…</svg>Like</button></div> */
 .actions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-1);
 }
-.actions button {
-  gap: var(--space-1);
+.actions button,
+.byline button {
+  gap: 0.25rem;
+  padding-inline: var(--space-1);
   white-space: nowrap;
 }
-.actions svg {
+.actions svg,
+.byline svg {
   inline-size: 1.25rem;
   block-size: 1.25rem;
   flex: none;
@@ -293,7 +296,8 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.actions [aria-pressed="true"] svg {
+.actions [aria-pressed="true"] svg,
+.byline [aria-pressed="true"] svg {
   fill: currentColor;
 }
 
@@ -394,6 +398,29 @@ header select {
 .post {
   padding-block-start: var(--space-2);
   border-block-start: var(--rule);
+}
+/* Byline: who wrote it, with Follow at the trailing end. The name truncates; the button never wraps. */
+.byline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+}
+.byline > div {
+  min-inline-size: 0;
+}
+.byline .quiet > span {
+  display: block;
+}
+/* The grid columns and the minimum width already keep these steady, so the widest-text reserve is not needed. */
+.actions .reserve,
+.byline .reserve {
+  display: none;
+}
+.byline > button {
+  flex: none;
+  min-inline-size: 6.5rem; /* room for "Sending…" without a jump */
+  padding-inline: var(--space-2);
 }
 .post > * + * {
   margin-block-start: var(--space-1);

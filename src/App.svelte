@@ -69,7 +69,7 @@
       data-loading={app.opening && app.showProgress ? "" : undefined}
     >
       <TargetCard object={app.resolved} />
-      <ActionButtons />
+      {#if !app.resolved.isActor}<ActionButtons />{/if}
     </section>
   {:else if usable && app.opening && app.showProgress}
     <TargetCard host={openingHost} />

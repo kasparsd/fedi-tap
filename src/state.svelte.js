@@ -115,9 +115,9 @@ export const isBusy = (key) => app.busyKey === key;
 /** True while a task of this section runs, so its field keeps its value but can't be edited. */
 export const locked = (section) => app.busy && app.busySection === section;
 
-/** The button label for an action. Following a post's author is "Follow author". */
-export function actionLabel(name, object) {
-  return name === "follow" && !object.isActor ? "Follow author" : ACTIONS[name].idle;
+/** The button label for an action. */
+export function actionLabel(name) {
+  return ACTIONS[name].idle;
 }
 
 /** What an action already sent for the loaded target (and the current account) returned, if any. */
@@ -585,7 +585,7 @@ export async function perform(action, text = "") {
       if (inSheet) return "";
       // A toggle says how to take it back, once, or why it can't be taken back.
       return result.undo
-        ? `${message} Press ${actionLabel(action, object)} again to undo.`
+        ? `${message} Press ${actionLabel(action)} again to undo.`
         : `${message} This server doesn’t allow undo from here.`;
     },
     {
