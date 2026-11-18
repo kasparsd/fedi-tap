@@ -22,7 +22,12 @@ async function webfingerActor(url) {
     .find(Boolean);
 }
 
-export async function fetchActor(url) {
+/**
+ * Reads the actor document. Servers that require signed requests refuse it with 401 or 403; when
+ * `allowRefused` is set that is not fatal: the address is still the actor's ID, but its document
+ * stays unread (`actor` is null) and only a backend that doesn't need it can go on.
+ */
+export async function fetchActor(url, { allowRefused = false } = {}) {
   let detail = "The profile ID is on a different server than the address.";
   try {
     const actor = await getJson(url, ACTOR_ACCEPT);
@@ -31,6 +36,7 @@ export async function fetchActor(url) {
   } catch (error) {
     // The browser reports CORS and other network failures the same way.
     detail = error.message;
+    if (allowRefused && /^HTTP (401|403)$/.test(detail)) return { actor: null, id: url };
   }
   throw new Problem(
     "Couldn’t read your profile",
@@ -113,6 +119,7 @@ export async function findActor(value, { profileLinkOnly = false } = {}) {
       );
     }
   }
-  const { actor, id } = await fetchActor(profile);
+  // An address WebFinger vouched for may be a server that refuses unsigned reads of it.
+  const { actor, id } = await fetchActor(profile, { allowRefused: Boolean(webfinger) });
   return { actor, id, profile, webfinger };
 }

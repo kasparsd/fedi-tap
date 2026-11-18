@@ -19,7 +19,8 @@ Evidence for the second backend. The decisions are in [`../development.md`](../d
 ## Not checked
 
 - In the browser: sign-in by handle (the mock cannot serve WebFinger on port 443), the "Use profile link" fallback, removing accounts of both types, a Mastodon account together with an ActivityPub one, and a reply draft kept across "sign in again". `npm run dev` and the `/_dev/` index cover these.
-- Any real server. Still open, and each needs a disposable account:
+- Real server, mastodon.social (2026-11-18, read-only probes): CORS is open on every endpoint used, including the `Idempotency-Key` preflight, and the OAuth metadata and `/api/v1/instance` read fine. The actor document is refused with 401 (signed requests required), so sign-in by handle now continues without it when WebFinger gave the actor address; a typed profile link on such a server still fails. App registration, the token exchange and the actions were not run against it.
+- Any other real server. Still open, and each needs a disposable account:
   - Mastodon 4.3 or later: the exact field names in `/.well-known/oauth-authorization-server`, whether `/oauth/token` needs `client_secret` alongside PKCE, and CORS for `/api/v1/apps`, `/oauth/token`, `/oauth/revoke` and `/api/*` including the `Idempotency-Key` preflight.
   - GoToSocial, Pleroma or Akkoma, and Pixelfed (like, reply and follow only; whether search `resolve` works and whether its accounts carry `uri`).
   - The WordPress account as a regression check, and a post on a server the home server blocks.
