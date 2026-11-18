@@ -467,7 +467,6 @@ function readSharedTarget() {
 function resetPreview() {
   resolved = null;
   actionForm.hidden = true;
-  lookup.hidden = false;
   $("reply").hidden = true;
   $("write-reply").setAttribute("aria-expanded", "false");
   $("reply-text").value = "";
@@ -482,7 +481,6 @@ function showPreview(object) {
     button.hidden = object.isActor;
   }
   actionForm.querySelector("[value=follow]").textContent = object.isActor ? "Follow" : "Follow author";
-  lookup.hidden = true;
   actionForm.hidden = false;
 }
 
@@ -543,11 +541,29 @@ lookup.addEventListener("submit", (event) => {
   void findTarget(true);
 });
 
-$("change-link").addEventListener("click", () => {
-  resetPreview();
-  $("action-status").textContent = "";
-  $("action-error").textContent = "";
-  targetInput.focus();
+$("paste-link").addEventListener("click", async () => {
+  const previous = targetInput.value;
+  let copied;
+  try {
+    copied = await navigator.clipboard.readText();
+  } catch {
+    if (busy || !accountPicker.value || targetInput.value !== previous) return;
+    $("action-status").textContent = "";
+    $("action-error").textContent = "Clipboard access is unavailable. Paste the link into the URL field.";
+    targetInput.focus();
+    return;
+  }
+  if (busy || !accountPicker.value || targetInput.value !== previous) return;
+  const target = httpsUrl(copied.trim());
+  if (!target) {
+    $("action-status").textContent = "";
+    $("action-error").textContent = "Copy an HTTPS post or profile link, then try Paste again.";
+    return;
+  }
+  targetInput.value = target.href;
+  targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+  $("action-status").textContent = "Link pasted.";
+  $("find-link").focus();
 });
 
 accountManagement.addEventListener("click", () => {

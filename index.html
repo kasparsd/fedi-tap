@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EUBPAB6y8a/K8oTuXez3uZr8Rpf6JbfxPhjHwzKd34Y='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ySVR86MzpoEaYoiDuD3yTso5OfUrhIuqQ2nHIDo4CUQ='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FediTap shortcut for iPhone</title>
@@ -50,17 +50,17 @@
           <label for="post-url">Fediverse post or profile URL</label>
           <div class="form-row">
             <input id="post-url" type="url" autocomplete="off" spellcheck="false" required>
-            <button type="submit">Find</button>
+            <div class="lookup-buttons">
+              <button type="button" id="paste-link">Paste</button>
+              <button type="submit" id="find-link">Find</button>
+            </div>
           </div>
         </fieldset>
       </form>
       <form id="action-form" hidden>
         <fieldset id="action-controls" disabled>
           <legend class="visually-hidden">Actions for the selected link</legend>
-          <div class="target-row">
-            <a id="target-link"></a>
-            <button type="button" id="change-link" class="text-button">Change link</button>
-          </div>
+          <p id="target"><a id="target-link"></a></p>
           <div class="action-grid">
             <button type="submit" name="action" value="like">Like</button>
             <button type="submit" name="action" value="repost">Repost</button>
@@ -86,6 +86,6 @@
       <p class="help">Open the file in Apple Shortcuts and choose <strong>Add Shortcut</strong>. Share a Fediverse link to FediTap to open it here.</p>
     </section>
   </main>
-  <script src="app.js" integrity="sha256-EUBPAB6y8a/K8oTuXez3uZr8Rpf6JbfxPhjHwzKd34Y="></script>
+  <script src="app.js" integrity="sha256-ySVR86MzpoEaYoiDuD3yTso5OfUrhIuqQ2nHIDo4CUQ="></script>
 </body>
 </html>
