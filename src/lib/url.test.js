@@ -1,5 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { homeEndpoint, httpsUrl, parseHandle } from "./url.js";
+import { homeEndpoint, httpsUrl, parseHandle, sharedLink } from "./url.js";
+
+describe("sharedLink", () => {
+  const link = (query) => sharedLink(new URLSearchParams(query))?.href ?? null;
+
+  it("reads the url parameter", () => {
+    expect(link({ url: "https://example.social/@a/1" })).toBe("https://example.social/@a/1");
+  });
+
+  it("finds a bare link in text", () => {
+    expect(link({ text: "https://example.social/@a/1" })).toBe("https://example.social/@a/1");
+  });
+
+  it("finds a link with words around it", () => {
+    expect(link({ text: "Look at this https://example.social/@a/1 great post" })).toBe(
+      "https://example.social/@a/1",
+    );
+  });
+
+  it("prefers url over text", () => {
+    expect(link({ url: "https://a.example/1", text: "https://b.example/2" })).toBe(
+      "https://a.example/1",
+    );
+  });
+
+  it("falls back to text when url is not HTTPS", () => {
+    expect(link({ url: "http://a.example/1", text: "https://b.example/2" })).toBe(
+      "https://b.example/2",
+    );
+  });
+
+  it("refuses plain HTTP and empty shares", () => {
+    expect(link({ text: "http://a.example/1" })).toBeNull();
+    expect(link({ title: "Only a title" })).toBeNull();
+  });
+});
 
 describe("httpsUrl", () => {
   it("accepts plain HTTPS", () => {

@@ -9,7 +9,7 @@ import { setRequestSignal } from "./lib/signal.js";
 import { authorize, completeSignIn } from "./lib/signin.js";
 import { readStore, resetStore, STORE_KEY, saveStore, useStore, withAccount } from "./lib/store.js";
 import { checkSupport } from "./lib/support.js";
-import { httpsUrl } from "./lib/url.js";
+import { httpsUrl, sharedLink } from "./lib/url.js";
 
 // Each message section has a status line (always in the page, so it is announced) and a slot for
 // one problem. The ids tie the markup to focus handling and `aria-describedby`.
@@ -711,8 +711,8 @@ async function run() {
 
   const callback = new URL(location.href);
   // The Shortcut sends `url`; the Android share target may send the link inside `text`.
-  const sharedText = /https:\/\/\S+/u.exec(callback.searchParams.get("text") ?? "")?.[0];
-  const shared = httpsUrl(callback.searchParams.get("url")) ?? httpsUrl(sharedText);
+  const shared = sharedLink(callback.searchParams);
+  const pasteShortcut = callback.searchParams.get("via") === "shortcut-paste";
   const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
   const params = ["code", "state", "error"].some((key) => callback.searchParams.has(key))
     ? new URLSearchParams(callback.search)
@@ -746,6 +746,11 @@ async function run() {
   }
   if (app.targetValue && app.current && !app.current.needsReauth) await findTarget();
   restoreDraft();
+  // The Android home-screen shortcut: reading the clipboard needs a tap, so only bring Paste forward.
+  if (pasteShortcut && !shared && app.current && !app.current.needsReauth) {
+    await tick();
+    byId("paste-link")?.focus();
+  }
 }
 
 /** Reads the saved accounts and the address, finishes a sign-in that is returning, opens a shared link. */
