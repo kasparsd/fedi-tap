@@ -6,3 +6,5 @@
 - Seen in the running app (Mastodon-style mock account, dark mode): Like shows "Liking…", then the filled on state and the status line; pressing again shows "Undoing…" and "Like undone."; focus stays on the button. Actions use two columns after "Follow author" crowded a four-across row.
 
 2026-11-18, later: Follow moved into the byline next to the author; Like, Repost and Reply are three columns. Seen at 320 px in the running app (Follow request sent, status line, no overflow). Merged to main with the loading-feedback work (`BusyLabel`); the `.reserve` width is hidden inside `.actions` and `.byline` because their widths are already fixed.
+
+2026-11-18, copy: Sign in became Connect (heading, button, menu, Reconnect, "Connection expired", errors) and the link screen has one heading, "Open a post or profile". Seen live: signed-out screen and link screen. Not seen live: the Reconnect screen, the Connect account option in the menu, and the new error titles (tests and svelte-check pass).

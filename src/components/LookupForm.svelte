@@ -19,14 +19,14 @@
   }}
 >
   <fieldset id="lookup-controls">
-    <legend>Open a link</legend>
+    <legend>Open a post or profile</legend>
     <label for="post-url">Link</label>
     <div class="row">
       <div class="field">
         <input
           id="post-url"
           type="url"
-          placeholder="Post or profile link"
+          placeholder="Paste a link"
           autocomplete="off"
           spellcheck="false"
           required

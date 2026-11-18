@@ -136,7 +136,7 @@ describe("prepare", () => {
       }),
     );
     await expect(signin.prepare(found)).rejects.toThrow(
-      "The sign-in addresses are on a different site.",
+      "The addresses for connecting are on a different site.",
     );
   });
 });

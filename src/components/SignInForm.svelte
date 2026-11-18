@@ -13,7 +13,7 @@
   }}
 >
   <fieldset id="sign-in-controls">
-    <legend>Account sign-in</legend>
+    <legend>Connect account</legend>
     <label for="account-input" id="account-label">
       {app.profileLinkMode ? "Profile link" : "Account"}
     </label>
@@ -40,7 +40,7 @@
         aria-busy={isBusy("continue") ? "true" : undefined}
         aria-disabled={locked("auth") ? "true" : undefined}
       >
-        <BusyLabel key="continue" idle="Sign in" busy="Looking up…" reserve={["Signing in…"]} />
+        <BusyLabel key="continue" idle="Connect" busy="Looking up…" reserve={["Connecting…"]} />
       </button>
     </div>
     <Messages section="auth" />

@@ -15,10 +15,10 @@
   >
     {#each app.accounts as account (account.actor)}
       <option value={account.actor}>
-        @{account.handle}{account.needsReauth ? " (sign in again)" : ""}
+        @{account.handle}{account.needsReauth ? " (reconnect)" : ""}
       </option>
     {/each}
-    <option value="add">Add account</option>
+    <option value="add">Connect account</option>
   </select>
   <!-- One progress cue for every task, laid over the header's rule so it takes no space. -->
   {#if app.showProgress}<progress aria-label={app.task?.announce}></progress>{/if}

@@ -6,9 +6,9 @@
 
 <section id="reauth">
   <fieldset id="reauth-controls" disabled={app.busy}>
-    <legend>Sign-in expired</legend>
+    <legend>Connection expired</legend>
     <p role="alert">
-      <strong>Sign-in expired.</strong> <span id="reauth-text">Sign in again as @{app.current.handle}.</span>
+      <strong>Connection expired.</strong> <span id="reauth-text">Reconnect as @{app.current.handle}.</span>
     </p>
     <button
       type="button"
@@ -17,9 +17,9 @@
       aria-busy={isBusy("reauth-sign-in") ? "true" : undefined}
       onclick={reauthenticate}
     >
-      <BusyLabel key="reauth-sign-in" idle="Sign in" busy="Looking up…" />
+      <BusyLabel key="reauth-sign-in" idle="Reconnect" busy="Looking up…" />
     </button>
-    <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Add account</button>
+    <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Connect account</button>
   </fieldset>
   <Messages section="reauth" />
 </section>

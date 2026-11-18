@@ -19,7 +19,7 @@ export function checkSupport() {
   }
   const blocked = {
     heading: "Storage is blocked",
-    title: "This browser can’t save your sign-in.",
+    title: "This browser can’t save your accounts.",
     message: "Allow website data for this page.",
   };
   try {
@@ -35,7 +35,7 @@ export function checkSupport() {
       ? {
           heading: "Saved data is damaged",
           title: "FediTap can’t read its saved data.",
-          message: "Reset it, then sign in again.",
+          message: "Reset it, then connect again.",
           reset: true,
         }
       : blocked;

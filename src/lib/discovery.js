@@ -69,7 +69,7 @@ export async function oauthEndpoints(origin, fallback = {}) {
   const token = homeEndpoint(tokenUrl, origin);
   if (!authorizeEndpoint || !token) {
     throw mismatch(
-      "The sign-in addresses are on a different site.",
+      "The addresses for connecting are on a different site.",
       "Authorization and token endpoints must use the account’s HTTPS origin.",
     );
   }

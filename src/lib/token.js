@@ -7,7 +7,7 @@ import { httpsUrl } from "./url.js";
 export function pageAddress() {
   const page = new URL("./", location.href);
   if (!httpsUrl(page.href) || !crypto.subtle) {
-    throw new Problem("Can’t sign in here", "Open the published HTTPS page.");
+    throw new Problem("Can’t connect here", "Open the published HTTPS page.");
   }
   return page;
 }
@@ -22,7 +22,7 @@ export async function clientIdentity() {
     !Array.isArray(identity.redirect_uris) ||
     !identity.redirect_uris.includes(page.href)
   ) {
-    throw new Problem("This page can’t sign in", "Its OAuth client identity doesn’t match.", {
+    throw new Problem("This page can’t connect", "Its OAuth client identity doesn’t match.", {
       steps: "Check client.json and open the published HTTPS address.",
       detail: "client_id or redirect_uris in client.json don’t match the page URL.",
     });
@@ -58,7 +58,7 @@ export async function requestToken(endpoint, params) {
   }
   if (response.type === "opaqueredirect") {
     throw new Problem(
-      "Sign-in was redirected",
+      "Connection was redirected",
       "The token address redirected the request, which isn’t allowed.",
       {
         steps: "Ask the server administrator to check the advertised token URL.",
@@ -82,7 +82,7 @@ export async function exchange(endpoint, params) {
     );
   }
   if (!response.ok || !result) {
-    throw new Problem("Sign-in failed", "Your server couldn’t finish it.", {
+    throw new Problem("Connection failed", "Your server couldn’t finish it.", {
       steps: "Try again in a moment.",
       detail: `HTTP ${response.status}`,
     });

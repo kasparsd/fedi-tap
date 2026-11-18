@@ -82,7 +82,7 @@ async function refreshAccount(store, account) {
     requireReconnect(store, account);
   }
   if (!response.ok) {
-    throw new Problem("Couldn’t renew your sign-in", "Your server didn’t renew the session.", {
+    throw new Problem("Couldn’t renew your connection", "Your server didn’t renew the session.", {
       steps: "Try again in a moment.",
       detail: `HTTP ${response.status}`,
     });

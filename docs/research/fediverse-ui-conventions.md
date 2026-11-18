@@ -59,6 +59,7 @@ Research input for the FediTap copy and panel layout. Not canonical: decisions m
 ### Sign in, Log in, Connect, Authorize
 
 - Mastodon's remote-interaction modal: **"Sign in to continue"**, with "On a different server" / "On this server" ([Mastodon en.json](https://raw.githubusercontent.com/mastodon/mastodon/main/app/javascript/mastodon/locales/en.json)). Elk: "Sign in". Misskey: "Sign In". Lemmy and some Mastodon pages say "Log in". Both are understood; **Sign in** is the better match for OAuth to an existing account.
+- Update 2026-11-18: FediTap now says **Connect**. It has no accounts of its own; the person links an existing one, as in Buffer's [Mastodon flow](https://support.buffer.com/articles/using-mastodon-with-buffer-owHRCwpxsR) ("sign into your account to connect it to Buffer"). The Sign in advice above fits clients people live in. See `docs/ux/components.md`, Decisions.
 - "Connect" is used by Micro.blog, Friends and WordPress for linking apps ("connected apps", "third-party Fediverse apps", [ActivityPub 8.1 post](https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/)); for a web app that holds a token, "Sign in" is more familiar to Mastodon users, "Connect" to WordPress admins. The consent screen on the server is the server's own wording and cannot be changed.
 
 ### How comparable tools word the remote flow

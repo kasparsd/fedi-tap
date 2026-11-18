@@ -56,7 +56,7 @@ export function corsProblem(title, detail) {
 }
 
 export function mismatch(cause, detail) {
-  return new Problem("Sign-in settings don’t match", cause, {
+  return new Problem("Connection settings don’t match", cause, {
     steps: "Ask the server administrator to check the site address and OAuth settings.",
     detail,
   });
@@ -74,33 +74,33 @@ export function oauthProblem(error, description) {
     .join(" — ")
     .slice(0, 500);
   if (error === "access_denied") {
-    return new Problem("Sign-in cancelled", "Your server didn’t allow access.", {
+    return new Problem("Connection cancelled", "Your server didn’t allow access.", {
       steps: "Try again and approve FediTap on your server.",
       detail,
     });
   }
-  return new Problem("Sign-in failed", "Your server refused it.", {
+  return new Problem("Connection failed", "Your server refused it.", {
     steps: "Try again. If it keeps failing, check the account on your server.",
     detail,
   });
 }
 
 export function signInProblem(cause, detail) {
-  return new Problem("Sign-in couldn’t finish", cause, {
-    steps: "Try signing in again.",
+  return new Problem("Connection couldn’t finish", cause, {
+    steps: "Try connecting again.",
     detail,
   });
 }
 
 export function sessionEnded(account) {
-  return new Problem("Sign-in expired", `Sign in again as @${account.handle}.`, {
+  return new Problem("Connection expired", `Reconnect as @${account.handle}.`, {
     sessionEnded: true,
   });
 }
 
 export function refused() {
-  return new Problem("Sign-in refused", "Sign in again from the account menu.", {
-    steps: "Choose Add account in the account menu and sign in again.",
+  return new Problem("Connection refused", "Reconnect from the account menu.", {
+    steps: "Choose Connect account in the account menu and connect again.",
     detail: "HTTP 401",
   });
 }

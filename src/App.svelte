@@ -38,7 +38,7 @@
     <section>
       <h2>Act on Fediverse posts from your own account</h2>
       <ol>
-        <li>Sign in with your Fediverse account.</li>
+        <li>Connect your Fediverse account.</li>
         <li>Open a post or profile link, or share one from your phone.</li>
         <li>Like, repost, reply or follow.</li>
       </ol>

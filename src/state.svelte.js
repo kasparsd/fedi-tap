@@ -93,9 +93,9 @@ class AppState {
       case "loaded":
         return this.resolved.isActor ? "Profile" : "Post";
       case "ready":
-        return "Open a link";
+        return "Open a post or profile";
       default:
-        return "Sign in";
+        return "Connect account";
     }
   }
 }
@@ -345,7 +345,7 @@ export async function submitSignIn() {
       key: "continue",
       busyLabel: "Looking up…",
       cancellable: true,
-      title: "Couldn’t sign in",
+      title: "Couldn’t connect",
       actions: (problem) =>
         problem.offerProfileLink ? [{ label: "Use profile link", run: useProfileLink }] : [],
     },
@@ -362,7 +362,7 @@ export function reauthenticate() {
     key: "reauth-sign-in",
     busyLabel: "Looking up…",
     cancellable: true,
-    title: "Couldn’t start sign-in",
+    title: "Couldn’t reconnect",
     actions: [{ label: "Try again", run: reauthenticate }],
   });
 }
@@ -593,7 +593,7 @@ export async function perform(action, text = "") {
       busyLabel: labels.doing,
       title: `Couldn’t ${labels.verb}.`,
       actions: (failure) =>
-        failure.sessionEnded && inSheet ? [{ label: "Sign in", run: signInFromReply }] : [],
+        failure.sessionEnded && inSheet ? [{ label: "Reconnect", run: signInFromReply }] : [],
     },
   );
   if (sent && inSheet && message) {
@@ -723,7 +723,7 @@ async function run() {
         app.accountValue = "";
         app.profileLinkMode = false;
       },
-      { key: "continue", busyLabel: "Signing in…", title: "Sign-in failed" },
+      { key: "continue", busyLabel: "Connecting…", title: "Connection failed" },
     );
     if (!signedIn) {
       app.accountInvalid = true;
