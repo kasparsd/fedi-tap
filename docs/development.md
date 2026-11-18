@@ -45,7 +45,7 @@ Sign in with a profile URL on the dev index page. Each user exercises a path:
 | `erin` | Refresh fails with `invalid_grant` (sign in again) |
 | `mismatch` | Authorizes as a different profile (identity check) |
 
-The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, missing post, legacy `#url=`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
+The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, missing post, no link with `?via=shortcut`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
 
 ### Pinned Node and Docker
 
@@ -61,7 +61,7 @@ The container binds the repo, so edits show on reload, and publishes the port on
 ## Test the WordPress flow
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
-2. Paste a post URL and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
+2. Paste a post URL (Paste loads it at once) and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
 3. Connect a second account. Switch accounts, verify the next action is sent as that account, then remove one account and check that the other still works.
 4. With a disposable account, expire the saved access token by setting its `expires` field in browser storage to a past time. Open the same link in two tabs and verify that refresh rotation preserves both sessions. Revoke access on the server and check that FediTap asks you to sign in again when the grant can no longer be refreshed.
 5. Install the shortcut on an iPhone, share a Fediverse link, and verify that the browser receives the URL and retains it through sign-in. A successful sign-in can resolve the link, but publishing always requires choosing an action.
@@ -92,10 +92,22 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
-The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. Older shortcuts that use `#url=` still work. With no URL, the shortcut opens the page directly. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
+The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, which tells the page the person has the Shortcut (so the Shortcut card stays hidden); the page removes the parameter from the address bar. Shortcuts built before this change open the bare page and keep showing the card until a link is shared once or the person taps **I already have it**. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
 ## Account storage
 
 The page stores accounts in browser local storage by ActivityPub actor ID and remembers the selected actor ID. Reauthorizing an actor replaces that actor’s credentials. Selecting or removing an account leaves other accounts intact. Web Locks serialize account writes and rotating refresh grants across tabs. Release builds should use a dedicated origin because JavaScript elsewhere on the same origin can read the stored credentials.
 
 The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.
+
+The page also keeps `feditap.shortcut` (`yes` or `dismissed`) in local storage, separate from the account store, to hide the Shortcut card. It is set when the page opens with a shared link (`?url=`) or `?via=shortcut`, or when the person taps **I already have it** or **Add Shortcut**. The page removes `via` from the address bar after reading it.
+
+## Actions, errors and the Home Screen app
+
+Like, Repost and Follow send one activity to the outbox and then stay disabled for that link and account (the label becomes Liked, Reposted, Follow requested); changing the link or account resets them. Reply opens a sheet that names the account, says the reply is public and counts to 500 characters. A failed send keeps the draft and shows the error inside the sheet. On a 401 from the proxy or outbox the page refreshes the token and retries once, showing "Reconnecting…", so the person never has to tap again.
+
+**Undo** appears only when the outbox response carries a readable `Location` header on the page's origin (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed). It sends an `Undo` activity whose `object` is that ID and is offered for Like, Repost and Follow, not Reply.
+
+Failures use one error component: a title, one sentence of cause, an optional "What to do" disclosure (steps, help link, technical detail such as HTTP codes) and buttons. A failed handle lookup keeps the typed value and offers "Use a profile link instead". When storage is blocked or the browser lacks Web Locks, `AbortSignal.timeout` or `crypto.subtle`, the page shows a full-screen explanation instead of a disabled form.
+
+`manifest.webmanifest` makes the page installable (`display: standalone`, `start_url` and `scope` `./`); the CSP allows `manifest-src 'self'` and `img-src 'self'` for the icons (`apple-touch-icon.png` 180 px, `icon-192.png`, `icon-512.png`, flat colour). Serve the manifest as `application/manifest+json`. In standalone mode (`display-mode: standalone` or `navigator.standalone`) the page hides the "Open without the browser bar" hint, tells the person that the Shortcut opens Safari and that this app keeps its own sign-in, and pads for the safe areas. A Home Screen app and Safari keep separate storage on iOS, so each needs its own sign-in.

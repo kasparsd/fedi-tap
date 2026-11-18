@@ -5,471 +5,138 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Fediverse actions: UX mocks</title>
+<link rel="stylesheet" href="components.css">
 <style>
-/* System colours and fonts only. Hex values are the fallback; where the browser knows
-   the -apple-system-* colour keywords (Safari on iOS and macOS) the live system colours
-   replace them and follow light/dark by themselves. */
-:root {
-  color-scheme: light dark;
-  --bg: #f2f2f7; --card: #fff; --label: #000; --secondary: #6c6c70; --sep: #c6c6c8;
-  --fill: #7676801f; --tint: #007aff; --red: #ff3b30; --orange: #ff9500; --green: #34c759;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #000; --card: #1c1c1e; --label: #fff; --secondary: #98989f; --sep: #38383a;
-    --fill: #7676803d; --tint: #0a84ff; --red: #ff453a; --orange: #ff9f0a; --green: #30d158;
-  }
-}
-@supports (color: -apple-system-label) {
-  :root {
-    --bg: -apple-system-grouped-background; --card: -apple-system-secondary-grouped-background;
-    --label: -apple-system-label; --secondary: -apple-system-secondary-label; --sep: -apple-system-separator;
-    --fill: -apple-system-tertiary-fill; --tint: -apple-system-blue; --red: -apple-system-red;
-    --orange: -apple-system-orange; --green: -apple-system-green;
-  }
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: Canvas; color: CanvasText; font: 15px/1.5 system-ui, -apple-system, sans-serif; }
-.wrap { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
-h1 { font-size: 1.5rem; margin: 0 0 .25rem; }
-h2 { font-size: 1.2rem; margin: 2.5rem 0 .25rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 20%, Canvas); }
-.lede, .note { color: color-mix(in srgb, CanvasText 65%, Canvas); max-width: 46rem; margin: 0 0 .5rem; }
-nav.toc { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
-nav.toc a { color: LinkText; }
-.row { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1rem; align-items: flex-start; }
-figure { margin: 0; width: 280px; }
-figcaption { margin-top: .6rem; font-size: .85rem; color: color-mix(in srgb, CanvasText 65%, Canvas); }
+/* Presentation only: page layout, phone frame, status bar, Safari bar, specimen sheet.
+   None of this is UI; every screen is built from components.css. */
+body { margin: 0; background: Canvas; color: CanvasText; font: 0.9375rem/1.5 system-ui, sans-serif; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+.wrap > h1 { font-size: 1.5rem; margin: 0 0 0.25rem; }
+.wrap > h2 { font-size: 1.2rem; margin: 2.5rem 0 0.25rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 20%, Canvas); }
+.spec > h3 { font-size: 0.8125rem; margin: 0 0 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; color: color-mix(in srgb, CanvasText 65%, Canvas); }
+.page-lede, .note { color: color-mix(in srgb, CanvasText 65%, Canvas); max-width: 46rem; margin: 0 0 0.5rem; }
+.toc { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 1rem 0; }
+.toc a { color: LinkText; }
+.flow { display: flex; flex-wrap: wrap; gap: 2rem 1.5rem; margin-top: 1rem; align-items: flex-start; }
+figure { margin: 0; width: min(390px, 100%); }
+figcaption { margin-top: 0.6rem; font-size: 0.85rem; color: color-mix(in srgb, CanvasText 65%, Canvas); }
 figcaption b { color: CanvasText; }
-.tag { font-size: .7rem; border: 1px solid currentColor; border-radius: .25rem; padding: 0 .3rem; margin-left: .25rem; white-space: nowrap; }
+.tag { font-size: 0.7rem; border: 1px solid currentColor; border-radius: 0.25rem; padding: 0 0.3rem; margin-left: 0.25rem; white-space: nowrap; }
 
-/* Device: a plain outline, no chrome beyond what iOS draws */
-.phone { width: 280px; height: 560px; border-radius: 30px; border: 1px solid color-mix(in srgb, CanvasText 35%, Canvas); background: var(--bg); color: var(--label); position: relative; overflow: hidden; font-size: 13px; line-height: 1.4; }
-.status { height: 30px; display: flex; justify-content: space-between; align-items: end; padding: 0 22px 3px; font-weight: 600; font-size: 12px; }
-.home { position: absolute; bottom: 6px; left: 50%; width: 90px; height: 4px; margin-left: -45px; border-radius: 2px; background: var(--label); opacity: .85; }
-.safari { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; background: var(--card); border-top: 1px solid var(--sep); text-align: center; padding-top: 8px; color: var(--secondary); font-size: 12px; }
-.in-browser .content { padding-bottom: 70px; }
-.nav { min-height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
-.nav .title { font-weight: 600; }
-.large { padding: 4px 14px 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
-.content { padding: 8px 14px 14px; }
-.dim { position: absolute; inset: 0; background: color-mix(in srgb, #000 40%, transparent); }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--bg); border-radius: 12px 12px 0 0; padding: 8px 14px 24px; }
-.sheet.tall { top: 60px; }
-.sheet .grab { width: 36px; height: 5px; background: var(--sep); border-radius: 3px; margin: 0 auto 8px; }
+.phone { --screen-height: 100%; --inset-top: 3rem; --inset-bottom: 1.75rem; position: relative; width: 100%; height: 760px; overflow: hidden; border: 1px solid color-mix(in srgb, CanvasText 35%, Canvas); border-radius: 2.25rem; background: var(--bg); }
+.phone.in-browser { --bottom-bar: 3rem; }
+.statusbar { position: absolute; inset: 0 0 auto 0; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; height: 3rem; padding: 0 1.75rem 0.25rem; font: 600 0.8125rem system-ui, sans-serif; color: var(--label); }
+.safari { position: absolute; inset: auto 0 0 0; display: flex; justify-content: center; align-items: center; height: 4.75rem; padding-bottom: 1.25rem; border-top: 1px solid var(--separator); background: var(--surface); color: var(--label-2); font: 0.8125rem system-ui, sans-serif; }
+.home { position: absolute; z-index: 20; bottom: 0.5rem; left: 50%; width: 8rem; height: 0.3rem; margin-left: -4rem; border-radius: 0.2rem; background: var(--label); }
 
-/* Controls: filled, plain, destructive. Nothing else. */
-.btn { display: block; width: 100%; text-align: center; padding: 11px; border-radius: 10px; background: var(--tint); color: #fff; font-weight: 600; border: 0; }
-.btn.plain { background: var(--card); color: var(--tint); }
-.btn.danger { background: var(--card); color: var(--red); }
-.btn.disabled { opacity: .4; }
-.btn + .btn { margin-top: 8px; }
-.link { color: var(--tint); }
-.field { background: var(--card); border-radius: 10px; padding: 10px 12px; border: 1px solid transparent; display: flex; justify-content: space-between; gap: 8px; }
-.field.error { border-color: var(--red); }
-.ph, .muted { color: var(--secondary); }
-.label { font-size: 11px; text-transform: uppercase; color: var(--secondary); margin: 14px 12px 4px; }
-.hint { font-size: 12px; color: var(--secondary); margin: 6px 12px; }
-.hint.err { color: var(--red); }
-.group { background: var(--card); border-radius: 10px; overflow: hidden; }
-.cell { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--sep); }
-.cell:last-child { border-bottom: 0; }
-.grow { flex: 1; min-width: 0; }
-.cell small, .post small { display: block; color: var(--secondary); font-size: 11px; }
-.check { color: var(--tint); font-weight: 700; }
-.acct { color: var(--tint); }
-.acct.warn { color: var(--orange); }
-.post { background: var(--card); border-radius: 10px; padding: 12px; }
-.post p { margin: 6px 0; }
-.post .src { display: flex; justify-content: space-between; color: var(--secondary); font-size: 11px; margin-top: 8px; }
-.skeleton { background: var(--fill); border-radius: 4px; height: 11px; margin: 7px 0; }
-.actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-.act { background: var(--card); border-radius: 10px; padding: 11px 4px; text-align: center; color: var(--tint); font-weight: 600; }
-.act.on { background: var(--tint); color: #fff; }
-.act.off { opacity: .4; }
-.status-line { margin: 10px 4px 0; color: var(--secondary); font-size: 12px; }
-.banner { border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; background: var(--card); border-left: 3px solid var(--secondary); }
-.banner.err { border-left-color: var(--red); } .banner.warn { border-left-color: var(--orange); } .banner.ok { border-left-color: var(--green); }
-.banner b { display: block; }
-.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; vertical-align: -2px; animation: spin 1s linear infinite; opacity: .6; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
-.disclose { color: var(--secondary); font-size: 12px; margin: 10px 12px; display: flex; justify-content: space-between; }
-.intro { margin: 4px 14px 0; color: var(--secondary); }
-.promo { background: var(--card); border-radius: 10px; padding: 12px; margin-top: 16px; }
-.promo b { display: block; }
-.promo p { margin: 2px 0 10px; color: var(--secondary); }
-.promo .later { text-align: center; margin-top: 8px; color: var(--secondary); font-size: 12px; }
-.rows { padding-left: 16px; margin: 4px 0 0; }
+.specs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr)); gap: 1.5rem; margin-top: 1rem; }
+.spec { min-width: 0; }
+.stage { position: relative; overflow: hidden; padding: 1rem; border: 1px solid var(--separator); border-radius: var(--radius); background: var(--bg); color: var(--label); font: var(--text-body); }
+.stage > :last-child, .stage .section:last-child { margin-bottom: 0; }
+.stage.is-sheet { height: 24rem; padding: 0; }
+.stage.is-sheet .scrim { position: absolute; }
+.stage .sheet, .stage .action-sheet { margin-inline: 0; }
+.stage .state { margin: 0.75rem 0 0.25rem; font: var(--text-caption); color: var(--label-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.stage .state:first-child { margin-top: 0; }
+.spacer { height: 0.5rem; }
+.stage .screen { --screen-height: 100%; --inset-top: 0px; min-height: 100%; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.5rem; }
+.swatch { display: flex; align-items: flex-end; min-height: 3.25rem; padding: 0.25rem 0.5rem; border: 1px solid var(--separator); border-radius: 0.375rem; font: var(--text-caption); }
+.type-sample { margin: 0.125rem 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Fediverse actions: UX mocks</h1>
-  <p class="lede">Every flow of the proposed design on iPhone. The interface is neutral: system font, system colours, no logo, no decoration, no theme toggle. Dark mode follows the device automatically (<code>prefers-color-scheme</code>). Screens are titled by what the person is doing, not by a product name. Screens marked <span class="tag">Home Screen app</span> run standalone; <span class="tag">Safari</span> screens show the browser bar. Screen IDs (A1, B3…) match <code>docs/ux/review.md</code>.</p>
-  <nav class="toc" aria-label="Flows">
-    <a href="#A">A First run</a><a href="#B">B Shared link, signed in</a><a href="#C">C Shared link, signed out</a><a href="#D">D Open directly</a>
-    <a href="#E">E Reply</a><a href="#F">F Profile</a><a href="#G">G Accounts</a><a href="#H">H Edge cases</a><a href="#I">I Home Screen web app</a>
-  </nav>
-
-<!-- ============================== A ============================== -->
+<h1>Fediverse actions: UX mocks</h1>
+<p class="page-lede">Every flow of the proposed design on iPhone, built only from the components in <code>components.css</code> (first section). The interface is neutral: system font, system colours, no logo, no decoration, no theme toggle. Dark mode follows the device automatically (<code>prefers-color-scheme</code>). Screens are titled by what the person is doing, not by a product name. Screens marked <span class="tag">Home Screen app</span> run standalone; <span class="tag">Safari</span> screens show the browser bar. Screen IDs (A1, B3…) match <code>docs/ux/review.md</code>.</p>
+<nav class="toc" aria-label="Flows"><a href="#components">Components</a><a href="#A">A First run</a><a href="#B">B Shared link, signed in</a><a href="#C">C Shared link, signed out</a><a href="#D">D Open directly</a><a href="#E">E Reply</a><a href="#F">F Profile</a><a href="#G">G Accounts</a><a href="#H">H Edge cases</a><a href="#I">I Home Screen web app</a></nav>
+<h2 id="components">Components</h2>
+<p class="page-lede">Every component in every state. Static mocks show states with the <code>.is-pressed</code>, <code>.is-focus</code> and <code>.is-disabled</code> classes that mirror <code>:active</code>, <code>:focus-visible</code> and <code>:disabled</code>. Light and dark follow the system.</p>
+<div class="specs">
+<div class="spec"><h3>Tokens: colour</h3><div class="stage"><div class="swatches"><div class="swatch" style="background:var(--bg);color:var(--label)">--bg</div><div class="swatch" style="background:var(--surface);color:var(--label)">--surface</div><div class="swatch" style="background:var(--sheet-bg);color:var(--label)">--sheet-bg</div><div class="swatch" style="background:var(--sheet-surface);color:var(--label)">--sheet-surface</div><div class="swatch" style="background:var(--fill);color:var(--label)">--fill</div><div class="swatch" style="background:var(--tint);color:var(--on-tint)">--tint</div><div class="swatch" style="background:var(--destructive);color:var(--on-tint)">--destructive</div><div class="swatch" style="background:var(--warning);color:var(--on-tint)">--warning</div><div class="swatch" style="background:var(--label);color:var(--bg)">--label</div><div class="swatch" style="background:var(--label-2);color:var(--bg)">--label-2</div><div class="swatch" style="background:var(--label-3);color:var(--bg)">--label-3</div><div class="swatch" style="background:var(--separator);color:var(--label)">--separator</div></div></div></div>
+<div class="spec"><h3>Tokens: type</h3><div class="stage"><p class="type-sample" style="font:var(--text-large-title)">Large title 34</p><p class="type-sample" style="font:var(--text-title)">Title 22</p><p class="type-sample" style="font:var(--text-headline)">Headline 17 semibold</p><p class="type-sample" style="font:var(--text-body)">Body 17</p><p class="type-sample" style="font:var(--text-subhead)">Subhead 15</p><p class="type-sample" style="font:var(--text-footnote)">Footnote 13</p><p class="type-sample" style="font:var(--text-caption)">Caption 12</p></div></div>
+<div class="spec"><h3>Navigation bar and bar buttons</h3><div class="stage"><nav class="navbar"><button class="bar-button" >Cancel</button><h1 class="navbar-title">Reply</h1><button class="bar-button is-strong" >Send</button></nav><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu is-warning" aria-haspopup="dialog">@me</button></nav><p class="state">Large title</p><h1 class="large-title">Sign in</h1><p class="lede">Use your Fediverse account to like, repost, reply to or follow a post.</p><p class="state">Bar button: pressed, focus, disabled, loading</p><nav class="navbar"><button class="bar-button is-pressed" >Cancel</button><h1 class="navbar-title"></h1><button class="bar-button is-strong is-focus" >Send</button></nav><nav class="navbar"><button class="bar-button is-disabled" disabled>Cancel</button><h1 class="navbar-title"></h1><button class="bar-button is-disabled" disabled><span class="spinner" aria-hidden="true"></span></button></nav></div></div>
+<div class="spec"><h3>Section: header, list, footer</h3><div class="stage"><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div><p class="section-footer">Your handle or profile link. You sign in on your own server.</p></section><p class="state">Footer: status, loading, error, warning, split</p><p class="section-footer status" role="status">Liked as @me.</p><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Loading post…</p><div class="section-footer" role="alert"><p class="error">Couldn’t find me@example.com.</p><p>Check the spelling, or use your profile link.</p></div><div class="section-footer" role="alert"><p class="warning">Sign in again</p><p>Your server ended the session for @me.</p></div><div class="section-footer is-split"><span>Public: anyone can see this.</span><span>0 / 500</span></div></div></div>
+<div class="spec"><h3>Rows</h3><div class="stage"><div class="list"><div class="row"><span class="row-title">Title only</span></div><div class="row"><span class="row-main"><span class="row-title">@me</span><span class="row-subtitle">example.com</span></span></div><div class="row"><span class="row-title">With value</span><span class="row-accessory">Public</span></div><a class="row" href="#components"><span class="row-title">With chevron</span><span class="row-accessory is-chevron" aria-hidden="true"></span></a></div><p class="state">Selection, pressed, focus, disabled</p><div class="list"><button class="row is-selected" type="button" role="radio" aria-checked="true"><span class="row-main"><span class="row-title">Selected</span><span class="row-subtitle">example.com</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row" type="button" role="radio" aria-checked="false"><span class="row-main"><span class="row-title">Not selected</span><span class="row-subtitle">company.social</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row is-pressed" type="button"><span class="row-title">Pressed</span></button><button class="row is-focus" type="button"><span class="row-title">Focus</span></button><button class="row is-disabled" type="button" disabled><span class="row-title">Disabled</span></button></div></div></div>
+<div class="spec"><h3>Button rows and accessories</h3><div class="stage"><div class="list"><button class="row row-button" type="button"><span class="row-title">Button row</span></button><button class="row row-button is-pressed" type="button"><span class="row-title">Pressed</span></button><button class="row row-button is-focus" type="button"><span class="row-title">Focus</span></button><button class="row row-button is-disabled" type="button" disabled><span class="row-title">Disabled</span></button><button class="row row-button" type="button" aria-busy="true" disabled><span class="row-title">Loading</span><span class="row-accessory"><span class="spinner" aria-hidden="true"></span></span></button><button class="row row-button is-done" type="button" disabled><span class="row-title">Done (finished)</span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row row-button row-destructive" type="button"><span class="row-title">Destructive row</span></button><div class="row"><span class="row-title">Account</span><button type="button" class="row-accessory is-button">Change</button></div></div></div></div>
+<div class="spec"><h3>Text field row</h3><div class="stage"><p class="state">Placeholder</p><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div><p class="state">Filled</p><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="me@example.com" readonly></div></div><p class="state">Focus</p><div class="list"><div class="row row-field is-focus"><input class="field" aria-label="Account" value="me@example.com" readonly></div></div><p class="state">Disabled</p><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="me@example.com" disabled></div></div><p class="state">Error (message in the footer)</p><section class="section"><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="me@example" aria-invalid="true" readonly></div></div><div class="section-footer"><p class="error">Couldn’t find me@example.</p><p>Check the spelling.</p></div></section><p class="state">Label left, accessory button</p><div class="list"><div class="row row-field"><span class="row-title">Link</span><input class="field" aria-label="Account" placeholder="https://" readonly><button type="button" class="row-accessory is-button">Clear</button></div></div><p class="state">Text area</p><div class="list"><div class="row row-field"><textarea class="field" aria-label="Reply" rows="5" placeholder="Reply to Dana" readonly></textarea></div></div></div></div>
+<div class="spec"><h3>Button: prominent</h3><div class="stage"><button type="button" class="button button-prominent">Default</button><div class="spacer"></div><button type="button" class="button button-prominent is-pressed">Pressed</button><div class="spacer"></div><button type="button" class="button button-prominent is-focus">Focus</button><div class="spacer"></div><button type="button" class="button button-prominent" disabled>Disabled</button><div class="spacer"></div><button type="button" class="button button-prominent" aria-busy="true"><span class="spinner" aria-hidden="true"></span>Contacting your server…</button></div></div>
+<div class="spec"><h3>Button: plain and destructive</h3><div class="stage"><button type="button" class="button button-plain">Default</button><button type="button" class="button button-plain is-pressed">Pressed</button><button type="button" class="button button-plain is-focus">Focus</button><button type="button" class="button button-plain" disabled>Disabled</button><p class="state">Destructive</p><button type="button" class="button button-destructive">Default</button><button type="button" class="button button-destructive is-pressed">Pressed</button><button type="button" class="button button-destructive is-focus">Focus</button><button type="button" class="button button-destructive" disabled>Disabled</button></div></div>
+<div class="spec"><h3>Link, spinner, placeholder</h3><div class="stage"><p>Server not working? <a class="link" href="#components">Setup instructions</a></p><p>Pressed <a class="link is-pressed" href="#components">link</a>, focus <a class="link is-focus" href="#components">link</a></p><p class="state">Spinner</p><p class="status"><span class="spinner" aria-hidden="true"></span>Loading post…</p><p class="state">Placeholder (loading)</p><div class="list"><article class="post" aria-busy="true"><span class="placeholder is-short"></span><span class="placeholder"></span><span class="placeholder"></span><span class="placeholder is-medium"></span></article></div></div></div>
+<div class="spec"><h3>Disclosure</h3><div class="stage"><div class="list"><details class="disclosure"><summary>Server not working?</summary><div class="disclosure-body"><p>Your server needs an ActivityPub client API.</p></div></details></div><div class="spacer"></div><div class="list"><details class="disclosure" open><summary>What to do</summary><div class="disclosure-body"><p>WordPress: Settings › ActivityPub › Advanced › ActivityPub API.</p><p><a class="link" href="#components">Setup instructions</a></p></div></details></div></div></div>
+<div class="spec"><h3>Post</h3><div class="stage"><p class="state">Post and source row</p><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div><p class="state">Profile</p><div class="list"><article class="post"><p class="post-author">Zed</p><p class="post-handle">@zed@social.example</p><p class="post-body">A profile you can follow.</p></article></div></div></div>
+<div class="spec"><h3>Sheet</h3><div class="stage is-sheet"><div class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet" role="dialog" aria-label="Accounts"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button" >Edit</button><h1 class="navbar-title">Accounts</h1><button class="bar-button is-strong" >Done</button></nav><section class="section"><div class="list"><button class="row is-selected" type="button" role="radio" aria-checked="true"><span class="row-main"><span class="row-title">@me</span><span class="row-subtitle">example.com</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row" type="button" role="radio" aria-checked="false"><span class="row-main"><span class="row-title">@work</span><span class="row-subtitle">company.social</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Add account…</span></button></div><p class="section-footer">Sign-ins are stored on this device only.</p></section></div></div></div></div></div>
+<div class="spec"><h3>Action sheet</h3><div class="stage is-sheet"><div class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="action-sheet" role="dialog" aria-label="Remove account"><div class="list"><header class="action-sheet-header"><h2>Remove @me?</h2><p>This device forgets the account. To end access on your server, use its account settings.</p></header><button class="row row-button row-destructive" type="button"><span class="row-title">Remove account</span></button></div><div class="list"><button class="row row-button" type="button"><span class="row-title">Cancel</span></button></div></div></div></div></div></div>
+</div>
 <h2 id="A">A · First run and sign-in <span class="tag">Home Screen app</span></h2>
-<p class="lede">Goal: connect an account so I can act on posts. One field, one button. Help and extras are collapsed.</p>
-<div class="row">
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="intro">Use your Fediverse account to like, repost, reply to or follow a post.</div>
-<div class="content">
-  <div class="label">Account</div>
-  <div class="field"><span class="ph">you@example.com</span></div>
-  <div class="hint">Your handle or profile link. You sign in on your own server.</div>
-  <div style="margin-top:10px" class="btn disabled">Continue</div>
-  <div class="promo"><b>Share from any app</b><p>Add the Shortcut to send a link here from the share sheet.</p><div class="btn plain" style="background:var(--fill)">Add Shortcut</div><div class="later">I already have it</div></div>
-  <div class="disclose"><span>Server not working?</span><span>›</span></div>
-</div><div class="home"></div></div>
-<figcaption><b>A1 Welcome.</b> The title states the task. The form is the main control (L1). Directly below it, the Shortcut card is prominent because this person did not arrive from the share sheet. Help stays a disclosure (L3).</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="content">
-  <div class="label">Account</div>
-  <div class="field"><span>me@example.com</span></div>
-  <div style="margin-top:10px" class="btn disabled"><span class="spin"></span> Contacting your server…</div>
-</div><div class="home"></div></div>
-<figcaption><b>A2 Looking up.</b> Progress is shown on the button that was pressed. The field is disabled and announced to VoiceOver.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="content">
-  <div class="label">Account</div>
-  <div class="field error"><span>me@example.com</span></div>
-  <div class="hint err">Couldn’t find me@example.com.</div>
-  <div class="btn" style="margin-top:10px">Use a profile link instead</div>
-  <div class="btn plain">Try again</div>
-</div><div class="home"></div></div>
-<figcaption><b>A3 Handle not found.</b> The typed value stays. The fallback is an explicit button. Today the field is cleared and silently changes type.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="content">
-  <div class="field error"><span>https://example.com/@me</span></div>
-  <div class="banner err" style="margin-top:10px"><b>This server isn’t set up yet</b>The ActivityPub API is turned off. Ask the site administrator to turn it on.</div>
-  <div class="btn">Try again</div>
-  <div class="disclose"><span>What to do ▾</span></div>
-  <div class="post muted" style="font-size:12px">WordPress: Settings › ActivityPub › Advanced › ActivityPub API.<br><span class="link">Setup instructions</span><br>Technical detail: no token endpoint advertised.</div>
-</div><div class="home"></div></div>
-<figcaption><b>A4 Server problem.</b> Cause in plain words, fix next, technical detail last (L3). Same layout for CORS, issuer or origin mismatch and redirects.</figcaption></figure>
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="content"><div class="large" style="padding:0;font-size:20px">Allow access?</div>
-  <p class="muted">example.com asks to like, repost, reply and follow as @me.</p>
-  <div class="btn">Allow</div><div class="btn plain">Don’t allow</div>
-  <div class="hint">This page belongs to your server.</div></div>
-<div class="safari">example.com</div></div>
-<figcaption><b>A5 Server consent.</b> Not our UI. In a Home Screen app iOS shows this inside a system sheet with a Done button (see I3).</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="banner ok"><b>Signed in as @me</b></div>
-  <div class="field"><span class="ph">Paste a post or profile link</span><span class="link">Paste</span></div>
-  <div class="promo"><b>Share from any app</b><p>Add the Shortcut to send a link here from the share sheet.</p><div class="btn plain" style="background:var(--fill)">Add Shortcut</div><div class="later">I already have it</div></div>
-</div><div class="home"></div></div>
-<figcaption><b>A6 Signed in.</b> Confirmation names the account and fades out. Paste is the task; the Shortcut card stays right under it until the person adds it, dismisses it or arrives from it.</figcaption></figure>
+<p class="page-lede">Goal: connect an account so I can act on posts. One field, one button. Help and extras are collapsed.</p>
+<div class="flow">
+<figure id="A1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><p class="lede">Use your Fediverse account to like, repost, reply to or follow a post.</p><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div><p class="section-footer">Your handle or profile link. You sign in on your own server.</p></section><section class="section"><button type="button" class="button button-prominent" disabled>Continue</button></section><section class="section"><h2 class="section-header">Share from any app</h2><div class="list"><button class="row row-button" type="button"><span class="row-title">Add Shortcut</span></button><button class="row row-button" type="button"><span class="row-title">I already have it</span></button></div><p class="section-footer">Add the Shortcut to send a link here from the share sheet.</p></section><section class="section"><div class="list"><details class="disclosure"><summary>Server not working?</summary><div class="disclosure-body"><p>Your server needs an ActivityPub client API. <a class="link" href="#A">WordPress setup instructions</a></p><p>This browser stores each account and its tokens. Requests go directly to your Fediverse server.</p></div></details></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>A1 Welcome.</b> The title states the task. The field is a row in a grouped list with its help in the footer; Continue is the one prominent button (L1). The Shortcut is its own section directly below, shown because this person did not arrive from the share sheet. Help stays a disclosure (L3).</figcaption></figure>
+<figure id="A2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="me@example.com" disabled></div></div></section><section class="section"><button type="button" class="button button-prominent" aria-busy="true"><span class="spinner" aria-hidden="true"></span>Contacting your server…</button></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>A2 Looking up.</b> Progress is shown on the button that was pressed. The field is disabled and announced to VoiceOver.</figcaption></figure>
+<figure id="A3"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="me@example.com" aria-invalid="true" readonly></div></div><div class="section-footer" role="alert"><p class="error">Couldn’t find me@example.com.</p><p>Check the spelling, or use the link to your profile.</p></div></section><section class="section"><button type="button" class="button button-prominent">Use a profile link instead</button></section><section class="section"><button type="button" class="button button-plain">Try again</button></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>A3 Handle not found.</b> The typed value stays. The problem is text in the footer of the field it belongs to, not a box. The fallback is the prominent button; retrying is plain. Today the field is cleared and silently changes type.</figcaption></figure>
+<figure id="A4"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="https://example.com/@me" aria-invalid="true" readonly></div></div><div class="section-footer" role="alert"><p class="error">This server isn’t set up yet</p><p>The ActivityPub API is turned off. Ask the site administrator to turn it on.</p></div></section><section class="section"><button type="button" class="button button-prominent">Try again</button></section><section class="section"><div class="list"><details class="disclosure" open><summary>What to do</summary><div class="disclosure-body"><p>WordPress: Settings › ActivityPub › Advanced › ActivityPub API.</p><p><a class="link" href="#A">Setup instructions</a></p><p>Technical detail: no token endpoint advertised.</p></div></details></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>A4 Server problem.</b> Cause in plain words as the footer error, fix next, technical detail last behind a disclosure (L3). Same layout for CORS, issuer or origin mismatch and redirects.</figcaption></figure>
+<figure id="A5"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Allow access?</h1><p class="lede">example.com asks to like, repost, reply and follow as @me.</p><section class="section"><button type="button" class="button button-prominent">Allow</button></section><section class="section"><button type="button" class="button button-plain">Don’t allow</button><p class="section-footer">This page belongs to your server.</p></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>A5 Server consent.</b> Not our UI, but built from the same components so the mock reads as one system. In a Home Screen app iOS shows this inside a system sheet with a Done button (see I3).</figcaption></figure>
+<figure id="A6"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="https://" readonly></div><button class="row row-button" type="button"><span class="row-title">Paste from Clipboard</span></button></div><p class="section-footer status" role="status">Signed in as @me.</p></section><section class="section"><h2 class="section-header">Share from any app</h2><div class="list"><button class="row row-button" type="button"><span class="row-title">Add Shortcut</span></button><button class="row row-button" type="button"><span class="row-title">I already have it</span></button></div><p class="section-footer">Add the Shortcut to send a link here from the share sheet.</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>A6 Signed in.</b> Confirmation names the account in the footer of the section the person is about to use, and clears itself. Paste is the first task; the Shortcut section stays right under it until the person adds it, dismisses it or arrives from it.</figcaption></figure>
 </div>
-
-<!-- ============================== B ============================== -->
 <h2 id="B">B · A shared link, signed in <span class="tag">Safari</span></h2>
-<p class="lede">Goal: act on the post I just shared. The Shortcut opens the page with <code>?url=…</code>, which iOS loads in Safari. The URL field never shows.</p>
-<div class="row">
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div></div>
-<div class="sheet"><div class="grab"></div><div class="nav" style="padding:0"><span class="title">Share</span></div>
-  <div class="group"><div class="cell">Messages</div><div class="cell">Mail</div><div class="cell"><b>Shortcut name</b></div></div></div></div>
-<figcaption><b>B1 Share sheet.</b> Entry point. The Shortcut passes only the first link.</figcaption></figure>
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post"><div class="skeleton" style="width:40%"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
-  <div class="actions"><div class="act off">Like</div><div class="act off">Repost</div><div class="act off">Reply</div></div>
-  <div class="status-line"><span class="spin"></span> Loading post…</div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>B2 Loading.</b> A placeholder keeps the layout from jumping. Actions are visible but off. No URL field.</figcaption></figure>
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post"><b>Dana</b><small>@dana@social.example</small>
-    <p>Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p>
-    <div class="src"><span>social.example · Nov 17</span><span class="link">Change link</span></div></div>
-  <div class="actions"><div class="act">Like</div><div class="act">Repost</div><div class="act">Reply</div></div>
-  <div class="btn plain" style="margin-top:12px">Follow Dana</div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>B3 Loaded.</b> The post proves it is the right one. The account chip shows who acts. Like, Repost and Reply are the main actions; Follow is secondary. The URL field hides behind “Change link”.</figcaption></figure>
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post"><b>Dana</b><small>@dana@social.example</small><p>Just shipped a small thing…</p></div>
-  <div class="actions"><div class="act on">Liked</div><div class="act">Repost</div><div class="act">Reply</div></div>
-  <div class="status-line">Liked as @me · <span class="link">Undo</span></div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>B4 After Like.</b> The pressed button fills and can’t be sent twice. Confirmation sits under the actions, not at the bottom of the page. <i>Undo only if the server exposes the activity ID.</i></figcaption></figure>
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="banner err"><b>Couldn’t open this post</b>Your server couldn’t find it. It may be private or deleted.</div>
-  <div class="post muted">social.example/@dana/404</div>
-  <div class="btn" style="margin-top:12px">Try again</div><div class="btn plain">Change link</div>
-  <div class="disclose"><span>Details ▾</span></div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>B5 Lookup failed.</b> Two recoveries. The HTTP code is under Details (L3).</figcaption></figure>
+<p class="page-lede">Goal: act on the post I just shared. The Shortcut opens the page with <code>?url=…</code>, which iOS loads in Safari. The URL field never shows.</p>
+<div class="flow">
+<figure id="B1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Posts</h1><span></span></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article></div></section><div class="scrim"><div class="sheet" role="dialog" aria-label="Share"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><span></span><h1 class="navbar-title">Share</h1><span></span></nav><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Messages</span></button><button class="row row-button" type="button"><span class="row-title">Mail</span></button><button class="row row-button" type="button"><span class="row-title">FediTap</span></button></div></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>B1 Share sheet.</b> Entry point, drawn by iOS. The Shortcut passes only the first link.</figcaption></figure>
+<figure id="B2"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post" aria-busy="true"><span class="placeholder is-short"></span><span class="placeholder"></span><span class="placeholder"></span><span class="placeholder is-medium"></span></article></div></section><section class="section"><div class="list"><button class="row row-button" type="button" disabled><span class="row-title">Like</span></button><button class="row row-button" type="button" disabled><span class="row-title">Repost</span></button><button class="row row-button" type="button" disabled><span class="row-title">Reply…</span></button></div><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Loading post…</p></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>B2 Loading.</b> Placeholder bars keep the layout from jumping. The action rows are visible but disabled. No URL field.</figcaption></figure>
+<figure id="B3"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Like</span></button><button class="row row-button" type="button"><span class="row-title">Repost</span></button><button class="row row-button" type="button"><span class="row-title">Reply…</span></button><button class="row row-button" type="button"><span class="row-title">Follow Dana</span></button></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>B3 Loaded.</b> The post proves it is the right one. The account bar button shows who acts. The actions are rows in one grouped list instead of tiles; Follow is the last row. The URL field hides behind “Change link” in the source row.</figcaption></figure>
+<figure id="B4"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><section class="section"><div class="list"><button class="row row-button is-done" type="button" disabled><span class="row-title">Like</span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row row-button" type="button"><span class="row-title">Repost</span></button><button class="row row-button" type="button"><span class="row-title">Reply…</span></button></div><p class="section-footer status" role="status">Liked as @me.</p></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Undo Like</span></button><button class="row row-button" type="button"><span class="row-title">Open another link</span></button></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>B4 After Like.</b> The Like row gains a checkmark and can’t be sent twice. The confirmation is the footer of the actions it refers to, not a banner at the bottom. <i>Undo only if the server exposes the activity ID.</i></figcaption></figure>
+<figure id="B5"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row"><span class="row-title">social.example/@dana/404</span></div></div><div class="section-footer" role="alert"><p class="error">Couldn’t open this post</p><p>Your server couldn’t find it. It may be private or deleted.</p></div></section><section class="section"><button type="button" class="button button-prominent">Try again</button></section><section class="section"><button type="button" class="button button-plain">Change link</button></section><section class="section"><div class="list"><details class="disclosure"><summary>Details</summary><div class="disclosure-body"><p>HTTP 404 from the lookup proxy.</p></div></details></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>B5 Lookup failed.</b> The failure is the footer of the link it concerns. Try again is the prominent button, Change link is plain. The HTTP code is under Details (L3).</figcaption></figure>
 </div>
-
-<!-- ============================== C ============================== -->
 <h2 id="C">C · A shared link, signed out <span class="tag">Safari</span></h2>
-<p class="lede">Today the link is stored but invisible until sign-in (finding 1).</p>
-<div class="row">
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="intro">to continue with this link</div>
-<div class="content">
-  <div class="post"><b>social.example/@dana/1</b></div>
-  <div class="label">Account</div>
-  <div class="field"><span class="ph">you@example.com</span></div>
-  <div class="btn" style="margin-top:10px">Continue</div>
-  <div class="disclose"><span>Server not working?</span><span>›</span></div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>C1 Pending link.</b> The link is shown so the person knows it arrived. It survives sign-in (already implemented through <code>sessionStorage</code>).</figcaption></figure>
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="banner ok"><b>Signed in as @me</b></div>
-  <div class="post"><div class="skeleton" style="width:40%"></div><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
-  <div class="status-line"><span class="spin"></span> Loading post…</div></div><div class="safari">example.com</div></div>
-<figcaption><b>C2 Return from server.</b> Goes straight to B2, then B3. No extra tap.</figcaption></figure>
+<p class="page-lede">Today the link is stored but invisible until sign-in (finding 1).</p>
+<div class="flow">
+<figure id="C1"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><p class="lede">to continue with this link</p><section class="section"><h2 class="section-header">Link to open after you sign in</h2><div class="list"><div class="row"><span class="row-title">social.example/@dana/1</span></div></div></section><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div></section><section class="section"><button type="button" class="button button-prominent">Continue</button></section><section class="section"><div class="list"><details class="disclosure"><summary>Server not working?</summary><div class="disclosure-body"><p>Your server needs an ActivityPub client API. <a class="link" href="#A">WordPress setup instructions</a></p><p>This browser stores each account and its tokens. Requests go directly to your Fediverse server.</p></div></details></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>C1 Pending link.</b> The link is shown as its own section so the person knows it arrived. It survives sign-in (already implemented through <code>sessionStorage</code>).</figcaption></figure>
+<figure id="C2"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post" aria-busy="true"><span class="placeholder is-short"></span><span class="placeholder"></span><span class="placeholder"></span><span class="placeholder is-medium"></span></article></div></section><section class="section"><div class="list"><button class="row row-button" type="button" disabled><span class="row-title">Like</span></button><button class="row row-button" type="button" disabled><span class="row-title">Repost</span></button><button class="row row-button" type="button" disabled><span class="row-title">Reply…</span></button></div><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Signed in as @me. Loading post…</p></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>C2 Return from server.</b> Goes straight to B2, then B3. No extra tap.</figcaption></figure>
 </div>
-
-<!-- ============================== D ============================== -->
 <h2 id="D">D · Open directly <span class="tag">Home Screen app</span></h2>
-<p class="lede">Goal: act on a link I copied. Paste is the main control.</p>
-<div class="row">
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post" style="text-align:center;padding:26px 12px"><b>Paste a post or profile link</b><div class="muted" style="margin:4px 0 12px">Copy a link in any app, then paste it here.</div><div class="btn">Paste link</div></div>
-  <div class="label">Or type it</div>
-  <div class="field"><span class="ph">https://</span></div>
-  <div class="promo"><b>Share from any app</b><p>Skip pasting: share a link straight here.</p><div class="btn plain" style="background:var(--fill)">Add Shortcut</div><div class="later">I already have it</div></div>
-</div><div class="home"></div></div>
-<figcaption><b>D1 Ready.</b> Paste is the main control (iOS shows its own “Allow Paste” prompt). Typing is the second path (L2). The Shortcut card sits below as the way to skip this screen next time.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="field"><span>https://social.example/@dana/1</span><span class="muted">✕</span></div>
-  <div class="btn disabled" style="margin-top:10px"><span class="spin"></span> Loading post…</div>
-</div><div class="home"></div></div>
-<figcaption><b>D2 Pasted.</b> Paste loads the link straight away. Today Paste only fills the field and Find is a second tap.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="field error"><span>not a link</span><span class="muted">✕</span></div>
-  <div class="hint err">Enter a link that starts with https://.</div>
-  <div class="btn disabled" style="margin-top:10px">Open link</div>
-  <div class="hint">If paste is blocked, paste into the field.</div>
-</div><div class="home"></div></div>
-<figcaption><b>D3 Invalid link.</b> The message sits under the field it refers to. A denied clipboard falls back to typing.</figcaption></figure>
+<p class="page-lede">Goal: act on a link I copied. Paste is the first row.</p>
+<div class="flow">
+<figure id="D1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="https://" readonly></div><button class="row row-button" type="button"><span class="row-title">Paste from Clipboard</span></button></div><p class="section-footer">Copy a link in any app, then paste it here.</p></section><section class="section"><h2 class="section-header">Share from any app</h2><div class="list"><button class="row row-button" type="button"><span class="row-title">Add Shortcut</span></button><button class="row row-button" type="button"><span class="row-title">I already have it</span></button></div><p class="section-footer">Skip pasting: share a link straight here.</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>D1 Ready.</b> One section: the field and a Paste row (iOS shows its own “Allow Paste” prompt). Paste loads the link at once (L2). The Shortcut section sits below as the way to skip this screen next time.</figcaption></figure>
+<figure id="D2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="https://social.example/@dana/1" readonly><button type="button" class="row-accessory is-button">Clear</button></div></div><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Loading post…</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>D2 Pasted.</b> Paste loads the link straight away; progress is the status footer under the field. Today Paste only fills the field and Find is a second tap.</figcaption></figure>
+<figure id="D3"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" value="not a link" aria-invalid="true" readonly><button type="button" class="row-accessory is-button">Clear</button></div><button class="row row-button" type="button"><span class="row-title">Paste from Clipboard</span></button></div><div class="section-footer" role="alert"><p class="error">Enter a link that starts with https://.</p><p>If paste is blocked, paste into the field.</p></div></section><section class="section"><button type="button" class="button button-prominent" disabled>Open link</button></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>D3 Invalid link.</b> The message is the footer of the field it refers to. A denied clipboard falls back to typing; the typed path has its own disabled Open link button.</figcaption></figure>
 </div>
-
-<!-- ============================== E ============================== -->
 <h2 id="E">E · Reply</h2>
-<div class="row">
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div></div>
-<div class="dim"></div>
-<div class="sheet tall"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link">Cancel</span><span class="title">Reply</span><span class="link muted">Send</span></div>
-  <div class="muted" style="margin:6px 0">As @me · Public: anyone can see this</div>
-  <div class="post" style="min-height:130px"><span class="ph">Reply to Dana</span></div>
-  <div class="hint" style="text-align:right">0 / 500</div></div><div class="home"></div></div>
-<figcaption><b>E1 Composer.</b> A sheet (L2). It names the account and says the reply is public in words. Send stays off until there is text.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div></div>
-<div class="dim"></div>
-<div class="sheet tall"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link muted">Cancel</span><span class="title">Reply</span><span class="muted"><span class="spin"></span></span></div>
-  <div class="post" style="min-height:130px">Congrats, this looks great!</div>
-  <div class="hint">Sending…</div></div><div class="home"></div></div>
-<figcaption><b>E2 Sending.</b> Text stays. Controls are off. A failure keeps the draft and shows a banner in the sheet.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div>
-  <div class="actions"><div class="act">Like</div><div class="act">Repost</div><div class="act on">Replied</div></div>
-  <div class="status-line">Reply sent · <span class="link">Open another link</span></div></div><div class="home"></div></div>
-<figcaption><b>E3 Sent.</b> The sheet closes and Reply shows its state. The next step is offered in text.</figcaption></figure>
+<div class="flow">
+<figure id="E1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet is-tall" role="dialog" aria-label="Reply"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button" >Cancel</button><h1 class="navbar-title">Reply</h1><button class="bar-button is-strong is-disabled" disabled>Send</button></nav><section class="section"><div class="list"><div class="row row-field"><textarea class="field" aria-label="Reply" rows="5" placeholder="Reply to Dana" readonly></textarea></div></div><div class="section-footer is-split"><span>As @me · Public: anyone can see this reply.</span><span>0 / 500</span></div></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>E1 Composer.</b> A sheet (L2) with Cancel and Send as bar buttons. The text area is a row in a grouped list; the footer names the account, says the reply is public in words and counts characters. Send stays off until there is text.</figcaption></figure>
+<figure id="E2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet is-tall" role="dialog" aria-label="Reply"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button is-disabled" disabled>Cancel</button><h1 class="navbar-title">Reply</h1><button class="bar-button is-disabled" disabled aria-label="Sending"><span class="spinner" aria-hidden="true"></span></button></nav><section class="section"><div class="list"><div class="row row-field"><textarea class="field" aria-label="Reply" rows="5" disabled>Congrats, this looks great!</textarea></div></div><p class="section-footer status" role="status">Sending…</p></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>E2 Sending.</b> Text stays. Controls are off; the Send bar button shows a spinner. A failure keeps the draft and shows an error footer in the sheet.</figcaption></figure>
+<figure id="E3"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Like</span></button><button class="row row-button" type="button"><span class="row-title">Repost</span></button><button class="row row-button is-done" type="button" disabled><span class="row-title">Reply…</span><span class="row-accessory is-check" aria-hidden="true"></span></button></div><p class="section-footer status" role="status">Reply sent as @me.</p></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Open another link</span></button></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>E3 Sent.</b> The sheet closes and the Reply row shows a checkmark. The next step is a row.</figcaption></figure>
 </div>
-
-<!-- ============================== F ============================== -->
 <h2 id="F">F · Profile link</h2>
-<div class="row">
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Profile</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Zed</b><small>@zed@social.example</small><p>A profile you can follow.</p></div>
-  <div class="btn" style="margin-top:12px">Follow Zed</div>
-  <div class="hint" style="text-align:center">Sends a follow request from @me.</div></div><div class="home"></div></div>
-<figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so they’re absent, not hidden in an empty grid. One main action.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Profile</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Zed</b><small>@zed@social.example</small></div>
-  <div class="btn plain" style="margin-top:12px">Follow requested</div>
-  <div class="status-line">Request sent as @me · <span class="link">Open another link</span></div></div><div class="home"></div></div>
-<figcaption><b>F2 Requested.</b> The label says what actually happened: a request, not a confirmed follow.</figcaption></figure>
+<div class="flow">
+<figure id="F1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Profile</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Zed</p><p class="post-handle">@zed@social.example</p><p class="post-body">A profile you can follow.</p></article></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Follow Zed</span></button></div><p class="section-footer">Sends a follow request from @me.</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so they’re absent. One action row; it is the only thing to tap.</figcaption></figure>
+<figure id="F2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Profile</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Zed</p><p class="post-handle">@zed@social.example</p></article></div></section><section class="section"><div class="list"><button class="row row-button is-done" type="button" disabled><span class="row-title">Follow requested</span><span class="row-accessory is-check" aria-hidden="true"></span></button></div><p class="section-footer status" role="status">Request sent as @me.</p></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Open another link</span></button></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>F2 Requested.</b> The label says what actually happened: a request, not a confirmed follow.</figcaption></figure>
 </div>
-
-<!-- ============================== G ============================== -->
 <h2 id="G">G · Connected accounts <span class="tag">Home Screen app</span></h2>
-<p class="lede">Goal: act as the right account, add another, or remove one. Today the picker, “Manage accounts”, the sign-in form and Remove share one area. Proposed: the account chip opens one sheet.</p>
-<div class="row">
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div></div>
-<div class="dim"></div>
-<div class="sheet"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link">Edit</span><span class="title">Accounts</span><span class="link"><b>Done</b></span></div>
-  <div class="group"><div class="cell"><div class="grow">@me<small>example.com</small></div><span class="check">✓</span></div>
-    <div class="cell"><div class="grow">@work<small>company.social</small></div></div></div>
-  <div class="group" style="margin-top:10px"><div class="cell"><span class="link">Add account…</span></div></div>
-  <div class="hint">Sign-ins are stored on this device only.</div></div><div class="home"></div></div>
-<figcaption><b>G1 Accounts.</b> A grouped list with a checkmark for the active account replaces the dropdown and the Manage toggle. Add is the last row.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@work ›</span></div>
-<div class="content"><div class="status-line" style="margin:0 0 8px">Now acting as @work · loading again…</div>
-  <div class="post"><b>Dana</b><small>@dana@social.example</small><p>Just shipped a small thing…</p></div>
-  <div class="actions"><div class="act">Like</div><div class="act">Repost</div><div class="act">Reply</div></div></div><div class="home"></div></div>
-<figcaption><b>G2 Switched.</b> Choosing a row closes the sheet, updates the chip and reloads the post for the new account.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"></div><div class="dim"></div>
-<div class="sheet"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link"><b>Done</b></span><span class="title">Accounts</span><span></span></div>
-  <div class="group"><div class="cell"><span style="color:var(--red)">−</span><div class="grow">@me<small>example.com</small></div><span style="color:var(--red)">Remove</span></div>
-    <div class="cell"><span style="color:var(--red)">−</span><div class="grow">@work<small>company.social</small></div></div></div></div><div class="home"></div></div>
-<figcaption><b>G3 Edit.</b> Removal appears only in Edit (L2), away from sign-in. It uses the standard iOS delete pattern.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"></div><div class="dim"></div>
-<div class="sheet" style="background:transparent">
-  <div class="group" style="padding:12px;text-align:center"><b>Remove @me?</b><div class="muted" style="font-size:12px;margin-top:4px">This device forgets the account. To end access on your server, use its account settings.</div>
-  <div style="border-top:1px solid var(--sep);margin:10px -12px 0;padding:10px;color:var(--red);font-weight:600">Remove account</div></div>
-  <div class="btn plain" style="margin-top:8px">Cancel</div></div><div class="home"></div></div>
-<figcaption><b>G4 Confirm.</b> An action sheet with one destructive choice and a Cancel. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct warn">@me ›</span></div>
-<div class="content">
-  <div class="banner warn"><b>Sign in again</b>Your server ended the session for @me.</div>
-  <div class="btn">Sign in again</div><div class="btn plain">Use another account</div>
-  <div class="post muted" style="margin-top:12px;opacity:.6"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div></div></div><div class="home"></div></div>
-<figcaption><b>G5 Session ended.</b> The problem is shown where the action would happen, not as “(sign in again)” inside a dropdown. The chip turns orange. One main recovery.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"></div><div class="dim"></div>
-<div class="sheet tall"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link">Cancel</span><span class="title">Add account</span><span></span></div>
-  <div class="label">Account</div>
-  <div class="field"><span class="ph">you@example.com</span></div>
-  <div class="hint">Your handle or profile link.</div>
-  <div class="btn" style="margin-top:8px">Continue</div></div><div class="home"></div></div>
-<figcaption><b>G6 Add account.</b> The same sign-in as A1 inside the sheet, with the A2–A4 states. It returns to G1 with the new account selected.</figcaption></figure>
+<p class="page-lede">Goal: act as the right account, add another, or remove one. Today the picker, “Manage accounts”, the sign-in form and Remove share one area. Proposed: the account bar button opens one sheet.</p>
+<div class="flow">
+<figure id="G1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet" role="dialog" aria-label="Accounts"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button" >Edit</button><h1 class="navbar-title">Accounts</h1><button class="bar-button is-strong" >Done</button></nav><section class="section"><div class="list"><button class="row is-selected" type="button" role="radio" aria-checked="true"><span class="row-main"><span class="row-title">@me</span><span class="row-subtitle">example.com</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button><button class="row" type="button" role="radio" aria-checked="false"><span class="row-main"><span class="row-title">@work</span><span class="row-subtitle">company.social</span></span><span class="row-accessory is-check" aria-hidden="true"></span></button></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Add account…</span></button></div><p class="section-footer">Sign-ins are stored on this device only.</p></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G1 Accounts.</b> A grouped list with a checkmark on the active account replaces the dropdown and the Manage toggle. Add account is a button row in its own section.</figcaption></figure>
+<figure id="G2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@work</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><section class="section"><div class="list"><button class="row row-button" type="button" disabled><span class="row-title">Like</span></button><button class="row row-button" type="button" disabled><span class="row-title">Repost</span></button><button class="row row-button" type="button" disabled><span class="row-title">Reply…</span></button></div><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Now acting as @work. Loading again…</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G2 Switched.</b> Choosing a row closes the sheet, updates the bar button and reloads the post for the new account; the status footer says so.</figcaption></figure>
+<figure id="G3"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet" role="dialog" aria-label="Accounts"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button is-strong" >Done</button><h1 class="navbar-title">Accounts</h1><span></span></nav><section class="section"><div class="list"><div class="row"><span class="row-main"><span class="row-title">@me</span><span class="row-subtitle">example.com</span></span><button type="button" class="row-accessory is-button is-destructive">Remove</button></div><div class="row"><span class="row-main"><span class="row-title">@work</span><span class="row-subtitle">company.social</span></span><button type="button" class="row-accessory is-button is-destructive">Remove</button></div></div></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G3 Edit.</b> Removal appears only in Edit (L2), away from sign-in, as a red trailing button on each account row.</figcaption></figure>
+<figure id="G4"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="action-sheet" role="dialog" aria-label="Remove @me?"><div class="list"><header class="action-sheet-header"><h2>Remove @me?</h2><p>This device forgets the account. To end access on your server, use its account settings.</p></header><button class="row row-button row-destructive" type="button"><span class="row-title">Remove account</span></button></div><div class="list"><button class="row row-button" type="button"><span class="row-title">Cancel</span></button></div></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G4 Confirm.</b> An action sheet with one destructive choice and a separate Cancel. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
+<figure id="G5"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu is-warning" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><div class="row"><span class="row-main"><span class="row-title">@me</span><span class="row-subtitle">example.com</span></span><span class="row-accessory">Session ended</span></div></div><div class="section-footer" role="alert"><p class="warning">Sign in again</p><p>Your server ended the session for @me.</p></div></section><section class="section"><button type="button" class="button button-prominent">Sign in again</button></section><section class="section"><button type="button" class="button button-plain">Use another account</button></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G5 Session ended.</b> The problem is the warning footer under the account it concerns, shown where the action would happen, not “(sign in again)” inside a dropdown. The bar button turns orange. One prominent recovery.</figcaption></figure>
+<figure id="G6"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><div class="scrim"><div class="sheet is-tall" role="dialog" aria-label="Add account"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button" >Cancel</button><h1 class="navbar-title">Add account</h1><span></span></nav><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div><p class="section-footer">Your handle or profile link.</p></section><section class="section"><button type="button" class="button button-prominent">Continue</button></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>G6 Add account.</b> The same sign-in as A1 inside the sheet, with the A2–A4 states. It returns to G1 with the new account selected.</figcaption></figure>
 </div>
-
-<!-- ============================== H ============================== -->
 <h2 id="H">H · Edge cases</h2>
-<div class="row">
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Can’t save accounts</div>
-<div class="content">
-  <div class="banner err"><b>Storage is blocked</b>This browser can’t keep your sign-in.</div>
-  <div class="post"><b>Try this</b><ul class="rows"><li>Turn off Private Browsing, or allow website data</li><li>Open the page in the current version of Safari</li><li>Use the published https address</li></ul></div>
-</div><div class="home"></div></div>
-<figcaption><b>H1 Storage blocked or browser too old.</b> Today: a disabled form and one line. Proposed: the cause and steps to fix it.</figcaption></figure>
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content"><div class="post"><b>Dana</b><p>Just shipped a small thing…</p></div>
-  <div class="actions"><div class="act off">Like</div><div class="act off">Repost</div><div class="act off">Reply</div></div>
-  <div class="status-line"><span class="spin"></span> Reconnecting…</div></div><div class="home"></div></div>
-<figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly. Today they must tap again.</figcaption></figure>
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="field"><span class="ph">Paste a post or profile link</span><span class="link">Paste</span></div>
-  <div class="promo"><b>Share from any app</b><p>Add the Shortcut to send a link here from the share sheet.</p><div class="btn plain" style="background:var(--fill)">Add Shortcut</div><div class="later">I already have it</div></div>
-  <div class="disclose"><span>Open without the browser bar</span><span>How ›</span></div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>H3 Shortcut card in Safari.</b> The card is the only extra element. “Add to Home Screen” is a one-line disclosure under it (Safari only; hidden once the page runs standalone).</figcaption></figure>
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post"><b>Dana</b><small>@dana@social.example</small><p>Just shipped a small thing…</p></div>
-  <div class="actions"><div class="act">Like</div><div class="act">Repost</div><div class="act">Reply</div></div>
-</div><div class="safari">example.com</div></div>
-<figcaption><b>H4 Arrived from the Shortcut.</b> No card. The page opened with a link or <code>?via=shortcut</code>, so the person has it. The app remembers this on the device and never shows the card again.</figcaption></figure>
+<div class="flow">
+<figure id="H1"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Can’t save accounts</h1><p class="lede"><span class="error">Storage is blocked.</span> This browser can’t keep your sign-in.</p><section class="section"><h2 class="section-header">Try this</h2><div class="list"><div class="row"><span class="row-title">Turn off Private Browsing, or allow website data for this page.</span></div><div class="row"><span class="row-title">Open the page in the current version of Safari.</span></div><div class="row"><span class="row-title">Use the published https address.</span></div><div class="row"><span class="row-title">If it still fails, clear this site’s data in your browser settings.</span></div></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>H1 Storage blocked or browser too old.</b> Today: a disabled form and one line. Proposed: the cause as a plain error line under the title, then the steps as rows. With no field to attach it to, the error sits in the lede.</figcaption></figure>
+<figure id="H2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing…</p></article></div></section><section class="section"><div class="list"><button class="row row-button" type="button" disabled><span class="row-title">Like</span></button><button class="row row-button" type="button" disabled><span class="row-title">Repost</span></button><button class="row row-button" type="button" disabled><span class="row-title">Reply…</span></button></div><p class="section-footer status" role="status"><span class="spinner" aria-hidden="true"></span>Reconnecting…</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly, with the actions disabled. Today they must tap again.</figcaption></figure>
+<figure id="H3"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="https://" readonly></div><button class="row row-button" type="button"><span class="row-title">Paste from Clipboard</span></button></div></section><section class="section"><h2 class="section-header">Share from any app</h2><div class="list"><button class="row row-button" type="button"><span class="row-title">Add Shortcut</span></button><button class="row row-button" type="button"><span class="row-title">I already have it</span></button></div><p class="section-footer">Add the Shortcut to send a link here from the share sheet.</p></section><section class="section"><div class="list"><details class="disclosure"><summary>Open without the browser bar</summary><div class="disclosure-body"><p>In Safari, tap Share, then Add to Home Screen. The Home Screen app keeps its own sign-in.</p></div></details></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>H3 Shortcut section in Safari.</b> The Shortcut section is the only extra. “Add to Home Screen” is a one-row disclosure under it (Safari only; hidden once the page runs standalone).</figcaption></figure>
+<figure id="H4"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><button type="button" class="row-accessory is-button">Change link</button></div></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Like</span></button><button class="row row-button" type="button"><span class="row-title">Repost</span></button><button class="row row-button" type="button"><span class="row-title">Reply…</span></button><button class="row row-button" type="button"><span class="row-title">Follow Dana</span></button></div></section></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>H4 Arrived from the Shortcut.</b> No Shortcut section. The page opened with a link or <code>?via=shortcut</code>, so the person has it. The app remembers this on the device and never shows it again.</figcaption></figure>
 </div>
-
-<!-- ============================== I ============================== -->
 <h2 id="I">I · Added to the Home Screen</h2>
-<p class="lede">Goal: open the tool like an app, with no browser bar. iOS keeps a Home Screen web app’s storage separate from Safari’s, so sign-ins are not shared. A link opened from the Shortcut loads in Safari, not in the Home Screen app. The design has to work well in both. The Web Share Target API isn’t available on iOS, so the Shortcut stays for sharing.</p>
-<div class="row">
-
-<figure><div class="phone in-browser"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="content"></div>
-<div class="sheet"><div class="grab"></div><div class="nav" style="padding:0"><span class="title">Share</span></div>
-  <div class="group"><div class="cell">Copy</div><div class="cell">Add to Bookmarks</div><div class="cell"><b>Add to Home Screen</b></div></div></div></div>
-<figcaption><b>I1 Install.</b> Done with the system Share sheet in Safari. The page can’t trigger it; the H3 row explains where to tap. The app name and icon in this dialog come from the manifest.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div>
-<div class="intro">Use your Fediverse account to like, repost, reply to or follow a post.</div>
-<div class="content">
-  <div class="label">Account</div>
-  <div class="field"><span class="ph">you@example.com</span></div>
-  <div class="hint">Signed in in Safari? The Home Screen app keeps its own sign-in. Sign in once here.</div>
-  <div class="btn disabled" style="margin-top:10px">Continue</div>
-  <div class="promo"><b>Share from any app</b><p>The Shortcut opens links in Safari, so you will sign in there once too.</p><div class="btn plain" style="background:var(--fill)">Add Shortcut</div></div>
-</div><div class="home"></div></div>
-<figcaption><b>I2 First launch.</b> Standalone: content respects the status bar and home indicator (safe areas). The hint explains separate storage only in this context.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="large">Sign in</div><div class="content"></div>
-<div class="sheet tall" style="top:40px"><div class="grab"></div>
-  <div class="nav" style="padding:0"><span class="link"><b>Done</b></span><span class="muted">example.com</span><span></span></div>
-  <div class="content"><div class="large" style="padding:0;font-size:20px">Allow access?</div><p class="muted">example.com asks to like, repost, reply and follow as @me.</p><div class="btn">Allow</div><div class="btn plain">Don’t allow</div></div></div><div class="home"></div></div>
-<figcaption><b>I3 Server consent.</b> iOS opens sign-in in a system sheet. <i>Risk:</i> returning to the app through the redirect may land in Safari instead of the Home Screen app. Must be tested on a device (see plan, phase 5).</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Open a link</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post" style="text-align:center;padding:26px 12px"><b>Paste a post or profile link</b><div class="muted" style="margin:4px 0 12px">Copy a link in any app, then paste it here.</div><div class="btn">Paste link</div></div>
-</div><div class="home"></div></div>
-<figcaption><b>I4 Everyday use.</b> The app opens straight to the paste screen. No install hint, no setup list. Same as D1.</figcaption></figure>
-
-<figure><div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
-<div class="nav"><span class="title">Post</span><span class="acct">@me ›</span></div>
-<div class="content">
-  <div class="post"><b>Dana</b><small>@dana@social.example</small><p>Just shipped a small thing…</p>
-    <div class="src"><span>social.example</span><span class="link">Open original ↗</span></div></div>
-  <div class="actions"><div class="act">Like</div><div class="act">Repost</div><div class="act">Reply</div></div></div><div class="home"></div></div>
-<figcaption><b>I5 Leaving the app.</b> “Open original” is the only link to another site. In standalone mode it opens in a system sheet with a Done button, so the person can return.</figcaption></figure>
+<p class="page-lede">Goal: open the tool like an app, with no browser bar. iOS keeps a Home Screen web app’s storage separate from Safari’s, so sign-ins are not shared. A link opened from the Shortcut loads in Safari, not in the Home Screen app. The design has to work well in both. The Web Share Target API isn’t available on iOS, so the Shortcut stays for sharing.</p>
+<div class="flow">
+<figure id="I1"><div class="phone in-browser"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Open a link</h1><div class="scrim"><div class="sheet" role="dialog" aria-label="Share"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><span></span><h1 class="navbar-title">Share</h1><span></span></nav><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Copy</span></button><button class="row row-button" type="button"><span class="row-title">Add to Bookmarks</span></button><button class="row row-button is-strong" type="button"><span class="row-title">Add to Home Screen</span></button></div></section></div></div></main><div class="safari" aria-hidden="true">example.com</div><div class="home" aria-hidden="true"></div></div><figcaption><b>I1 Install.</b> Done with the system Share sheet in Safari. The page can’t trigger it; the H3 row explains where to tap. The app name and icon in this dialog come from the manifest.</figcaption></figure>
+<figure id="I2"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><p class="lede">Use your Fediverse account to like, repost, reply to or follow a post.</p><section class="section"><h2 class="section-header">Account</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com" readonly></div></div><div class="section-footer"><p>Your handle or profile link. You sign in on your own server.</p><p>Signed in in Safari? The Home Screen app keeps its own sign-in. Sign in once here.</p></div></section><section class="section"><button type="button" class="button button-prominent" disabled>Continue</button></section><section class="section"><h2 class="section-header">Share from any app</h2><div class="list"><button class="row row-button" type="button"><span class="row-title">Add Shortcut</span></button></div><p class="section-footer">The Shortcut opens links in Safari, so you will sign in there once too.</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>I2 First launch.</b> Standalone: content respects the status bar and home indicator (safe areas). The extra footer line explains separate storage only in this context.</figcaption></figure>
+<figure id="I3"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><h1 class="large-title">Sign in</h1><div class="scrim"><div class="sheet is-tall" role="dialog" aria-label="example.com"><div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar"><button class="bar-button is-strong" >Done</button><h1 class="navbar-title">example.com</h1><span></span></nav><h1 class="large-title">Allow access?</h1><p class="lede">example.com asks to like, repost, reply and follow as @me.</p><section class="section"><button type="button" class="button button-prominent">Allow</button></section><section class="section"><button type="button" class="button button-plain">Don’t allow</button></section></div></div></main><div class="home" aria-hidden="true"></div></div><figcaption><b>I3 Server consent.</b> iOS opens sign-in in a system sheet. <i>Risk:</i> returning to the app through the redirect may land in Safari instead of the Home Screen app. Must be tested on a device (see plan, phase 5).</figcaption></figure>
+<figure id="I4"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Open a link</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><h2 class="section-header">Link</h2><div class="list"><div class="row row-field"><input class="field" aria-label="Account" placeholder="https://" readonly></div><button class="row row-button" type="button"><span class="row-title">Paste from Clipboard</span></button></div><p class="section-footer">Copy a link in any app, then paste it here.</p></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>I4 Everyday use.</b> The app opens straight to the paste screen. No install hint, no Shortcut section. Same as D1.</figcaption></figure>
+<figure id="I5"><div class="phone"><div class="statusbar" aria-hidden="true"><span>9:41</span><span>LTE 100%</span></div><main class="screen"><nav class="navbar"><span></span><h1 class="navbar-title">Post</h1><button class="bar-button has-menu" aria-haspopup="dialog">@me</button></nav><section class="section"><div class="list"><article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p><p class="post-body">Just shipped a small thing for the Fediverse. It stays out of the way until you need it.</p></article><div class="row"><span class="row-main"><span class="row-title">social.example</span><span class="row-subtitle">Nov 17</span></span><a class="row-accessory is-button" href="#I">Open original</a></div></div></section><section class="section"><div class="list"><button class="row row-button" type="button"><span class="row-title">Like</span></button><button class="row row-button" type="button"><span class="row-title">Repost</span></button><button class="row row-button" type="button"><span class="row-title">Reply…</span></button><button class="row row-button" type="button"><span class="row-title">Follow Dana</span></button></div></section></main><div class="home" aria-hidden="true"></div></div><figcaption><b>I5 Leaving the app.</b> “Open original” is the only link to another site. In standalone mode it opens in a system sheet with a Done button, so the person can return.</figcaption></figure>
 </div>
-
 <p class="note" style="margin-top:2.5rem">Open questions are listed in <code>docs/ux/review.md</code>.</p>
 </div>
 </body>
