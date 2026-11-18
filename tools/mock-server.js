@@ -1,5 +1,5 @@
-// Mock ActivityPub server with an OAuth 2.0 (PKCE) provider, used by `npm run dev` and
-// `npm run preview` as Vite middleware on the same origin as the app.
+// Mock ActivityPub and Mastodon-API server with an OAuth 2.0 (PKCE) provider, used by `npm run dev`
+// and `npm run preview` as Vite middleware on the same origin as the app.
 //
 //   npm run dev            # https://localhost:8443/_dev/
 //   PORT=9000 DELAY_MS=1500 npm run dev
@@ -47,6 +47,18 @@ const USERS = {
     about: "Authorizes as a different profile: tests identity check.",
     quirk: "mismatch",
   },
+  // Mastodon-API accounts: no ActivityPub API, a token that never expires and no refresh token.
+  mario: {
+    name: "Mario (Mastodon)",
+    about: "Mastodon-style account. Sign in registers an app; the token never expires.",
+    kind: "mastodon",
+  },
+  gone: {
+    name: "Gone (Mastodon)",
+    about: "Mastodon-style account whose token is rejected after sign-in: tests 'sign in again'.",
+    kind: "mastodon",
+    quirk: "unauthorized",
+  },
 };
 
 const actorId = (name) => `${ORIGIN}/users/${name}`;
@@ -56,6 +68,8 @@ const AUTHORS = {
   flaky: { id: actorId("flaky"), name: "Flaky" },
   erin: { id: actorId("erin"), name: "Erin" },
   mismatch: { id: actorId("mismatch"), name: "Mismatch" },
+  mario: { id: actorId("mario"), name: "Mario (Mastodon)" },
+  gone: { id: actorId("gone"), name: "Gone (Mastodon)" },
   // Remote authors the signed-in account can interact with.
   zed: { id: `${ORIGIN}/users/zed`, name: "Zed Remote", summary: "A profile you can follow." },
   dana: { id: `${ORIGIN}/users/dana`, name: "Dana Writer" },
@@ -74,6 +88,11 @@ const NOTES = {
       'Progressive disclosure means the first screen shows only what matters, and the rest waits behind a tap. Details live in sheets, destructive actions ask first, and the main task never moves. </p><p>Second paragraph with <a href="https://example.com">a link</a> and some <strong>markup</strong> that must render as plain text.</p>',
   },
   3: { author: "dana", content: "<p>Reply target: a short post.</p>" },
+  4: {
+    author: "zed",
+    content: "<p>A followers-only post: a reply must stay followers-only.</p>",
+    visibility: "private",
+  },
 };
 
 const TARGET_ALIASES = {
@@ -115,15 +134,19 @@ function actorObject(name, { forLogin = false } = {}) {
     inbox: `${author.id}/inbox`,
     outbox: `${author.id}/outbox`,
     followers: `${author.id}/followers`,
-    endpoints: {
-      proxyUrl: `${ORIGIN}/proxy`,
-      ...(flags.apiOff
-        ? {}
+    // A Mastodon actor has an outbox but no client API, so the app probes its Mastodon API instead.
+    endpoints:
+      USERS[name]?.kind === "mastodon"
+        ? { sharedInbox: `${ORIGIN}/inbox` }
         : {
-            oauthAuthorizationEndpoint: `${ORIGIN}/oauth/authorize`,
-            oauthTokenEndpoint: `${ORIGIN}/oauth/token`,
-          }),
-    },
+            proxyUrl: `${ORIGIN}/proxy`,
+            ...(flags.apiOff
+              ? {}
+              : {
+                  oauthAuthorizationEndpoint: `${ORIGIN}/oauth/authorize`,
+                  oauthTokenEndpoint: `${ORIGIN}/oauth/token`,
+                }),
+          },
   };
 }
 
@@ -145,13 +168,15 @@ const accessTokens = new Map(); // token -> { user, expires, dead }
 const refreshTokens = new Map(); // token -> user
 const flakyIssued = new Set();
 const activities = [];
+const apps = new Map(); // client_id -> { secret, redirect, scopes }  (Mastodon-style registered apps)
+const posted = new Map(); // Idempotency-Key -> status
 const flags = { apiOff: false }; // toggled from /_dev/: hides OAuth endpoints like a server with the API disabled
 
 const log = (...parts) => console.log(new Date().toISOString().slice(11, 19), ...parts);
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 const random = () => randomBytes(24).toString("base64url");
 
-function issueTokens(user) {
+function issueTokens(user, scope) {
   const def = USERS[user];
   const access = random();
   const refresh = random();
@@ -159,6 +184,20 @@ function issueTokens(user) {
   // The flaky account's very first access token is dead on arrival.
   const dead = def.quirk === "flaky" && !flakyIssued.has(user);
   if (dead) flakyIssued.add(user);
+  if (def.kind === "mastodon") {
+    // Mastodon issues a token that never expires and has no refresh token.
+    accessTokens.set(access, {
+      user,
+      expires: Infinity,
+      gone: def.quirk === "unauthorized",
+    });
+    return {
+      access_token: access,
+      token_type: "Bearer",
+      scope: scope || "read write follow",
+      created_at: Math.floor(Date.now() / 1000),
+    };
+  }
   accessTokens.set(access, { user, expires: Date.now() + seconds * 1000, dead });
   refreshTokens.set(refresh, user);
   return {
@@ -178,7 +217,7 @@ function send(res, status, body, type = "application/json", extra = {}) {
     "Content-Type": type,
     "Cache-Control": "no-store",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Idempotency-Key",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Expose-Headers": "Location",
     ...extra,
@@ -192,10 +231,12 @@ async function readBody(req) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-function bearer(req) {
+// `gone` tokens only work for verify_credentials, as if revoked right after sign-in.
+function bearer(req, { allowGone = false } = {}) {
   const match = /^Bearer (.+)$/.exec(req.headers.authorization || "");
   const record = match && accessTokens.get(match[1]);
   if (!record || record.dead || record.expires <= Date.now()) return null;
+  if (record.gone && !allowGone) return null;
   return record;
 }
 
@@ -232,6 +273,7 @@ function devIndex() {
     ["Shared long post (Zed)", share(`${ORIGIN}/notes/2`)],
     ["Shared remote-style post URL", share("https://social.example/@dana/1")],
     ["Shared profile", share(`${ORIGIN}/users/zed`)],
+    ["Shared followers-only post (Zed, for Mastodon accounts)", share(`${ORIGIN}/notes/4`)],
     ["Shared missing post (404)", share(`${ORIGIN}/notes/404`)],
     ["Opened from the Shortcut, no link", "/?via=shortcut"],
     ["No link", "/"],
@@ -243,6 +285,7 @@ function devIndex() {
     `<h1>FediTap dev server</h1>
 <p>Mock ActivityPub + OAuth on <code>${ORIGIN}</code>. Sign in by entering one of these <b>profile URLs</b>:</p>
 <ul>${users}</ul>
+<p><code>mario</code> and <code>gone</code> are Mastodon-style accounts: no ActivityPub API, so the app signs in through the Mastodon API instead.</p>
 <p>Or enter <code>alice@localhost</code> to see the WebFinger fallback (the mock has no WebFinger on port 443).</p>
 <h2>Open the app</h2><ul>${links}</ul>
 <h2>Tools</h2><ul>
@@ -283,9 +326,120 @@ function authorizePage(url) {
   );
 }
 
+// ---- Mastodon API ----------------------------------------------------------
+
+const isLocal = (name) => Boolean(USERS[name]);
+
+function mastoAccount(name) {
+  const author = AUTHORS[name];
+  return {
+    id: name,
+    username: name,
+    // Accounts of the home server have no host in `acct`, remote ones do.
+    acct: isLocal(name) ? name : `${name}@social.example`,
+    uri: author.id,
+    url: isLocal(name) ? author.id : `https://social.example/@${name}`,
+    display_name: author.name,
+    note: author.summary ? `<p>${author.summary}</p>` : "",
+  };
+}
+
+function mastoStatus(key) {
+  const note = NOTES[key];
+  return {
+    id: String(1000 + Number(key)),
+    uri: `${ORIGIN}/notes/${key}`,
+    url: `https://social.example/@${note.author}/${key}`,
+    created_at: "2026-11-17T09:30:00Z",
+    visibility: note.visibility ?? "public",
+    spoiler_text: "",
+    content: note.content,
+    account: mastoAccount(note.author),
+  };
+}
+
+function mastoSearch(q) {
+  const result = { accounts: [], statuses: [], hashtags: [] };
+  const alias = TARGET_ALIASES[q];
+  const note =
+    alias?.type === "note" ? alias.key : new RegExp(`^${ORIGIN}/notes/(\\d+)$`).exec(q)?.[1];
+  if (note && NOTES[note]) result.statuses.push(mastoStatus(note));
+  const actor =
+    alias?.type === "actor" ? alias.key : new RegExp(`^${ORIGIN}/users/([a-z]+)$`).exec(q)?.[1];
+  if (actor && AUTHORS[actor]) result.accounts.push(mastoAccount(actor));
+  return result;
+}
+
+/** The Mastodon REST routes the app uses. Answers with `false` when the path is not one of them. */
+async function mastodon(req, res, url) {
+  const path = url.pathname;
+  if (path === "/api/v1/instance") {
+    return send(res, 200, { uri: "localhost", title: "Mock Mastodon", version: "4.3.0" });
+  }
+  if (path === "/api/v1/apps" && req.method === "POST") {
+    const form = new URLSearchParams(await readBody(req));
+    const redirect = form.get("redirect_uris");
+    if (redirect !== `${ORIGIN}/` || !form.get("scopes")) {
+      return send(res, 422, { error: "Validation failed: Redirect URI is invalid" });
+    }
+    const client_id = random();
+    const client_secret = random();
+    apps.set(client_id, { secret: client_secret, redirect, scopes: form.get("scopes") });
+    log("  app registered", form.get("client_name"), form.get("scopes"));
+    return send(res, 200, {
+      id: String(apps.size),
+      name: form.get("client_name"),
+      website: form.get("website"),
+      redirect_uri: redirect,
+      client_id,
+      client_secret,
+    });
+  }
+
+  const verify = path === "/api/v1/accounts/verify_credentials";
+  const token = bearer(req, { allowGone: verify });
+  if (!token) return send(res, 401, { error: "The access token is invalid" });
+  await sleep(DELAY_MS);
+
+  if (verify) return send(res, 200, mastoAccount(token.user));
+  if (path === "/api/v2/search") {
+    return send(res, 200, mastoSearch(url.searchParams.get("q") || ""));
+  }
+  if (path === "/api/v1/statuses" && req.method === "POST") {
+    const form = new URLSearchParams(await readBody(req));
+    const key = req.headers["idempotency-key"];
+    if (key && posted.has(key)) return send(res, 200, posted.get(key));
+    const status = {
+      id: String(2000 + activities.length),
+      content: form.get("status"),
+      visibility: form.get("visibility"),
+      in_reply_to_id: form.get("in_reply_to_id"),
+    };
+    if (key) posted.set(key, status);
+    activities.push({ by: token.user, type: "Status", ...status });
+    log("  status by", token.user, status.visibility);
+    return send(res, 200, status);
+  }
+  const action = /^\/api\/v1\/(statuses|accounts)\/([^/]+)\/(\w+)$/.exec(path);
+  const kinds = {
+    favourite: "Like",
+    unfavourite: "Undo Like",
+    reblog: "Announce",
+    unreblog: "Undo Announce",
+    follow: "Follow",
+    unfollow: "Undo Follow",
+  };
+  if (action && req.method === "POST" && kinds[action[3]]) {
+    activities.push({ by: token.user, type: kinds[action[3]], object: action[2] });
+    log("  ", kinds[action[3]], action[2], "by", token.user);
+    return send(res, 200, { id: action[2], following: action[3] === "follow", requested: false });
+  }
+  return send(res, 404, { error: "Record not found" });
+}
+
 // Resolves to true when the request was answered, false when it is not one of the mock's routes.
 const ROUTES =
-  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|proxy$|\.well-known\/oauth-authorization-server$)/;
+  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|api\/|proxy$|\.well-known\/oauth-authorization-server$)/;
 
 async function route(req, res) {
   const url = new URL(req.url, ORIGIN);
@@ -299,7 +453,8 @@ async function route(req, res) {
     return send(res, 200, devIndex(), "text/html; charset=utf-8");
   if (path === "/_dev/activities") return send(res, 200, activities);
   if (path === "/_dev/reset" && req.method === "POST") {
-    for (const store of [codes, accessTokens, refreshTokens, flakyIssued]) store.clear();
+    for (const store of [codes, accessTokens, refreshTokens, flakyIssued, apps, posted])
+      store.clear();
     activities.length = 0;
     flags.apiOff = false;
     return send(res, 303, "", "text/plain", { Location: "/_dev/" });
@@ -341,11 +496,24 @@ async function route(req, res) {
       issuer: ORIGIN,
       authorization_endpoint: `${ORIGIN}/oauth/authorize`,
       token_endpoint: `${ORIGIN}/oauth/token`,
+      registration_endpoint: `${ORIGIN}/api/v1/apps`,
+      scopes_supported: [
+        "read",
+        "write",
+        "follow",
+        "read:accounts",
+        "read:search",
+        "write:favourites",
+        "write:statuses",
+        "write:follows",
+      ],
       authorization_response_iss_parameter_supported: true,
       code_challenge_methods_supported: ["S256"],
       grant_types_supported: ["authorization_code", "refresh_token"],
     });
   }
+
+  if (path.startsWith("/api/")) return mastodon(req, res, url);
 
   if (path === "/oauth/authorize")
     return send(res, 200, authorizePage(url), "text/html; charset=utf-8");
@@ -353,7 +521,11 @@ async function route(req, res) {
   if (path === "/oauth/decision" && req.method === "POST") {
     const form = new URLSearchParams(await readBody(req));
     const redirect = form.get("redirect_uri");
-    if (redirect !== `${ORIGIN}/` || form.get("client_id") !== `${ORIGIN}/client.json`) {
+    const app = apps.get(form.get("client_id"));
+    const known = app
+      ? app.redirect === redirect
+      : form.get("client_id") === `${ORIGIN}/client.json`;
+    if (redirect !== `${ORIGIN}/` || !known) {
       return send(
         res,
         400,
@@ -367,7 +539,13 @@ async function route(req, res) {
       back.searchParams.set("error_description", "The user denied the request.");
     } else {
       const code = random();
-      codes.set(code, { user: form.get("user"), challenge: form.get("code_challenge"), redirect });
+      codes.set(code, {
+        user: form.get("user"),
+        challenge: form.get("code_challenge"),
+        redirect,
+        client: form.get("client_id"),
+        scope: form.get("scope"),
+      });
       back.searchParams.set("code", code);
     }
     back.searchParams.set("state", form.get("state"));
@@ -390,6 +568,13 @@ async function route(req, res) {
           error: "invalid_grant",
           error_description: "Bad code or PKCE verifier.",
         });
+      }
+      const app = apps.get(entry.client);
+      if (app && app.secret !== form.get("client_secret")) {
+        return send(res, 401, { error: "invalid_client", error_description: "Bad client secret." });
+      }
+      if (USERS[entry.user].kind === "mastodon") {
+        return send(res, 200, issueTokens(entry.user, entry.scope));
       }
       const shown = USERS[entry.user].quirk === "mismatch" ? "dana" : entry.user;
       return send(res, 200, { ...issueTokens(entry.user), activitypub_actor_id: actorId(shown) });

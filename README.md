@@ -4,7 +4,7 @@ Like, repost, reply to or follow a Fediverse post from your own account. Use Fed
 
 ## Install and connect
 
-Your home server needs a compatible client-to-server ActivityPub API. FediTap has been tested with ActivityPub for WordPress 9.4 or later. On WordPress, enable **ActivityPub API** under **Settings › ActivityPub › Advanced**. [WordPress setup instructions](https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/)
+FediTap works with Mastodon-compatible servers (Mastodon, GoToSocial, Pleroma, Akkoma, and Pixelfed on a best-effort basis) and with servers that have a client-to-server ActivityPub API. It has been tested with ActivityPub for WordPress 9.4 or later; on WordPress, enable **ActivityPub API** under **Settings › ActivityPub › Advanced**. [WordPress setup instructions](https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/) Lemmy and Misskey are not supported.
 
 1. Open [FediTap](https://kasparsd.github.io/fedi-tap/) and sign in on your home server.
 2. Choose **Paste** in the link field (or type a link and choose **Open**), then choose an action.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { activityKey, makeActivity, mentionOf, replyHtml } from "./activity.js";
-import { AS_PROFILE, PUBLIC } from "./constants.js";
+import { AS_PROFILE, PUBLIC } from "../constants.js";
+import { makeActivity, mentionOf, replyHtml } from "./activity.js";
 
 const author = "https://social.example/users/dana";
 const post = {
@@ -75,12 +75,5 @@ describe("makeActivity", () => {
 
   it("follows the verified author", () => {
     expect(makeActivity("follow", post, account)).toMatchObject({ type: "Follow", object: author });
-  });
-});
-
-describe("activityKey", () => {
-  it("keys a follow by the author and other actions by the post", () => {
-    expect(activityKey("me", post, "follow")).toBe(`me ${author} follow`);
-    expect(activityKey("me", post, "like")).toBe(`me ${post.id} like`);
   });
 });

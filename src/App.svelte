@@ -42,7 +42,8 @@
     {/if}
     <SignInForm />
     <p class="quiet">
-      Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.
+      Works with Mastodon-compatible servers, WordPress (ActivityPub plugin) and servers that have
+      the ActivityPub API.
     </p>
   {:else if app.view === "unsupported"}
     <Unsupported />
@@ -65,11 +66,15 @@
     <details>
       <summary>Supported servers</summary>
       <p class="quiet">
-        The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin
-        and turn on the API.
+        Mastodon, GoToSocial, Pleroma and Akkoma work as they are. Pixelfed should, but is less
+        tested.
+      </p>
+      <p class="quiet">
+        WordPress needs the ActivityPub plugin with its API turned on. Other servers need the
+        ActivityPub client API.
         <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">Setup instructions</a>
       </p>
-      <p class="quiet">Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p>
+      <p class="quiet">Lemmy and Misskey are not supported.</p>
     </details>
   {/if}
 

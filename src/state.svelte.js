@@ -2,10 +2,10 @@
 // functions below; the protocol itself lives in lib/ and knows nothing about the page.
 
 import { tick } from "svelte";
-import { activityKey, resolveTarget, sendActivity, undoActivity } from "./lib/activity.js";
+import { activityKey, backendFor } from "./lib/backend.js";
 import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
-import { authorize, completeSignIn } from "./lib/oauth.js";
 import { Problem, problemOf } from "./lib/problem.js";
+import { authorize, completeSignIn } from "./lib/signin.js";
 import { readStore, resetStore, STORE_KEY, saveStore, useStore, withAccount } from "./lib/store.js";
 import { checkSupport } from "./lib/support.js";
 import { httpsUrl } from "./lib/url.js";
@@ -242,7 +242,7 @@ async function runTask(section, message, task, { key, busyLabel, title, actions 
 
 // Refreshes the token while telling the person, so a 401 never needs another tap.
 function withSession(actorId, task) {
-  return withAccount(actorId, (account, renew) =>
+  return withAccount(actorId, backendFor, (account, renew) =>
     task(account, async () => {
       say("Reconnecting…");
       await renew();
@@ -441,7 +441,7 @@ export async function findTarget() {
     "Loading…",
     async () => {
       const object = await withSession(actorId, (account, renew) =>
-        resolveTarget(account, target.href, renew),
+        backendFor(account).resolve(account, target.href, renew),
       );
       if (app.current?.actor !== actorId || app.targetValue !== target.href) return;
       app.resolved = object;
@@ -495,7 +495,7 @@ export async function perform(action, text = "") {
     "",
     async () => {
       const result = await withSession(actorId, (account, renew) =>
-        sendActivity(account, action, object, text, renew),
+        backendFor(account).act(account, action, object, text, renew),
       );
       app.done = { ...app.done, [activityKey(actorId, object, action)]: result };
       const same = app.current?.actor === actorId && app.resolved === object;
@@ -526,14 +526,16 @@ export async function perform(action, text = "") {
 
 export async function undoLast(action) {
   const sent = sentFor(action);
-  if (!sent?.id || app.busy || !app.current) return;
+  if (!sent?.undo || app.busy || !app.current) return;
   const actorId = app.current.actor;
   const object = app.resolved;
   const undone = await runTask(
     "actions",
     "",
     async () => {
-      await withSession(actorId, (account, renew) => undoActivity(account, sent, renew));
+      await withSession(actorId, (account, renew) =>
+        backendFor(account).undo(account, sent, renew),
+      );
       const { [activityKey(actorId, object, action)]: _removed, ...rest } = app.done;
       app.done = rest;
       if (app.current?.actor === actorId && app.resolved === object) {
