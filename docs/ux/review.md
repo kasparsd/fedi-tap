@@ -1,10 +1,10 @@
 # FediTap UX review and improvement plan
 
-Scope: `index.html`, `app.js`, `style.css` at commit `f571c53`. Visual mocks of every flow below are in [`mocks.html`](mocks.html) (open it in a browser; it follows the device's light/dark setting and has no toggle), built only from the shared components in [`components.css`](components.css) and described in [`components.md`](components.md). Mock IDs such as **B3** refer to screens there.
+Scope: `index.html`, `app.js`, `style.css` at commit `f571c53`. Visual mocks of every flow below are in [`mocks.html`](mocks.html) (open it in a browser; each screen is the real page at phone width in a plain frame, follows the device's light/dark setting and has no toggle), built only from the shared components in [`components.css`](components.css) and described in [`components.md`](components.md). Mock IDs such as **B3** refer to screens there.
 
 Design direction (updated): neutral and task-first. No logo, brand colour, gradient, shadow, emoji or avatar decoration; system fonts and system colours only; dark mode follows the device automatically with no toggle; screens are titled by what the person is doing ("Sign in", "Open a link", "Post", "Accounts"), not by a product name. The name appears only where the system requires it (page `<title>`, Home Screen name). The app must also work well when added to the Home Screen (section 3a).
 
-Design lens: Apple Human Interface Guidelines (clarity, deference, depth; sheets for secondary tasks; action sheets for destructive confirmation; lists with checkmarks for selection; 44 pt targets; Dynamic Type; light/dark) and progressive disclosure (show the one thing the person came to do, reveal the rest on demand).
+Design lens: the ideas of Apple's Human Interface Guidelines applied to a native-looking web page (clarity and deference; one prominent action; dialogs for secondary tasks and destructive confirmation; 44 px targets; system fonts and colours; light/dark), not iOS look-alike controls, and progressive disclosure (show the one thing the person came to do, reveal the rest on demand).
 
 ## 1. Summary of findings
 
@@ -15,8 +15,8 @@ Ranked by impact on the two flows you named.
 | 1 | **A pending shared link is invisible before sign-in.** `?url=` is stored, but `#fediverse-actions` (which holds the URL field) stays hidden until an account exists; the only hint is "Sign in to use this link." | `app.js:354`, `app.js:492`, `index.html:26,45` |
 | 2 | **Account management is one overloaded area.** The picker, "Manage accounts" toggle, the sign-in form (used to *add* an account), help text and the destructive "Remove selected account" all share one fieldset. Adding a second account is undiscoverable; the section title "Connect an account" never changes. | `index.html:16-44`, `app.js:360-365` |
 | 3 | **Removal is immediate, unconfirmed and mislabelled.** It lives inside the sign-in form, acts on whichever account the picker shows, has no confirmation and no hint that the server-side grant is not revoked. | `app.js:654-670` |
-| 4 | **The loaded URL shows no content.** (Mock B3: post row with author, handle, text, source and date.) After lookup the person sees only "Post on example.com" plus four equal buttons. They cannot confirm it is the right post, who wrote it, or which account will act. | `app.js:509-519` |
-| 5 | **Action feedback is weak.** (Mocks B4, E3, F2: checkmark rows plus a footer status.) One status line at the bottom of the section; no per-button state (Liked/Reposted/Following); nothing stops a duplicate Like; no undo. | `app.js:633-637` |
+| 4 | **The loaded URL shows no content.** (Mock B3: post with author, handle, text, source and date.) After lookup the person sees only "Post on example.com" plus four equal buttons. They cannot confirm it is the right post, who wrote it, or which account will act. | `app.js:509-519` |
+| 5 | **Action feedback is weak.** (Mocks B4, E3, F2: a done label such as “Liked” plus status text under the actions.) One status line at the bottom of the section; no per-button state (Liked/Reposted/Following); nothing stops a duplicate Like; no undo. | `app.js:633-637` |
 | 6 | **The URL field dominates even when the link came from the share sheet.** Field, Paste and Find stay on screen after the link is already loaded. | `index.html:47-59` |
 | 7 | **The Shortcut is mispositioned.** It is the best way to use the tool, yet it sits below everything, always visible, with a generic heading, even for people who already installed it. It should sit directly under the form for people who did not arrive from it, and disappear for people who did. | `index.html:80-87` |
 | 8 | **Errors are one line of raw text.** HTTP codes, CORS and "API off" are not actionable in place and the CORS help link appears only for one message. | `app.js:521-551` |
@@ -78,13 +78,13 @@ S1 download Shortcut, S2 view source, S3 WordPress help link, S4 CORS help link.
 Three states instead of one long page. Each reveals only what the person needs next.
 
 1. **Signed out** (A1–A4): app name, one sentence, one field, one button. Help and the shortcut are collapsed disclosures. If a shared link is pending, show it as its own section at the top.
-2. **Ready** (D1): account name (`@handle ›`) as a plain button in the navigation bar; one primary "Paste link" control; the Shortcut card directly under it until added or dismissed.
-3. **Link loaded** (B3): a post/profile row with author, excerpt and host; a grouped list of action rows (Like, Repost, Reply…, Follow) with the status in its footer; the URL field disappears behind "Change link". The account stays as a bar button.
+2. **Ready** (D1): account name (`@handle`) as a plain button beside the title; one primary "Paste link" control; the Shortcut card directly under it until added or dismissed.
+3. **Link loaded** (B3): a post/profile block with author, excerpt and host; a list with separators of action buttons (Like, Repost, Reply…, Follow) with the status as text under it; the URL field disappears behind "Change link". The account button stays beside the title.
 
-Secondary tasks move into sheets:
-- **Account sheet** (G1): list with checkmark on the active account, "Add account" row, Edit mode for removal.
-- **Reply composer** (E1): sheet with the post quoted, character count and an explicit "Public" indicator.
-- **Remove account** (G4): action sheet with a destructive button and an explanation.
+Secondary tasks move into dialogs:
+- **Accounts dialog** (G1): list with the active account in bold and marked Current, "Add account…" row, Edit mode for removal.
+- **Reply composer** (E1): bottom-docked dialog with the account named, a character count and "Replies are public" in words.
+- **Remove account** (G4): centred confirmation dialog with a destructive button and an explanation.
 
 ### 3a. Added to the Home Screen
 
@@ -114,12 +114,12 @@ No tracking is involved; nothing leaves the device.
 
 | Flow | Screens | Notes |
 |------|---------|-------|
-| A First run and sign-in | A1 welcome with Shortcut section, A2 looking up, A3 profile-link fallback, A4 server problem, A5 server consent, A6 signed in | Errors are the footer under the field, with a "What to do" disclosure |
+| A First run and sign-in | A1 welcome with Shortcut section, A2 looking up, A3 profile-link fallback, A4 server problem, A5 server consent, A6 signed in | Errors are plain text under the field, with a "Details" disclosure |
 | B Share sheet, already signed in | B1 share sheet, B2 loading, B3 loaded, B4 after Like, B5 lookup failed | Shortcut hands over `?url=`; the field never appears |
 | C Share sheet, signed out | C1 pending link plus sign-in, C2 returns to B2/B3 | Fixes finding 1 |
 | D Open directly | D1 ready, D2 pasted and loading | Paste is the primary control |
-| E Reply | E1 composer, E2 sending, E3 sent | Sheet with text area row, counter and "Public" in the footer |
-| F Profile target | F1 profile, F2 follow requested | Single Follow row |
+| E Reply | E1 composer, E2 sending, E3 sent | Bottom dialog with text area, counter and "Replies are public" in words |
+| F Profile target | F1 profile, F2 follow requested | Single Follow button |
 | G Accounts | G1 account sheet, G2 switched, G3 edit mode, G4 confirm remove, G5 needs re-auth, G6 add account | Fixes findings 2 and 3 |
 | H Edge cases | H1 storage blocked, H2 token refresh, H3 Shortcut section in Safari, H4 arrived from the Shortcut (no section) | |
 | I Home Screen web app | I1 install from Share sheet, I2 first launch, I3 server consent sheet, I4 everyday use, I5 leaving the app | Separate storage, Shortcut opens Safari |
@@ -131,15 +131,15 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 ### Phase 0 — Structure (small, unblocks the rest)
 - Add a view-state attribute on `<main>` (`data-state="signed-out | ready | loaded"`) and drive visibility from CSS plus one `render()` function, replacing scattered `hidden` toggles in `renderAccounts`, `showAccountManagement`, `resetPreview`, `showPreview`.
 - Replace the instruction H1 with a task title per state ("Sign in", "Open a link", "Post"); keep the one-sentence purpose as a subtitle on the sign-in screen only. Remove product naming from visible UI.
-- Introduce system-based tokens: `font: system-ui` (San Francisco on Apple), and colours as CSS keywords (`Canvas`, `CanvasText`, `LinkText`, `AccentColor` where supported) plus the WebKit `-apple-system-*` keywords inside an `@supports (color: -apple-system-label)` block, with hex fallbacks outside it. Do not put keyword fallbacks in custom properties by redeclaring them: custom properties accept any value, so the later declaration wins and breaks the variable (this bit the first draft of the mocks). Dark mode comes from `color-scheme: light dark` plus the system keywords; there is no toggle and no JavaScript theme code.
-- Support Dynamic Type with `font: -apple-system-body` (fallback `system-ui`) and `rem` sizes.
+- Introduce system-based tokens: `font: system-ui` (San Francisco on Apple), and colours as CSS system keywords (`Canvas`, `CanvasText`, `LinkText`, `AccentColor`, `GrayText`) plus two values derived with `color-mix()`. No hex palette and no `-apple-system-*` keywords. Dark mode comes from `color-scheme: light dark`; there is no toggle and no JavaScript theme code.
+- Size type in `rem` so the browser's text size setting scales it; `font: -apple-system-body` (Dynamic Type) is a possible later one-liner, not part of the components.
 - **Done when:** behaviour is unchanged and the three states switch from one place.
 
 ### Phase 1 — Account management (finding 2, 3, 9 partially)
 - Account chip button in the header opens a native `<dialog>` styled as a bottom sheet.
-- Sheet lists accounts (`role=listbox`-style radios with checkmark), "Add account" row (reveals the sign-in field inside the sheet), "Edit" toggles per-row Remove.
-- Remove uses a second dialog styled as an action sheet; copy states that tokens are deleted from this browser and that access can be revoked in the server's settings.
-- Re-auth state shows a banner plus a "Sign in again" row; no more `(sign in again)` text in a `<select>`.
+- The dialog lists accounts (the active one in bold, marked Current), "Add account…" row (reveals the sign-in field inside the dialog), "Edit" toggles per-row Remove.
+- Remove uses a second, centred confirmation dialog; copy states that tokens are deleted from this browser and that access can be revoked in the server's settings.
+- Re-auth state shows plain alert text plus a "Sign in again" button; no more `(sign in again)` text in a `<select>`.
 - Remove the `<select>`, "Manage accounts" toggle and `#forget` from the sign-in form.
 - **Done when:** adding, switching, removing and re-authing an account are possible without leaving the sheet; focus returns to the chip on close; Escape closes; VoiceOver reads selection state.
 
@@ -152,10 +152,10 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 - **Done when:** a shared link goes from tap to a content card with no extra taps and the field is only visible when the person asks for it.
 
 ### Phase 3 — Action feedback (finding 5, 9, 11)
-- Action rows in one grouped list (no tiles, no icons); a pressed row shows a spinner accessory, then a trailing checkmark and secondary text (Liked, Reposted, Follow requested). The used row is disabled for that target to prevent duplicates.
-- Replace the status line with the footer of the actions list ("Liked as @you.") that announces via `role=status`.
+- Actions as one list with separators (no tiles, no icons); a pressed action shows a busy state, then its label changes and turns bold (Liked, Reposted, Follow requested). The used action is disabled for that target to prevent duplicates.
+- Replace the status line with text under the actions list ("Liked as @you.") that announces via `role=status`.
 - On 401, refresh and retry the request once automatically (H2).
-- Reply sheet: quote the post, count characters, show "Public" tag, disable Send when empty.
+- Reply dialog: name the post and account, count characters, say "Replies are public" in words, disable Send when empty.
 - Undo: send an `Undo` activity. This needs the new activity's `id`, normally returned in the `Location` header, which browsers only expose cross-origin if the server sends `Access-Control-Expose-Headers`. Verify against ActivityPub for WordPress first; if unavailable, ship without Undo and label actions as final. Do not promise Undo in the UI until verified.
 - **Done when:** each action has loading, success and failure states; no duplicate sends; refresh is invisible.
 

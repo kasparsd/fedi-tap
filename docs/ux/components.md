@@ -1,107 +1,136 @@
 # Interface components
 
-The mocks drifted: every screen restyled labels, buttons and notices on its own. This document lists the shared elements and fixes one pattern for each, so markup and CSS are written once (`components.css`) and reused by the mocks and, later, the app. The reference is Apple's Human Interface Guidelines (iOS grouped lists, navigation bars, sheets, action sheets), not a web component library or a generic "card" look.
+The page is a web page, also usable as a Home Screen web app. It should look like a clean, well-made web page that uses the browser's own elements, not like an iPhone app. This document describes the small system behind it: a base layer for HTML elements, a handful of classes and a short token list, all in [`style.css`](../../style.css) (about 150 lines). The mocks in [`mocks.html`](mocks.html) show every screen and every component using that file alone. The file is meant to be adopted unchanged as the app's `style.css`.
 
 ## Principles
 
-- **Follow the platform.** Forms look like Settings: grouped inset lists with a header above and help text below each group. Navigation looks like a navigation bar with a title and text bar buttons. Secondary tasks are sheets. Destructive confirmation is an action sheet.
-- **One prominent action per screen.** At most one filled button; everything else is a plain text button or a list row. Filled buttons are not repeated as a row of equals.
-- **Rows, not tiles.** Group related things as rows in one grouped list (separators inside, one rounded container). Avoid grids of boxes, nested cards and a rounded box around every piece of text.
-- **Structure from layout, not decoration.** Hierarchy comes from type size, weight, spacing and system colours. No tinted callout boxes with a coloured edge, no gradients, shadows, emoji, icons used as ornament, or pastel fills.
-- **Words carry the state.** A status or error is plain text in the footer of the thing it refers to, in the secondary or red system colour, not a separate coloured panel.
-- **Everything has a state.** Default, pressed, focus-visible, disabled, selected, loading, error.
-- **44 pt minimum target, system text styles, rem units, light and dark by system colours only.**
+Taken as ideas from Apple's guidelines and component thinking, without copying any iOS controls.
+
+- **Reuse before inventing.** Style the HTML elements first (`h1`, `p`, `label`, `input`, `button`, `a`, `fieldset`, `ul`, `details`, `dialog`). Add a class only where an element alone cannot do the job. Every class is used by at least one screen.
+- **One prominent action per screen.** At most one filled button; everything else is a bordered or text button, or a row in a list.
+- **Progressive disclosure.** Show the one thing the person came to do. Help, details and secondary tasks sit behind `details` or a `dialog`.
+- **Plain text carries the state.** A status or an error is a line of text next to the thing it concerns (`role="status"`, `role="alert"`), told apart by weight and one colour, not by a box.
+- **No decoration.** No shadows, gradients, icons, emoji, tinted boxes, side borders or cards inside cards. Group related actions as a list with separators, not tiles.
+- **Every control has its states.** Hover, active, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`, all from real pseudo-classes and attributes.
+- **Strict consistency.** Two font sizes, two weights, three spaces, four colours and a line colour (see Scale). The same element looks and measures the same on every screen.
+- **44 px targets, system fonts and colours, light and dark by themselves.** Minimum target 2.75rem, sizes in `rem` so the browser's text size scales them, `color-scheme: light dark`.
 
 ## Tokens
 
-Defined once in `components.css` as custom properties. Hex fallbacks first, then a `prefers-color-scheme: dark` block, then an `@supports (color: -apple-system-label)` block that swaps in the live system colours in Safari. A token is never redeclared as a "fallback" (the later declaration would win and break it).
+One `:root` block: seven custom properties for colour and border, three for space, plus size, radius and target. The full set of values in use is in Scale below; nothing else appears in `style.css` or `mocks.html`.
 
-| Group | Tokens |
-|-------|--------|
-| Colour | `--bg` (grouped background), `--surface` (secondary grouped background, list fill), `--sheet-bg` and `--sheet-surface` (elevated levels used inside sheets), `--label`, `--label-2` (secondary), `--label-3` (tertiary: placeholder and disabled), `--separator`, `--fill` (pressed rows, placeholders, disabled prominent button), `--tint`, `--destructive`, `--warning`, `--on-tint`, `--scrim` |
-| Type | `--text-large-title` 34 bold, `--text-title` 22 bold, `--text-headline` 17 semibold, `--text-body` 17, `--text-subhead` 15, `--text-footnote` 13, `--text-caption` 12, each a `font` shorthand in `rem` relative to the body size, so Dynamic Type (`font: -apple-system-body` on the root) scales everything |
-| Space | `--space-1` 4, `-2` 8, `-3` 12, `-4` 16, `-5` 20, `-8` 32 (4-point scale, in `rem`) |
-| Shape | `--radius` 10 for lists, buttons and the top corners of sheets; `--target` 44 pt minimum |
-| Motion | `--ease` 200 ms for the disclosure chevron; all animation and transitions off under `prefers-reduced-motion` |
+| Token | Value |
+|-------|-------|
+| `--quiet` | `CanvasText` 65% mixed into `Canvas` |
+| `--line` | `CanvasText` 45% mixed into `Canvas` |
+| `--accent` | `AccentColor` 85% mixed into `CanvasText` |
+| `--danger` | `red` 75% mixed into `CanvasText` |
+| `--space-1`, `--space-2`, `--space-3` | 0.5, 1, 1.5 rem |
+| `--small`, `--radius`, `--target` | 0.875rem, 0.5rem, 2.75rem |
+| `--rule`, `--focus` | `1px solid var(--line)`, `2px solid var(--accent)` |
 
-## Inventory
+Font is `system-ui` at 1rem, line height 1.45. `accent-color` colours native controls.
 
-Class names in the second column; the markup contract is the comment at the top of each block in `components.css`, and every component is shown in all its states in the first section of `mocks.html`.
+## Scale
 
-### Structure
-| Component | Classes | Purpose and notes |
-|-----------|---------|-------------------|
-| Screen | `.screen` | Full-height container, safe-area padding via `--inset-top`, `--inset-bottom`, `--bottom-bar`, grouped background. Children are inset 1 rem except the navigation bar |
-| Large title, lede | `.large-title`, `.lede` | Screen title for Sign in and the unsupported state; one-sentence purpose below it |
-| Navigation bar | `.navbar`, `.navbar-title` | Always three children: leading, title, trailing. Title is inline and centred |
-| Bar button | `.bar-button`, `.is-strong`, `.is-warning`, `.has-menu` | Text button in the bar: Cancel, Done, Send, Edit and the account button (`.has-menu` adds a chevron, `.is-warning` when the session ended) |
-| Section | `.section`, `.section-header`, `.section-footer` | The unit of layout; header is uppercase footnote, footer is footnote in `--label-2` and holds help, status and errors. `.is-split` footer puts two items at the edges (visibility and counter) |
-| List | `.list` | The one rounded container (radius 10, `--surface`) with inset separators between children |
-| Sheet | `.scrim`, `.sheet`, `.is-tall`, `.sheet-grabber` | Modal task over a scrim. The sheet holds a navigation bar and sections |
-| Action sheet | `.action-sheet`, `.action-sheet-header` | Two lists: choices (centred rows, destructive in red) and a separate Cancel |
+The complete set. A value that is not here does not belong in the CSS.
 
-### Rows and inputs
-| Component | Classes | Purpose and notes |
-|-----------|---------|-------------------|
-| Row | `.row`, `.row-main`, `.row-title`, `.row-subtitle`, `.row-accessory` | Title, optional subtitle, accessory. Accessories: value text, `.is-chevron`, `.is-check`, `.spinner`, or a button or link with `.is-button` (add `.is-destructive` for Remove) |
-| Selection row | `.row` with `.is-selected` or `aria-checked="true"` | The check accessory shows only on the selected row |
-| Button row | `.row-button`, `.row-destructive` | A row that acts: tint text, red for destructive. Finished: `.is-done` plus a check accessory and `disabled` |
-| Text field row | `.row-field`, `.field` | Borderless input inside a list row; optional left label as `.row-title`; trailing accessory button. `aria-invalid="true"` turns the text red; the message is the footer |
-| Text area row | `.row-field` with `textarea.field` | Multi-line; counter in a `.is-split` footer |
-| Disclosure | `.disclosure`, `.disclosure-body` | Native `details`; the summary is styled as a row and the chevron turns when open |
+- **Font sizes (2):** 1rem for content and actions (headings, labels, fields, buttons, links, post text); `--small` 0.875rem for supportive text (hints, status, errors, metadata, captions). Headings differ by weight only. No uppercase, letter-spacing or italics.
+- **Weights (2):** 400, and 600 for headings, labels, `strong`, the primary button, and `aria-pressed` and `aria-current` rows.
+- **Space (3):** `--space-1` 0.5rem for a pair that belongs together (label and input, field and help, heading and what it introduces, items inside a post, a row's gap); `--space-2` 1rem for the vertical rhythm between all other siblings and for horizontal padding; `--space-3` 1.5rem for the bottom of the page and list indents. The same three values are the only margins, paddings and gaps in the mocks. The one derived value is `-1 * --space-2`, the margin that lets a `.link` align its text with the column edge.
+- **Control padding (1):** `--space-1` vertically and `--space-2` horizontally on inputs, text areas, buttons and list rows, with a minimum height and width of `--target` 2.75rem, so every control is the same height.
+- **Radius (1):** `--radius` 0.5rem on controls and dialogs; a bottom-docked sheet squares its lower corners.
+- **Border (1):** `--rule`, 1px in `--line`. The focus ring is `--focus`, 2px in `--accent`, offset 2px.
+- **Layout dimensions (not spacing):** column 36rem, dialog 30rem (a sheet 36rem), dialog maximum height `100dvh` minus two `--space-2`, input minimum 12rem, 100% widths, 1px hidden legend. In `mocks.html` only: page 84rem, text measure 46rem, grid tracks 24.375rem (the 390px frame) and 20rem, frame minimum height 36rem (22rem with a dialog in the specimen), swatches 7rem by 3rem.
+- **Mix ratios in the derived tokens:** 65%, 45%, 85%, 75%, and 50% for the dialog backdrop (`--line` over transparent).
 
-### Controls
-| Component | Classes | Purpose and notes |
-|-----------|---------|-------------------|
-| Button | `.button` | Base: full width, 44 pt minimum |
-| Prominent button | `.button-prominent` | The one main action: filled tint, white label, 50 pt. Disabled and loading become `--fill` with grey text |
-| Plain button | `.button-plain` | Secondary action: tint text, no background |
-| Destructive button | `.button-destructive` | Removal outside a list: red text |
-| Link | `.link` | Inline navigation in text: tint, underline on hover and focus |
+### Colour uses
 
-All interactive components have `:active` (or `.is-pressed`), `:focus-visible` (or `.is-focus`) and `:disabled` / `[aria-disabled="true"]` (or `.is-disabled`) states. Loading is `aria-busy="true"` plus a `.spinner`.
+| Token | Where it is used |
+|-------|------------------|
+| `Canvas` | Page, field and dialog backgrounds; the label on the primary button |
+| `CanvasText` | All content text; the hover border; the pressed primary fill; the label of a finished action |
+| `--quiet` | Supportive text: `.quiet`, `role="status"`, placeholders, disabled text, a loading post |
+| `--accent` | Links, `.link` buttons, the one `.primary` fill, the focus ring |
+| `--danger` | `role="alert"` text, the border of an `aria-invalid` field, `.destructive` labels |
+| `--line` | Borders, list separators, the pressed fill of a bordered button, the disabled border, the backdrop |
 
-### Feedback
-| Component | Classes | Purpose and notes |
-|-----------|---------|-------------------|
-| Status text | `.section-footer.status` | Result or progress ("Liked as @me.", spinner plus "Loading post…"); `role="status"` |
-| Error text | `.error` inside `.section-footer` | Red semibold first line, secondary explanation below; `role="alert"`; details go behind a disclosure |
-| Warning text | `.warning` inside `.section-footer` | Same, orange; used when a session ended |
-| Activity indicator | `.spinner` | In the button, row, bar button or footer that caused the work |
-| Placeholder | `.placeholder`, `.is-short`, `.is-medium` | Flat `--fill` bars inside a post row while loading; no shimmer |
+## Base layer (no classes)
 
-### Content
-| Component | Classes | Purpose and notes |
-|-----------|---------|-------------------|
-| Post | `.post`, `.post-author`, `.post-handle`, `.post-body` | One row with stacked text, used for posts and profiles. The source and date are a normal row below it (`Change link` or `Open original` as the accessory) |
-| Account identifier | `.row-title` over `.row-subtitle` | `@handle` over domain in account rows |
+| Element | Style |
+|---------|-------|
+| `main` | One centred column, `max-inline-size: 36rem`, safe-area padding |
+| `main`, `section`, `article`, `form`, `fieldset`, `details`, `dialog` | Children are spaced by one rule (`> * + *`, `--gap` to tighten) |
+| `h1`, `h2`, `p`, `a` | Headings are body size at weight 600; margins reset; links in `--accent` |
+| `label`, `input`, `textarea` | Weight 600 label above a full-width bordered field, 2.75rem tall; `[aria-invalid="true"]` turns the border to `--danger`; `:disabled` greys the text |
+| `fieldset`, `legend` | Borderless group; the legend names it for assistive technology and is never drawn |
+| `button` | Bordered, 2.75rem; direct children of `main`, `section`, `form`, `fieldset` and `dialog` fill the width |
+| `[role="status"]`, `[role="alert"]` | Small text: `--quiet` for status, `--danger` for alerts, whose `<strong>` first line is its own line |
+| `details`, `summary` | Native disclosure, summary is 2.75rem tall |
+| `dialog` | Bordered, `Canvas` background, backdrop from `--line`, max 30rem |
 
-## Decisions
+## Classes
 
-Things the spec left open, decided while building the mocks.
+| Class | What it is | Markup contract |
+|-------|------------|-----------------|
+| `.primary` | The one filled button: `--accent` fill, `Canvas` label (5.5:1 in light and dark). Disabled becomes a plain outline | `<button class="primary">Continue</button>` |
+| `.link` | A button that looks like a link; no border | `<button class="link">Change link</button>` |
+| `.destructive` | Red label; combine with `.link` or use alone | `<button class="link destructive">Remove</button>` |
+| `.button` | A link that looks like a button | `<a class="button" href download>Add Shortcut</a>` |
+| `.quiet` | Secondary text (hints, meta) | `<p class="quiet">Your handle or profile link.</p>` |
+| `.row` | Items side by side, wrapping, spread to the edges; an input inside grows | `<div class="row"><input type="url"><button>Open</button></div>` |
+| `.list` | Related actions or choices as rows with separators. A row is a button, optionally followed by text or a second control | `<ul class="list"><li><button class="link">Like</button></li></ul>` |
+| `.post` | The post or profile being acted on, set off by one rule above it | `<article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">…</footer></article>` |
+| `.sheet` | Dialog modifier: docked to the bottom edge, full width up to 36rem | `<dialog class="sheet" aria-labelledby="t"><form method="dialog"><h2 id="t">Reply</h2>…</form></dialog>` |
 
-- **Prominent button.** At most one per screen, always outside a list. Pressed dims, disabled and loading switch to a `--fill` background with tertiary or secondary text (no opacity fade), so a disabled Continue is obviously inert.
-- **Actions are a grouped list, not tiles.** Like, Repost, Reply… and Follow are button rows in one list. A finished action gets a trailing checkmark, turns secondary and cannot be pressed again; the footer of that list holds the status ("Liked as @me."). Follow on a profile is a single button row. Reply… ends with an ellipsis because it opens a sheet.
-- **Next steps are rows.** "Undo Like", "Open another link" and "Change link" (on failure) are button rows or plain buttons, never inline links, so every target is 44 pt.
-- **Paste is a row.** "Paste from Clipboard" is the second row under the field in the same list. It loads the link at once. Typing needs an explicit "Open link" prominent button, shown disabled until the input is a valid link.
-- **Failures with a field use the footer; failures without one use the lede.** The storage-blocked screen has no field, so the red line sits in the `.lede` under the title.
-- **Errors lead with the consequence in the first line.** The explanation follows in secondary colour; HTTP codes and setup steps live in a disclosure under the Try again button.
-- **Retry is prominent, alternatives are plain.** On a failed lookup, Try again is filled and Change link is plain. On a failed handle, the profile-link fallback is the filled button because retrying the same input would fail again.
-- **Edit mode shows Remove as a trailing red button.** The iOS minus-in-circle control is a decorative icon, so it is not used.
-- **Warnings.** A session that ended is orange: the account bar button (`.is-warning`) and the footer heading (`.warning`). Nothing else uses orange.
-- **No empty-state component.** The Open a link screen is the empty state; it asks for one thing with one field and a Paste row.
-- **Server consent** (A5, I3) is not our page, but the mock builds it from the same components so the flow reads as one system.
-- **Sheet levels.** Inside a sheet the background is elevated one level (`--sheet-bg`, `--sheet-surface`), which has no `-apple-system-*` keyword, so those two tokens are plain hex values that equal the system colours.
-- **Safe areas** are CSS variables on `.screen` (`--inset-top`, `--inset-bottom`, `--bottom-bar`) defaulting to `env(safe-area-inset-*)`; the mocks only override them for the phone frame.
-- **Chevron and check** are drawn with borders, not glyphs or icon fonts.
-- **Mock-only classes** (`.phone`, `.statusbar`, `.safari`, `.home`, `.stage`, `.spec`) are presentation devices defined in the inline style of `mocks.html`; they are not part of the component set.
+Attributes the CSS also reads: `aria-pressed="true"` (a finished action, bold, readable even when disabled), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; the label says what is happening).
+
+## Copy
+
+Every word on screen has to earn its place. The mocks and the app share these rules.
+
+- **A label names the thing, in one to three words.** "Account", "Link", "Reply". Not "Fediverse handle or profile URL". The input accepts what it accepts; the placeholder shows the shape (`you@example.com`) and the error says what was wrong.
+- **No help text by default.** Add supportive text only when a person would otherwise make a mistake or be surprised, and say only that thing in one short sentence. Never restate the label ("Your handle or profile link."), explain what a field is for, or reassure ("You sign in on your own server.").
+- **Where explanation belongs.** What happens next goes on the button ("Continue", "Open link", "Add Shortcut"). Consequences of an irreversible action go in the confirmation. Background and troubleshooting go behind a disclosure, not in the flow.
+- **Buttons are verbs, one or two words.** Sentences and trailing ellipses are not labels.
+- **Status and errors state the result or the fix, not the process.** "Liked as @me", "Couldn't find me@example.com. Use a profile link." Not "Contacting your server…" repeated three ways.
+- **One idea per screen.** If a screen needs a paragraph to explain itself, the screen is wrong, not the paragraph.
+- **Same thing, same words everywhere.** One label per concept across screens (the account field is "Account" in sign in, in add account and in the first-run screen), and the same wording in the live app.
+- **Audit rule.** For each string ask whether removing it changes what a person does or understands. If not, remove it. Example from the first pass: the sign-in field had the label "Fediverse handle or profile URL" plus the help "Your handle or profile link. You sign in on your own server."; it is now the label "Account", the placeholder `you@example.com` and no help text.
 
 ## Screen recipes
 
-- **Sign in:** large title and lede; Section (header "Account") with one text field row and the help in its footer; the prominent Continue; the Shortcut as its own Section; a Server not working disclosure.
-- **Open a link:** inline title with the account bar button; Section (header "Link") with a text field row and a Paste from Clipboard row; Shortcut Section below.
-- **Post:** Section with the post row and a source row; Section of action rows (Like, Repost, Reply…, Follow) whose footer carries the status; a Section with next-step rows after an action.
-- **Accounts sheet:** Section of selection rows; Section with an Add account button row and the footer; Edit swaps the accessories for red Remove buttons.
-- **Reply sheet:** bar buttons Cancel and Send; text area row; split footer with visibility and counter.
-- **Remove account:** action sheet.
-- **Problems:** the same screen with the error in the relevant footer, one prominent Try again, a plain alternative and the details in a disclosure.
+- **Sign in:** `h1`, one sentence, a `form` with a labelled `input`, hints, `.primary` Continue; the Shortcut as a `section`; `details` for help.
+- **Open a link:** `header.row` with `h1` and the account `.link`; `.primary` Paste link; a labelled `input` with Open in a `.row`.
+- **Post:** `header.row`; `.post`; a `fieldset` holding the action `.list`; status text; next steps as `.link` buttons.
+- **Accounts:** `dialog.sheet` with a `.row` heading and Edit, a `.list` of accounts (`aria-current` bold; `.quiet` "Sign in again" where needed; Remove as `.link.destructive` in edit mode; Add account as the last row), Done.
+- **Reply:** `dialog.sheet` with a label, `textarea`, counter and a `.row` of Cancel and `.primary` Send.
+- **Remove account:** a plain `dialog` with a heading, one sentence and a `.row` of Cancel and `.destructive` Remove.
+- **Problems:** the same screen with a `role="alert"` next to the field or link it concerns, one `.primary` Try again, a plain alternative and technical details in `details`.
+
+## Decisions
+
+- **Native web, not iOS.** No navigation bar, bar buttons, inset grouped lists, action sheets, status bar or grabber. A heading, the account as a text button beside it, and a dialog for secondary tasks do the same jobs with elements the browser already provides.
+- **One body size, one supportive size.** There are no large titles: a heading is the same size as the text under it and is told apart by weight and by the space above it. The screen title is the first line of the page, so it needs no size.
+- **Four colours and a line.** `--accent` is derived from `AccentColor` mixed with the text colour: darker in light mode, lighter in dark mode. That keeps links 5.5:1 against the page and lets the primary button use `Canvas` for its label in both schemes. The raw accent colour measures 4.2:1 against white. `LinkText` is not used, so links and the primary button share one blue.
+- **Disabled is quiet.** There is no `GrayText`. A disabled control has `--quiet` text and a `--line` border, which is also what the supportive text looks like, so a disabled control reads as inactive rather than as a different colour.
+- **Danger is one token.** CSS has no red system keyword, so `--danger` mixes `red` with the text colour.
+- **Pressed is inverted.** A bordered button's pressed fill is `--line`; the primary button's is `CanvasText`. Hover is a `CanvasText` border. Touch devices see only the pressed state.
+- **Status and errors are text, not boxes.** An alert's first line is a `<strong>` (its own line); the explanation follows in the same colour. Details sit under a `details` element. Session ended is an alert, not a separate warning colour.
+- **Done actions say so.** A finished action is disabled, bold and reads in the past tense: Liked, Reposted, Replied, Follow requested. No checkmark icon.
+- **Actions are a list with separators, not tiles.** Like, Repost, Reply and Follow are rows of `.link` buttons. A finished action that can be undone gets a second `.link` control, Undo, at the end of its own row, so every action has its own Undo (Reply has none).
+- **Retry is filled, alternatives are plain.** On a failed lookup Try again is `.primary` and Change link is `.link`. On a failed handle the profile-link fallback is `.primary` because retrying the same input will fail again.
+- **Paste is the one filled button on the Open a link screen.** Typing is the second path, a field and a bordered Open button.
+- **Failures with no field sit under the title.** The storage-blocked screen has no field to attach the alert to.
+- **One dialog element.** The accounts and reply dialogs use `.sheet` (bottom-docked); the removal confirmation is the plain centred dialog. The bottom-docked form is not limited to narrow screens: it stays centred and at most 36rem wide on a desktop, which keeps the CSS free of media queries.
+- **The legend is hidden, the label is visible.** A `fieldset` names a group for assistive technology; the visible name is a heading or a label.
+- **Links keep a 44 px target where they stand alone.** A link inside a `.row` is a 2.75rem flex item. A link inside running text is exempt.
+- **Residual exceptions.** The disclosure summary is 2.75rem tall with its text near the top, because `display: flex` would remove its marker. The dialog backdrop and the mock frame's scrim use `--line` at 50%, not a fifth colour.
+- **No empty-state, spinner or placeholder components.** A busy control says what it is doing in its label (Looking up…, Sending…); the post area says Loading…. Nothing shimmers.
+- **Server consent and system sheets are drawn with the same components.** They are not our pages (A5, B1, I1, I3, I5), but the mock draws them with the same elements so the flow reads as one system.
+- **Mock-only styling stays in `mocks.html`.** The frame, the scrim behind an open dialog and the `data-force` rules that show hover, pressed and focus on a static page live in its inline style.
+- **Not adopted:** Dynamic Type through `font: -apple-system-body`, a toggle for the colour scheme, transitions, and per-component colours.
+
+## App states and live regions
+
+`style.css` ends with the rules the app needs on top of the components: `main[data-state]` (`signed-out`, `ready`, `loaded`, `unsupported`) shows the elements whose `data-views` lists that state, flags on `main` (`data-pending`, `data-reauth`, `data-loading`, `data-failed`, `data-shortcut`, `data-standalone`) add detail, and `data-standalone-only` and `data-browser-only` pick copy for the Home Screen app or Safari. The sign-in screen, its fallback message and the unsupported-browser screen are plain HTML that needs no JavaScript-added classes. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. There are no animations, so no reduced-motion rule is needed.

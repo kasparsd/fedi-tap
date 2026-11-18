@@ -6,7 +6,7 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 
 ## Decisions
 
-- Neutral UI: system font, system colours, no logo, shadows, gradients, emoji or avatars; dark mode follows the device with no toggle.
+- Neutral, native-web UI: semantic elements styled from system fonts and colours (`style.css`, described in `docs/ux/components.md`), no iOS look-alike controls, no logo, shadows, gradients, emoji or avatars; dark mode follows the device with no toggle.
 - Text-only post card; no remote images (the CSP stays `default-src 'none'`).
 - The Shortcut card sits under the primary control unless the person arrived from the Shortcut (`?url=` or `?via=shortcut`) or dismissed it.
 - Legacy `#url=` links are dropped (greenfield).
@@ -23,7 +23,16 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 - [ ] Review against the plan and the security checks
 - [x] Browser test of the Phase 3 to 4b flows in light, dark and 320 px width (Playwright against the mock server); Phase 0 to 2 flows were tested earlier. A final full pass is still open.
 - [ ] Real-device test of the Home Screen OAuth round trip (owner)
-- [ ] Align style.css and index.html with docs/ux/components.css (shared components). Today the app still uses tinted `.card` and `.banner` boxes, a 2x2 grid of tile buttons for the actions and its own token names (`--card`, `--secondary`, `--sep`); the components use grouped lists with button rows, footer status and errors, and `--surface`, `--label-2`, `--separator`.
+- [x] Adopt the component stylesheet as `style.css` and align `index.html` and `app.js`: semantic markup, `.list` actions with a per-row Undo, `dialog.sheet`, plain-text alerts and statuses, copy trimmed to the rules in components.md, review findings fixed in `app.js` (see below). Verified in Playwright in light, dark and 320 px.
+
+## Decisions made while adopting the stylesheet
+
+- Undo is per action: a second control in the action's own row (replaces the single Undo under the list).
+- Sent actions are remembered by account, target and kind for the page session, so a send that finishes after the person moved to another link is still recorded and cannot be sent twice. Reload resets them.
+- A send that ends ambiguously (timeout, dropped connection, HTTP 5xx or 408) offers Dismiss only and says it may already have gone through.
+- Posts need the author's actor to prove its own id; otherwise the card shows only the host and Follow is hidden. A returned object must live on the opened link's origin (or name that address in `url`).
+- The theme-color meta tags are gone: Safari takes the colour from the page background, which is now a system colour.
+- A reply draft survives a session ending: the sheet stays open and "Sign in" stores the draft in session storage for the return trip.
 
 ## Open items for the owner
 

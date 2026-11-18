@@ -58,10 +58,24 @@ docker compose up    # https://localhost:8443/_dev/
 
 The container binds the repo, so edits show on reload, and publishes the port on `127.0.0.1` only. Use the host's mkcert certificate: a certificate made inside the container is not trusted by your browser, and the page needs a trusted HTTPS origin to work. If `.local/dev-certs` is missing the container falls back to a self-signed certificate and the browser shows a warning. Set `PORT` (and `DELAY_MS`) in the environment; the port is part of the OAuth client ID, so it must be the same on both sides. Building the Shortcut (`./build-shortcut.sh`) needs Cherri and Apple's Shortcuts command, so it only runs on a Mac and is not part of the container.
 
+## Lint, format and validate
+
+```bash
+npm install          # dev tools only; the app itself has no dependencies
+npm run validate     # Biome (lint + format check) + static checks
+npm run lint:fix     # apply safe lint fixes and format
+npm run format       # format only
+```
+
+- **[Biome](https://biomejs.dev)** (`biome.json`) lints and formats JS, CSS, HTML, JSON and the manifest in one fast tool, replacing the usual ESLint + Prettier pair. Rules: the recommended set plus `const`, no `var`, strict equality, no unused variables and no shadowed names. A GritQL plugin (`tools/biome/no-html-sinks.grit`) bans `innerHTML`, `outerHTML`, `insertAdjacentHTML` and `document.write`, so remote data can only reach the page as text. `noRedundantUseStrict` is off because `app.js` is a classic script, not a module. Docs and `.local` are not touched; docs use soft line breaks.
+- **Static checks** (`tools/scripts/check.js`): every id that `app.js` or `style.css` refers to exists in `index.html`; the CSP script hash and `integrity` match `app.js` (so a forgotten hash update fails here, not in the browser); no inline scripts, styles or event handlers; local files and manifest icons exist. Ids defined but never referenced are reported as warnings.
+
+Run `npm run validate` before committing. After editing `app.js`, run `npm run format` first, then regenerate the script hash, because formatting changes the file.
+
 ## Test the WordPress flow
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
-2. Paste a post URL (Paste loads it at once) and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
+2. Paste a post URL (**Paste link** loads it at once) and test the four actions. A profile URL should offer only **Follow**. Reload the page and check that the selected account is remembered.
 3. Connect a second account. Switch accounts, verify the next action is sent as that account, then remove one account and check that the other still works.
 4. With a disposable account, expire the saved access token by setting its `expires` field in browser storage to a past time. Open the same link in two tabs and verify that refresh rotation preserves both sessions. Revoke access on the server and check that FediTap asks you to sign in again when the grant can no longer be refreshed.
 5. Install the shortcut on an iPhone, share a Fediverse link, and verify that the browser receives the URL and retains it through sign-in. A successful sign-in can resolve the link, but publishing always requires choosing an action.
@@ -92,7 +106,7 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
-The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, which tells the page the person has the Shortcut (so the Shortcut card stays hidden); the page removes the parameter from the address bar. Shortcuts built before this change open the bare page and keep showing the card until a link is shared once or the person taps **I already have it**. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
+The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, which tells the page the person has the Shortcut (so the Shortcut card stays hidden); the page removes the parameter from the address bar. Shortcuts built before this change open the bare page and keep showing the card until a link is shared once or the person taps **Hide**. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
 ## Account storage
 
@@ -100,14 +114,18 @@ The page stores accounts in browser local storage by ActivityPub actor ID and re
 
 The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.
 
-The page also keeps `feditap.shortcut` (`yes` or `dismissed`) in local storage, separate from the account store, to hide the Shortcut card. It is set when the page opens with a shared link (`?url=`) or `?via=shortcut`, or when the person taps **I already have it** or **Add Shortcut**. The page removes `via` from the address bar after reading it.
+The page also keeps `feditap.shortcut` (`yes` or `dismissed`) in local storage, separate from the account store, to hide the Shortcut card. It is set when the page opens with a shared link (`?url=`) or `?via=shortcut`, or when the person taps **Hide** or **Add Shortcut**. The page removes `via` from the address bar after reading it.
 
 ## Actions, errors and the Home Screen app
 
-Like, Repost and Follow send one activity to the outbox and then stay disabled for that link and account (the label becomes Liked, Reposted, Follow requested); changing the link or account resets them. Reply opens a sheet that names the account, says the reply is public and counts to 500 characters. A failed send keeps the draft and shows the error inside the sheet. On a 401 from the proxy or outbox the page refreshes the token and retries once, showing "Reconnecting…", so the person never has to tap again.
+Like, Repost and Follow send one activity to the outbox and then stay disabled for that link and account (the label becomes Liked, Reposted, Follow requested). The page remembers what it sent by account, target and kind until it reloads, so an action that finishes after the person moved on is still recorded and coming back to the link shows it as done. Reply opens a sheet that names the post and account, says replies are public and counts to 500 characters; blank lines make paragraphs and single newlines line breaks, all escaped. A failed send keeps the draft and shows the error inside the sheet. If the session ends during a reply, the sheet stays open with the draft, and Sign in keeps the draft in session storage for the return. On a 401 from the proxy or outbox the page refreshes the token and retries once, showing "Reconnecting…".
 
-**Undo** appears only when the outbox response carries a readable `Location` header on the page's origin (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed). It sends an `Undo` activity whose `object` is that ID and is offered for Like, Repost and Follow, not Reply.
+A send that ends without a clear answer (timeout, dropped connection, HTTP 5xx or 408) says it may already have gone through and offers only Dismiss; the person checks their account before sending again. Other failures offer Try again, which re-reads the reply text at the moment of the tap.
 
-Failures use one error component: a title, one sentence of cause, an optional "What to do" disclosure (steps, help link, technical detail such as HTTP codes) and buttons. A failed handle lookup keeps the typed value and offers "Use a profile link instead". When storage is blocked or the browser lacks Web Locks, `AbortSignal.timeout` or `crypto.subtle`, the page shows a full-screen explanation instead of a disabled form.
+**Undo** appears in an action's own row only when the outbox response carries a readable `Location` header on the page's origin (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed). It sends an `Undo` activity whose `object` is that ID and is offered for Like, Repost and Follow, not Reply. Each action has its own Undo.
 
-`manifest.webmanifest` makes the page installable (`display: standalone`, `start_url` and `scope` `./`); the CSP allows `manifest-src 'self'` and `img-src 'self'` for the icons (`apple-touch-icon.png` 180 px, `icon-192.png`, `icon-512.png`, flat colour). Serve the manifest as `application/manifest+json`. In standalone mode (`display-mode: standalone` or `navigator.standalone`) the page hides the "Open without the browser bar" hint, tells the person that the Shortcut opens Safari and that this app keeps its own sign-in, and pads for the safe areas. A Home Screen app and Safari keep separate storage on iOS, so each needs its own sign-in.
+Proxy responses are read with a 1 MB cap and the HTML in them is cut to 20,000 characters before parsing. A returned post must live on the origin of the opened link (a proxy may resolve an alias address only when the object names that address in `url`). The author counts as verified only when its actor document carries the same id the post names; otherwise the card shows only the host and Follow is hidden, so Follow always targets a verified id.
+
+Failures use one pattern: a plain-text alert (bold title, one sentence), its buttons, and an optional "What to do" disclosure (steps, help link, technical detail such as HTTP codes). A failed handle lookup keeps the typed value and offers "Use profile link". When storage is blocked, its saved data is damaged (a Reset button removes only this app's key) or the browser lacks Web Locks, `AbortSignal.timeout` or `crypto.subtle`, the page shows a full-screen explanation instead of a disabled form.
+
+`manifest.webmanifest` makes the page installable (`display: standalone`, `start_url` and `scope` `./`); the CSP allows `manifest-src 'self'` and `img-src 'self'` for the icons (`apple-touch-icon.png` 180 px, `icon-192.png`, `icon-512.png`, flat colour). Serve the manifest as `application/manifest+json`. In standalone mode (`display-mode: standalone` or `navigator.standalone`) the page hides the "Add to Home Screen" hint, tells the person that the Shortcut opens Safari and that this app keeps its own sign-in, and pads for the safe areas. A Home Screen app and Safari keep separate storage on iOS, so each needs its own sign-in.
