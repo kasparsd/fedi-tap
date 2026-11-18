@@ -1,210 +1,234 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-0+3NypKELINHYxtWKlpc3vGvPe7plg+BfGyLhcXuLE8='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'">
-  <meta name="referrer" content="no-referrer">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="FediTap">
-  <title>FediTap shortcut for iPhone</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon-192.png" type="image/png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main data-state="signed-out">
-    <header class="bar">
-      <h1 id="title">Sign in</h1>
-      <button type="button" id="account-chip" class="chip" aria-haspopup="dialog" hidden></button>
-    </header>
-    <p id="subtitle" class="help" data-views="signed-out">Use your Fediverse account to like, repost, reply to or follow a post.</p>
+  <head>
+    <meta charset="utf-8">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-CH7lOADBNUEi+M2Gbcn9hrrp+S3+eahfitNIJ+Gpc7Q='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'"
+    >
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="FediTap">
+    <title>FediTap shortcut for iPhone</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main data-state="signed-out">
+      <header class="row">
+        <h1 id="title">Sign in</h1>
+        <button type="button" id="account-chip" class="link" aria-haspopup="dialog" hidden></button>
+      </header>
 
-    <section id="pending-card" class="card" aria-label="Link waiting for sign-in" data-views="signed-out">
-      <p class="meta">Link to open after you sign in</p>
-      <p id="pending-link"></p>
-    </section>
+      <section id="pending-card">
+        <h2>Link waiting</h2>
+        <p id="pending-link" class="quiet"></p>
+      </section>
 
-    <div id="sign-in-slot" data-views="signed-out">
-      <div id="sign-in-panel">
-        <form id="sign-in">
-          <p id="setup-unavailable">Sign-in requires JavaScript and the published HTTPS page.</p>
-          <fieldset id="sign-in-controls" disabled>
-            <legend class="visually-hidden">Account sign-in</legend>
-            <label for="account-input" id="account-label">Fediverse handle or profile URL</label>
-            <input id="account-input" name="account" type="text" placeholder="you@example.com" autocomplete="off" autocapitalize="none" spellcheck="false" required>
-            <p class="help">Your handle or profile link. You sign in on your own server.</p>
-            <p class="help standalone-only">Signed in in Safari? The Home Screen app keeps its own sign-in. Sign in once here.</p>
-            <button type="submit" id="continue" class="primary">Continue</button>
-          </fieldset>
-        </form>
+      <form id="sign-in" data-views="signed-out">
+        <p id="setup-unavailable" role="alert">
+          <strong>Sign-in isn’t available.</strong> It needs JavaScript and the published HTTPS
+          page.
+        </p>
+        <fieldset id="sign-in-controls" disabled>
+          <legend>Account sign-in</legend>
+          <label for="account-input" id="account-label">Account</label>
+          <input
+            id="account-input"
+            name="account"
+            type="text"
+            placeholder="you@example.com"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+          >
+          <p class="quiet" data-standalone-only>
+            This app keeps its own sign-in, separate from Safari.
+          </p>
+          <button type="submit" id="continue" class="primary">Continue</button>
+        </fieldset>
         <p id="status" role="status"></p>
-        <div id="error" role="alert"></div>
-      </div>
-    </div>
+        <section id="error"></section>
+      </form>
 
-    <section id="unsupported" data-views="unsupported">
-      <div class="banner err">
-        <strong id="unsupported-title"></strong>
-        <p id="unsupported-text"></p>
-      </div>
-      <div class="card">
-        <p><strong>Try this</strong></p>
-        <ul class="steps">
-          <li>Turn off Private Browsing, or allow website data for this page.</li>
-          <li>Open the page in the current version of Safari.</li>
+      <section id="unsupported" data-views="unsupported">
+        <p role="alert">
+          <strong id="unsupported-title"></strong> <span id="unsupported-text"></span>
+        </p>
+        <button type="button" id="reset-data" class="primary" hidden>Reset</button>
+        <h2>Try this</h2>
+        <ul>
+          <li>Turn off Private Browsing, or allow website data.</li>
+          <li>Use the current version of Safari.</li>
           <li>Use the published https address.</li>
-          <li>If it still fails, clear this site’s data in your browser settings.</li>
+          <li>Clear this site’s data in your browser settings.</li>
         </ul>
-      </div>
-    </section>
+      </section>
 
-    <section id="reauth" aria-labelledby="reauth-title">
-      <fieldset id="reauth-controls" disabled>
-        <legend class="visually-hidden">Session ended</legend>
-        <div class="banner">
-          <strong id="reauth-title">Sign in again</strong>
-          <p id="reauth-text"></p>
-        </div>
-        <button type="button" id="reauth-sign-in" class="primary">Sign in again</button>
-        <button type="button" id="reauth-other">Use another account</button>
-      </fieldset>
-      <p id="reauth-status" role="status"></p>
-      <div id="reauth-error" role="alert"></div>
-    </section>
+      <section id="reauth">
+        <fieldset id="reauth-controls" disabled>
+          <legend>Session ended</legend>
+          <p role="alert"><strong>Session ended.</strong> <span id="reauth-text"></span></p>
+          <button type="button" id="reauth-sign-in" class="primary">Sign in</button>
+          <button type="button" id="reauth-other">Add account</button>
+        </fieldset>
+        <p id="reauth-status" role="status"></p>
+        <section id="reauth-error"></section>
+      </section>
 
-    <div id="stage">
       <form id="lookup" data-views="ready">
         <fieldset id="lookup-controls" disabled>
-          <legend class="visually-hidden">Find a Fediverse post or profile</legend>
-          <div class="card paste-card">
-            <p><strong>Paste a post or profile link</strong></p>
-            <p class="help">Copy a link in any app, then paste it here.</p>
-            <button type="button" id="paste-link" class="primary">Paste link</button>
-          </div>
-          <label for="post-url">Or type it</label>
-          <div class="form-row">
-            <input id="post-url" type="url" placeholder="https://" autocomplete="off" spellcheck="false" required>
-            <button type="submit" id="find-link">Open</button>
+          <legend>Open a link</legend>
+          <button type="button" id="paste-link" class="primary">Paste link</button>
+          <label for="post-url">Link</label>
+          <div class="row">
+            <input
+              id="post-url"
+              type="url"
+              placeholder="https://"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            >
+            <button type="submit">Open</button>
           </div>
         </fieldset>
       </form>
 
-      <section id="loading-card" class="card" aria-label="Loading link">
-        <p class="meta">Loading…</p>
-        <p id="loading-link"></p>
-      </section>
+      <article id="loading-card" class="post" aria-busy="true">
+        <p id="loading-link" class="quiet"></p>
+      </article>
 
-      <section id="target-view" data-views="loaded">
-        <article id="target-card" class="card" tabindex="-1">
-          <p id="target-name" class="name"></p>
-          <p id="target-handle" class="meta"></p>
-          <p id="target-excerpt"></p>
-          <div class="card-foot">
-            <span class="meta"><a id="target-link" target="_blank" rel="noopener noreferrer"></a><span id="target-date"></span></span>
-            <button type="button" id="change-link" class="text-button">Change link</button>
-          </div>
-        </article>
-        <form id="action-form">
-          <fieldset id="action-controls" disabled>
-            <legend class="visually-hidden">Actions for the selected link</legend>
-            <div class="action-grid">
-              <button type="submit" data-act="like">Like</button>
-              <button type="submit" data-act="repost">Repost</button>
-              <button type="button" data-act="reply" id="write-reply" aria-haspopup="dialog">Reply</button>
-              <button type="submit" data-act="follow">Follow</button>
-            </div>
-            <p id="action-hint" class="help"></p>
-          </fieldset>
-        </form>
-      </section>
+      <article id="target-card" class="post" data-views="loaded" tabindex="-1">
+        <h2 id="target-name">Post</h2>
+        <p id="target-meta" class="quiet"></p>
+        <p id="target-excerpt"></p>
+        <footer class="row quiet">
+          <a id="target-link" href="#target-card" target="_blank" rel="noopener noreferrer"
+            >Original post</a
+          >
+          <button type="button" id="change-link" class="link">Change link</button>
+        </footer>
+      </article>
 
-      <div id="feedback" data-views="ready loaded">
-        <p id="action-status" role="status"></p>
-        <div id="action-next" hidden>
-          <button type="button" id="undo" class="text-button" hidden>Undo</button>
-          <button type="button" id="another-link" class="text-button">Open another link</button>
-        </div>
+      <fieldset id="action-controls" data-views="loaded" disabled>
+        <legend>Actions</legend>
+        <ul class="list">
+          <li>
+            <button type="button" class="link" data-act="like">Like</button>
+            <button type="button" class="link" data-undo="like" hidden>Undo</button>
+          </li>
+          <li>
+            <button type="button" class="link" data-act="repost">Repost</button>
+            <button type="button" class="link" data-undo="repost" hidden>Undo</button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="link"
+              data-act="reply"
+              id="write-reply"
+              aria-haspopup="dialog"
+            >
+              Reply
+            </button>
+          </li>
+          <li>
+            <button type="button" class="link" data-act="follow">Follow</button>
+            <button type="button" class="link" data-undo="follow" hidden>Undo</button>
+          </li>
+        </ul>
+      </fieldset>
+
+      <p id="action-status" role="status"></p>
+      <section id="action-error"></section>
+      <div id="action-next" class="row" hidden>
+        <button type="button" id="another-link" class="link">Open another link</button>
       </div>
-      <div id="action-error" role="alert"></div>
-    </div>
 
-    <aside id="shortcut-card" class="card" aria-labelledby="shortcut-title">
-      <p><strong id="shortcut-title">Share from any app</strong></p>
-      <p class="help browser-only">Add the Shortcut to send a link here from the share sheet. <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">View source on GitHub</a></p>
-      <p class="help standalone-only">The Shortcut opens links in Safari, so you will sign in there once too. <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">View source on GitHub</a></p>
-      <a class="button" id="add-shortcut" href="FediTap.shortcut" download>Add Shortcut</a>
-      <button type="button" id="shortcut-have" class="text-button">I already have it</button>
-    </aside>
+      <section id="shortcut-card" data-views="signed-out ready">
+        <h2>Share from any app</h2>
+        <p class="quiet" data-browser-only>
+          Send links here from the share sheet.
+          <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source</a>
+        </p>
+        <p class="quiet" data-standalone-only>
+          The Shortcut opens Safari, where you sign in too.
+          <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source</a>
+        </p>
+        <a class="button" id="add-shortcut" href="FediTap.shortcut" download>Add Shortcut</a>
+        <button type="button" id="shortcut-have" class="link">Hide</button>
+      </section>
 
-    <details id="help" data-views="signed-out">
-      <summary>Server not working?</summary>
-      <p class="help">Your server needs an ActivityPub client API. <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">WordPress setup instructions</a></p>
-      <p class="help">This browser stores each account and its tokens. Requests go directly to your Fediverse server.</p>
-    </details>
+      <details data-views="signed-out">
+        <summary>Server not working?</summary>
+        <p class="quiet">
+          Your server needs an ActivityPub client API.
+          <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/"
+            >WordPress setup instructions</a
+          >
+        </p>
+      </details>
 
-    <details id="a2hs" data-views="ready">
-      <summary>Open without the browser bar</summary>
-      <p class="help">In Safari, tap Share, then Add to Home Screen. The Home Screen app keeps its own sign-in.</p>
-    </details>
-  </main>
+      <details id="a2hs" data-views="ready">
+        <summary>Add to Home Screen</summary>
+        <p class="quiet">
+          In Safari, tap Share, then Add to Home Screen. The app keeps its own sign-in.
+        </p>
+      </details>
+    </main>
 
-  <dialog id="accounts-sheet" class="sheet" aria-labelledby="sheet-title" data-mode="list">
-    <div class="sheet-body">
-      <div class="sheet-nav">
-        <button type="button" id="sheet-left" class="text-button">Edit</button>
+    <dialog id="accounts-sheet" class="sheet" aria-labelledby="sheet-title">
+      <div class="row">
         <h2 id="sheet-title">Accounts</h2>
-        <button type="button" id="sheet-right" class="text-button">Done</button>
+        <button type="button" id="sheet-edit" class="link">Edit</button>
       </div>
       <fieldset id="sheet-controls" disabled>
-        <legend class="visually-hidden">Connected accounts</legend>
-        <div id="sheet-list-view">
-          <ul id="account-list" class="group"></ul>
-          <ul class="group add-group">
-            <li><button type="button" id="add-account" class="row-main add-row">Add account…</button></li>
-          </ul>
-          <p class="help">Sign-ins are stored on this device only.</p>
-        </div>
+        <legend>Accounts</legend>
+        <ul id="account-list" class="list"></ul>
       </fieldset>
-      <div id="sheet-sign-in"></div>
       <p id="sheet-status" role="status"></p>
-      <div id="sheet-error" role="alert"></div>
-    </div>
-  </dialog>
+      <section id="sheet-error"></section>
+      <button type="button" id="sheet-done">Done</button>
+      <button type="button" id="sheet-cancel" class="link" hidden>Cancel</button>
+    </dialog>
 
-  <dialog id="remove-sheet" class="sheet action-sheet" aria-labelledby="remove-title" aria-describedby="remove-text">
-    <div class="sheet-body">
-      <div class="card centered">
-        <p><strong id="remove-title">Remove account?</strong></p>
-        <p id="remove-text" class="help">This device forgets the account. To end access on your server, use its account settings.</p>
-        <button type="button" id="remove-confirm" class="destructive">Remove account</button>
+    <dialog id="remove-sheet" aria-labelledby="remove-title" aria-describedby="remove-text">
+      <h2 id="remove-title">Remove account?</h2>
+      <p id="remove-text" class="quiet">
+        This only signs out on this device. To end access, revoke it on your server.
+      </p>
+      <div class="row">
+        <button type="button" id="remove-cancel">Cancel</button>
+        <button type="button" id="remove-confirm" class="destructive">Remove</button>
       </div>
-      <button type="button" id="remove-cancel">Cancel</button>
-    </div>
-  </dialog>
-  <dialog id="reply-sheet" class="sheet" aria-labelledby="reply-title">
-    <div class="sheet-body">
+    </dialog>
+
+    <dialog id="reply-sheet" class="sheet" aria-labelledby="reply-title">
+      <h2 id="reply-title">Reply</h2>
+      <p id="reply-context" class="quiet"></p>
       <fieldset id="reply-controls" disabled>
-        <legend class="visually-hidden">Write a reply</legend>
-        <div class="sheet-nav">
-          <button type="button" id="reply-cancel" class="text-button">Cancel</button>
-          <h2 id="reply-title">Reply</h2>
-          <button type="button" id="reply-send" class="text-button strong" disabled>Send</button>
+        <legend>Write a reply</legend>
+        <label for="reply-text">Your reply</label>
+        <textarea id="reply-text" rows="5" aria-describedby="reply-count"></textarea>
+        <div class="row quiet">
+          <p>Replies are public.</p>
+          <p id="reply-count">0 / 500</p>
         </div>
-        <p id="reply-context" class="help"></p>
-        <label for="reply-text" class="visually-hidden">Your reply</label>
-        <textarea id="reply-text" rows="6" aria-describedby="reply-count"></textarea>
-        <p id="reply-count" class="help count">0 / 500</p>
+        <p id="reply-status" role="status"></p>
+        <section id="reply-error"></section>
+        <div class="row">
+          <button type="button" id="reply-cancel">Cancel</button>
+          <button type="button" id="reply-send" class="primary" disabled>Send</button>
+        </div>
       </fieldset>
-      <p id="reply-status" role="status"></p>
-      <div id="reply-error" role="alert"></div>
-    </div>
-  </dialog>
-  <script src="app.js" integrity="sha256-0+3NypKELINHYxtWKlpc3vGvPe7plg+BfGyLhcXuLE8="></script>
-</body>
+    </dialog>
+    <script src="app.js" integrity="sha256-CH7lOADBNUEi+M2Gbcn9hrrp+S3+eahfitNIJ+Gpc7Q="></script>
+  </body>
 </html>
