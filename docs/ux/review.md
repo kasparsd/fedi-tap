@@ -78,11 +78,11 @@ S1 download Shortcut, S2 view source, S3 WordPress help link, S4 CORS help link.
 Three states instead of one long page. Each reveals only what the person needs next.
 
 1. **Signed out** (A1–A4): app name, one sentence, one field, one button. Help and the shortcut are collapsed disclosures. If a shared link is pending, show it as its own section at the top.
-2. **Ready** (D1): account name (`@handle`) as a button beside the title; the link field with Paste inside it and a primary Open button beside it; the Shortcut card directly under it until added or dismissed.
+2. **Ready** (D1): the account dropdown in the header; the link field with Paste inside it and a primary Open button beside it; the Shortcut card directly under it until added or dismissed.
 3. **Link loaded** (B3): a post/profile block with author, excerpt and host; ordinary action buttons (Like, Repost, Reply, Follow) in a wrapping group with the status as text under them; the link field stays above the post with its value, so there is no "Change link". The account button stays beside the title.
 
 Secondary tasks move into dialogs:
-- **Accounts dialog** (G1): a list of account buttons with the current one outlined and bold, an Add account button, Edit mode for removal.
+- **Accounts dialog** (G1): opened from the last option ("Add account") of the header's account dropdown; a list of stored accounts with Remove buttons and the add-account row.
 - **Reply composer** (E1): bottom-docked dialog with the account named, a character count and "Replies are public" in words.
 - **Remove account** (G4): centred confirmation dialog with a destructive button and an explanation.
 
@@ -136,12 +136,12 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 - **Done when:** behaviour is unchanged and the three states switch from one place.
 
 ### Phase 1 — Account management (finding 2, 3, 9 partially)
-- Account chip button in the header opens a native `<dialog>` styled as a bottom sheet.
-- The dialog lists accounts (the active one in bold, marked Current), "Add account…" row (reveals the sign-in field inside the dialog), "Edit" toggles per-row Remove.
+- The header's native account dropdown switches accounts; its last option opens a native `<dialog>` styled as a bottom sheet (superseded: there is no account chip any more).
+- The dialog lists the stored accounts, each with a Remove button, and below them the add-account field with its button.
 - Remove uses a second, centred confirmation dialog; copy states that tokens are deleted from this browser and that access can be revoked in the server's settings.
 - Re-auth state shows plain alert text plus a "Sign in again" button; no more `(sign in again)` text in a `<select>`.
 - Remove the `<select>`, "Manage accounts" toggle and `#forget` from the sign-in form.
-- **Done when:** adding, switching, removing and re-authing an account are possible without leaving the sheet; focus returns to the chip on close; Escape closes; VoiceOver reads selection state.
+- **Done when:** adding, switching, removing and re-authing an account are possible without leaving the sheet; focus returns to the dropdown on close; Escape closes; VoiceOver reads selection state.
 
 ### Phase 2 — Loaded-URL experience (finding 1, 4, 6, 7)
 - Pending-link card shown in the signed-out state (C1).

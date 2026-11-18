@@ -14,7 +14,7 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 ## Todos
 
 - [x] Phase 0: view-state model, task titles, system tokens, automatic dark mode
-- [x] Phase 1: account chip, accounts sheet, confirmed removal, session-ended state
+- [x] Phase 1: account switching and removal (now the header dropdown and Accounts dialog), confirmed removal, session-ended state
 - [x] Phase 2: post/profile card, hidden URL field, Paste loads at once, Shortcut card rules
 - [x] Phase 3: action button states, no double send, inline confirmation, automatic refresh and retry on 401, Reply sheet, Undo only if the server exposes the activity ID (implemented, hidden when the `Location` header is unreadable)
 - [x] Phase 4: structured errors, sign-in fallback without clearing the field, storage-blocked screen
@@ -39,6 +39,12 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 - An input that has been shown is never hidden or disabled: the link field stays in the ready, loading and loaded states and the account field in every sign-in state and in the add-account sheet. While a request runs the input is read-only and its buttons `aria-disabled` (so value and focus survive); a failure prints below the input (`aria-invalid`, `aria-describedby`) and the value is editable at once. There is no loading card and no "Change link"; the stale post is removed while a new link loads and when it fails.
 - Paste is a button inside the link field (`.field`); the submit button (Continue, Open) is one row with the input, which shrinks at 320 px.
 - Like, Repost, Reply, Follow and Undo are ordinary buttons in a wrapping `.group`; a finished action is disabled and filled (`aria-pressed`). The "list row that is really a button" and the `.link` button style are retired; two styles remain, a button and a real link. "Open another link" is gone. Failures add a button only when there is a different way forward (Use profile link, Sign in), since the primary button next to the field is the retry.
+
+## Decisions: header and account dropdown
+
+- Every screen has the same header: the "⁂tap" mark (a plain link, aria-label "FediTap") and, once an account is stored, a native "Account" dropdown whose last option is "Add account". The account chip and the accounts sheet are gone; the Accounts dialog (stored accounts with Remove, plus the add-account row) opens only from that last option.
+- A short summary paragraph shows above the sign-in form only while no account is stored. The Shortcut panel ("Add Shortcut for iOS") and the Add to Home Screen disclosure show on iOS only, never when signed out.
+- Labels follow `docs/research/fediverse-ui-conventions.md` (Like and Repost kept). Replies are public with a Mention of the author, and the reply counter and 500 limit are gone. The expired-sign-in screen has one primary button, Sign in.
 
 ## Open items for the owner
 

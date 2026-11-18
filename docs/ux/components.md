@@ -69,11 +69,19 @@ The complete set. A value that is not here does not belong in the CSS.
 | `details`, `summary` | Native disclosure, summary is 2.75rem tall |
 | `dialog` | Bordered, `Canvas` background, backdrop from `--line`, max 30rem |
 
+## Header and account dropdown
+
+Every screen starts with the same `header` (a `.row`, one line, a `--rule` line below): the product mark on the left and the account switcher on the right.
+
+- **Mark:** the text "⁂tap" as a plain link to the page start, `<a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>`. Body size, weight 600, inherited colour, no underline, no logo. The aria-label makes screen readers say "FediTap" instead of reading the symbol. It is the only place the product name shows in the visible UI besides the Shortcut and Home Screen copy.
+- **Dropdown:** a native `select` labelled "Account", hidden until an account is stored. Each account is `@handle@domain`, with " (sign in again)" appended when it needs signing in; the last option is "Add account". Choosing an account switches to it (the post reloads for it; one that needs signing in goes to its sign-in). Choosing the last option opens the Accounts dialog and the select stays on the active account. It uses the same control tokens as inputs, shrinks and clips its text (`max-inline-size: 70%`) and never pushes the mark off at 320 px.
+- **Retired:** the account chip button and the accounts sheet with its Edit mode. Accounts are removed from the Accounts dialog, behind the dropdown's last option.
+
 ## Classes
 
 | Class | What it is | Markup contract |
 |-------|------------|-----------------|
-| `.primary` | The one filled button: `--accent` fill, `Canvas` label (5.5:1 in light and dark). Disabled becomes a plain outline | `<button class="primary">Continue</button>` |
+| `.primary` | The one filled button: `--accent` fill, `Canvas` label (5.5:1 in light and dark). Disabled becomes a plain outline. One per screen; on the session-ended screen it is Sign in and Open is a normal button | `<button class="primary">Sign in</button>` |
 | `.field` | An input with a button inside its trailing end; the wrapper draws the border (an inset outline) and the input has none | `<div class="field"><input type="url"><button type="button">Paste</button></div>` |
 | `.destructive` | Red label on the normal button | `<button class="destructive">Remove</button>` |
 | `.button` | A link that looks like a button | `<a class="button" href download>Add Shortcut</a>` |
@@ -92,7 +100,7 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 - **A label names the thing, in one to three words.** "Account", "Link", "Reply". Not "Fediverse handle or profile URL". The input accepts what it accepts; the placeholder shows the shape (`you@example.com`) and the error says what was wrong.
 - **No help text by default.** Add supportive text only when a person would otherwise make a mistake or be surprised, and say only that thing in one short sentence. Never restate the label ("Your handle or profile link."), explain what a field is for, or reassure ("You sign in on your own server.").
-- **Where explanation belongs.** What happens next goes on the button ("Continue", "Open", "Add Shortcut"; "Opening…" while it runs). Consequences of an irreversible action go in the confirmation. Background and troubleshooting go behind a disclosure, not in the flow.
+- **Where explanation belongs.** What happens next goes on the button ("Sign in", "Open", "Add Shortcut"; "Opening…" while it runs). Consequences of an irreversible action go in the confirmation. Background and troubleshooting go behind a disclosure ("Supported servers"), not in the flow.
 - **Buttons are verbs, one or two words.** Sentences and trailing ellipses are not labels.
 - **Status and errors state the result or the fix, not the process.** "Liked as @me", "Couldn't find me@example.com. Use a profile link." Not "Contacting your server…" repeated three ways.
 - **One idea per screen.** If a screen needs a paragraph to explain itself, the screen is wrong, not the paragraph.
@@ -101,17 +109,17 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 ## Screen recipes
 
-- **Sign in:** `h1`, a `form` with a labelled `input` and `.primary` Continue in one `.row`, the error directly below that row; the Shortcut as a `section`; `details` for help.
-- **Open a link:** `header.row` with `h1` and the account button; a labelled `.field` (input with Paste inside) and `.primary` Open in one `.row`; status and error below the row. The field stays visible in the ready, loading and loaded states and keeps its value.
+- **Sign in:** `header`, `h1`, one short paragraph saying what the app does (only while no account is stored), a `form` with a labelled `input` and `.primary` Sign in in one `.row`, the error directly below that row, one compatibility sentence below the form, `details` "Supported servers". No Shortcut panel when signed out.
+- **Open a link:** `header` with the mark and the account dropdown, `h1`; a labelled `.field` (input with Paste inside) and `.primary` Open in one `.row`; status and error below the row. The field stays visible in the ready, loading and loaded states and keeps its value. On iOS only, the Shortcut panel and the Add to Home Screen disclosure sit below.
 - **Post:** the link row, then `.post`, then a `fieldset` holding a `.group` of action buttons (Like, Repost, Reply, Follow, and Undo buttons next to a finished one); status text below. The post is removed while the next link loads or fails.
-- **Accounts:** `dialog.sheet` with a `.row` heading and an Edit button, a `.list` of account buttons (`aria-current` outlines and bolds the current one; Remove as `.destructive` buttons in edit mode), Add account and Done buttons.
-- **Reply:** `dialog.sheet` with a label, `textarea`, counter and a `.row` of Cancel and `.primary` Send.
+- **Accounts:** `dialog.sheet` opened only from the dropdown's last option: a heading, a `.list` of stored accounts (text and a `.destructive` Remove button each), then the add-account `.row` (input and Sign in), and a Done button. It cannot be dismissed while a sign-in runs.
+- **Reply:** `dialog.sheet` with a label, `textarea`, "Replies are public." and a `.row` of Cancel and `.primary` Send (disabled while empty). A reply is addressed to Public with the author in `cc` and a Mention, so the author is notified.
 - **Remove account:** a plain `dialog` with a heading, one sentence and a `.row` of Cancel and `.destructive` Remove.
 - **Problems:** a `role="alert"` directly below the input it belongs to (the input gets `aria-invalid` and `aria-describedby`), technical detail in `details`. The person edits the value and presses the same primary button again, so a failure adds a button only when there is a different way forward (Use profile link, Sign in).
 
 ## Decisions
 
-- **Native web, not iOS.** No navigation bar, bar buttons, inset grouped lists, action sheets, status bar or grabber. A heading, the account as a button beside it, and a dialog for secondary tasks do the same jobs with elements the browser already provides.
+- **Native web, not iOS.** No navigation bar, bar buttons, inset grouped lists, action sheets, status bar or grabber. A header with the name, a native dropdown for accounts, and a dialog for secondary tasks do the same jobs with elements the browser already provides.
 - **One body size, one supportive size.** There are no large titles: a heading is the same size as the text under it and is told apart by weight and by the space above it. The screen title is the first line of the page, so it needs no size.
 - **Four colours and a line.** `--accent` is derived from `AccentColor` mixed with the text colour: darker in light mode, lighter in dark mode. That keeps links 5.5:1 against the page and lets the primary button use `Canvas` for its label in both schemes. The raw accent colour measures 4.2:1 against white. `LinkText` is not used, so links and the primary button share one blue.
 - **Disabled is quiet.** There is no `GrayText`. A disabled control has `--quiet` text and a `--line` border, which is also what the supportive text looks like, so a disabled control reads as inactive rather than as a different colour.
@@ -119,7 +127,7 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 - **Pressed is inverted.** A bordered button's pressed fill is `--line`; the primary button's is `CanvasText`. Hover is a `CanvasText` border. Touch devices see only the pressed state.
 - **Status and errors are text, not boxes.** An alert's first line is a `<strong>` (its own line); the explanation follows in the same colour. Details sit under a `details` element. Session ended is an alert, not a separate warning colour.
 - **Done actions say so.** A finished action is disabled, bold and reads in the past tense: Liked, Reposted, Replied, Follow requested. No checkmark icon.
-- **Actions are real buttons.** Like, Repost, Reply and Follow use the same bordered button as everything else, in a wrapping `.group` under the post. Two styles exist for controls: a button looks like a button, navigation looks like a link; there is no button dressed as a link and no row dressed as a button. A finished action is disabled and filled with `--accent` (`aria-pressed`), and its label is past tense; Undo is a separate plain button next to it.
+- **Actions are real buttons.** Like, Repost, Reply and Follow use the same bordered button as everything else, in a wrapping `.group` under the post. Two styles exist for controls: a button looks like a button, navigation looks like a link (the header mark, Source code); there is no button dressed as a link and no row dressed as a button. A finished action is disabled and filled with `--accent` (`aria-pressed`), and its label is past tense; Undo is a separate plain button next to it.
 - **The field is never hidden or disabled by an error.** An input that has been shown stays shown, with its value. While a request runs the input is `readonly` and its buttons `aria-disabled` with `aria-busy` on the pressed one, so text and focus are never lost; there is no loading card and no Change link. A failure prints below the field and the field is editable at once.
 - **Paste lives inside the link field.** A bordered button segment at the trailing end of the `.field`; it reads the clipboard, fills the field and submits. Open is the one filled button to the right of the row.
 - **Failures with no field sit under the title.** The storage-blocked screen has no field to attach the alert to.
