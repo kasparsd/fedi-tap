@@ -14,6 +14,7 @@ const form = $("sign-in");
 const input = $("account-input");
 const submit = $("continue");
 const status = $("status");
+const connect = $("connect");
 let settings = "";
 
 function httpsUrl(value) {
@@ -106,7 +107,9 @@ async function discover(value) {
   if (!profile) {
     const account = parseHandle(value);
     if (!account || input.type === "url") {
-      throw new Error("Enter a handle like you@example.org or an HTTPS profile URL.");
+      input.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-describedby", "error");
+      throw new Error("Enter a handle like you@example.com or an HTTPS profile URL.");
     }
     webfinger = new URL("/.well-known/webfinger", account.origin);
     webfinger.searchParams.set("resource", `acct:${account.handle}`);
@@ -114,8 +117,8 @@ async function discover(value) {
     if (!profile) {
       input.type = "url";
       input.value = "";
-      input.placeholder = "https://example.org/author/you";
       $("account-label").textContent = "ActivityPub profile URL";
+      input.placeholder = "https://…";
       input.focus();
       throw new Error(`Couldn't look up ${account.handle}. Enter your profile URL instead.`);
     }
@@ -280,20 +283,14 @@ function showConnect(payload, server) {
   $("resume").hidden = false;
   form.hidden = false;
   settings = JSON.stringify(payload);
-  $("account").textContent = `@${payload.handle} · ${server}`;
-  $("connect").href = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=${encodeURIComponent(settings)}`;
-  const shortcut = httpsUrl(SHORTCUT_ICLOUD_URL);
-  if (shortcut?.hostname === "www.icloud.com" && shortcut.pathname.startsWith("/shortcuts/")) {
-    $("get-shortcut").href = shortcut.href;
-    $("get-shortcut").removeAttribute("download");
-    $("get-shortcut").target = "_blank";
-    $("get-shortcut").rel = "noopener noreferrer";
-  }
+  $("account").textContent = `Signed in as @${payload.handle} · ${server}`;
+  connect.href = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=${encodeURIComponent(settings)}`;
+  connect.removeAttribute("aria-disabled");
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   $("desktop").hidden = isIOS;
   status.textContent = "";
-  $("connected").hidden = false;
+  $("connection-details").hidden = false;
   $("connected-title").focus();
 }
 
@@ -307,19 +304,31 @@ function showError(error, callback = false) {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  input.removeAttribute("aria-invalid");
+  input.removeAttribute("aria-describedby");
   submit.disabled = true;
   $("failure").hidden = true;
+  $("error").textContent = "";
   status.textContent = "Looking up your account…";
   try {
     await authorize(input.value.trim());
   } catch (error) {
     showError(error);
     submit.disabled = false;
+    if (input.hasAttribute("aria-invalid")) input.focus();
   }
+});
+
+input.addEventListener("input", () => {
+  if (!input.hasAttribute("aria-invalid")) return;
+  input.removeAttribute("aria-invalid");
+  input.removeAttribute("aria-describedby");
+  $("error").textContent = "";
 });
 
 $("retry").addEventListener("click", () => {
   $("failure").hidden = true;
+  $("error").textContent = "";
   form.hidden = false;
   input.focus();
 });
@@ -339,22 +348,33 @@ window.addEventListener("pagehide", () => {
   status.textContent = "";
   if (!settings) return;
   settings = "";
-  $("connect").removeAttribute("href");
-  $("connected").hidden = true;
+  connect.removeAttribute("href");
+  connect.setAttribute("aria-disabled", "true");
+  $("connection-details").hidden = true;
   $("copy-status").textContent = "";
   restoreHandle();
   form.hidden = false;
 });
 
+const shortcut = httpsUrl(SHORTCUT_ICLOUD_URL);
+if (shortcut?.hostname === "www.icloud.com" && shortcut.pathname.startsWith("/shortcuts/")) {
+  const download = $("get-shortcut");
+  download.href = shortcut.href;
+  download.removeAttribute("download");
+  download.target = "_blank";
+  download.rel = "noopener noreferrer";
+}
+
 restoreHandle();
+submit.disabled = false;
+$("setup-unavailable").hidden = true;
 const callback = new URL(location.href);
 const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
 if (["code", "state", "error"].some((key) => callback.searchParams.has(key))) {
+  form.hidden = true;
   const params = new URLSearchParams(callback.search);
   for (const key of oauthParams) callback.searchParams.delete(key);
   history.replaceState(null, "", callback.href);
   status.textContent = "Finishing sign-in…";
   completeSignIn(params).catch((error) => showError(error, true));
-} else {
-  form.hidden = false;
 }

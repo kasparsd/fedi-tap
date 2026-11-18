@@ -31,7 +31,7 @@ FediTap uses the client-to-server ActivityPub API described in the [Social API B
 2. On the Connect screen, verify the handle and server. Check that the address bar no longer contains the OAuth code or state and that browser storage contains no tokens or pending OAuth transaction.
 3. On desktop, click **Copy settings** and save the copied JSON to a private `settings.json`. With Node.js 22 or later, run `npm run try -- settings.json https://example.org/path/to/a/fediverse-post` with a real federated post URL. The default action reads through the account’s proxy and should print the resolved object type and ID. Run `npm run try -- --help` for the other actions and `--dry-run`.
 4. Use the refresh grant below on a disposable test connection. Check that the response includes a new token pair and that the previous refresh token is rejected. The refresh call can be made before the access token expires. To exercise automatic refresh on an iPhone, set the saved account’s `expires` to less than 60 seconds from now, then run a shortcut action.
-5. On an iPhone, open the page in Safari, sign in, install **FediTap** using **Download Shortcut** and tap **Connect FediTap**. Confirm that Shortcuts receives JSON as text and writes the account to `fediverse.json`. Repeat with the same handle, then a different handle, to check replacement and addition.
+5. On an iPhone, open the page in Safari and install **FediTap** using **Download Shortcut**. Return to the page, sign in, and tap **Connect FediTap**. Confirm that Shortcuts receives JSON as text and writes the account to `fediverse.json`. Repeat with the same handle, then a different handle, to check replacement and addition.
 
 ```sh
 umask 077
