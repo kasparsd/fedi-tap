@@ -10,7 +10,7 @@
   <article id="target-card" class="post">
     <div class="byline">
       <div>
-        {#if object.name}<h2 id="target-name">{object.name}</h2>{/if}
+        {#if object.name}<strong id="target-name">{object.name}</strong>{/if}
         <p id="target-meta" class="quiet">
           {#if object.handle}<span>{object.handle}</span>{/if}
           {#if object.date}<span>{object.date}</span>{/if}

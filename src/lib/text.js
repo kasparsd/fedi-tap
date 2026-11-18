@@ -15,7 +15,5 @@ export function plainText(html, limit) {
 /** A date for display ("Nov 17, 2026"), or "" when the value isn't a date. */
 export function shortDate(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? ""
-    : date.toLocaleDateString(undefined, { dateStyle: "medium" });
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("en", { dateStyle: "medium" });
 }

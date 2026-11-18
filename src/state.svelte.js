@@ -51,7 +51,6 @@ class AppState {
   done = $state.raw({});
 
   accountsOpen = $state.raw(false);
-  removeOpen = $state.raw(false);
   replyOpen = $state.raw(false);
   removing = $state.raw(null);
 
@@ -91,7 +90,6 @@ class AppState {
       case "unsupported":
         return this.unsupported.heading;
       case "loaded":
-        return this.resolved.isActor ? "Profile" : "Post";
       case "ready":
         return "Open a post or profile";
       default:
@@ -118,6 +116,11 @@ export const locked = (section) => app.busy && app.busySection === section;
 /** The button label for an action. */
 export function actionLabel(name) {
   return ACTIONS[name].idle;
+}
+
+/** What the button reads once the action is sent. */
+export function doneLabel(name) {
+  return ACTIONS[name].done ?? ACTIONS[name].idle;
 }
 
 /** What an action already sent for the loaded target (and the current account) returned, if any. */
@@ -171,7 +174,7 @@ export async function settleFocus() {
   const active = document.activeElement;
   if (active && active !== document.body && !active.matches(":disabled")) return;
   if (app.replyOpen) focusFirst(byId("reply-text"));
-  else if (!app.accountsOpen && !app.removeOpen) {
+  else if (!app.accountsOpen) {
     const enabled = [...document.querySelectorAll("#action-controls button:not(:disabled)")];
     focusFirst(...enabled, byId("post-url"), byId("account-select"));
   }
@@ -381,6 +384,7 @@ export async function openAccountsSheet(keepMessages = false) {
 }
 
 export function accountsClosed() {
+  app.removing = null;
   focusFirst(app.current ? byId("account-select") : byId("account-input"));
 }
 
@@ -420,7 +424,7 @@ async function switchAccount(actorId, select) {
   else if (app.targetValue) await findTarget();
 }
 
-export function askRemove(actorId) {
+export async function askRemove(actorId) {
   const account = app.accounts.find((item) => item.actor === actorId);
   if (!account) {
     // Removed in another tab: show what is left instead of asking about a ghost.
@@ -432,13 +436,21 @@ export function askRemove(actorId) {
     return;
   }
   app.removing = account.actor;
-  app.removeOpen = true;
+  await tick();
+  byId("remove-cancel")?.focus();
+}
+
+export async function cancelRemove() {
+  const actorId = app.removing;
+  app.removing = null;
+  await tick();
+  const index = app.accounts.findIndex((item) => item.actor === actorId);
+  byId("account-list")?.querySelectorAll("li")[index]?.querySelector("button")?.focus();
 }
 
 export async function confirmRemove() {
   const actorId = app.removing;
   app.removing = null;
-  app.removeOpen = false;
   if (!actorId) return;
   const wasCurrent = actorId === app.current?.actor;
   const removed = await runTask(
@@ -583,10 +595,8 @@ export async function perform(action, text = "") {
       }
       message = `${labels.sent} as @${app.current.handle}.`;
       if (inSheet) return "";
-      // A toggle says how to take it back, once, or why it can't be taken back.
-      return result.undo
-        ? `${message} Press ${actionLabel(action)} again to undo.`
-        : `${message} This server doesn’t allow undo from here.`;
+      // The button now reads as done and presses back to undo; say so only when it can't.
+      return result.undo ? message : `${message} This server doesn’t allow undo from here.`;
     },
     {
       key: inSheet ? "reply-send" : `act:${action}`,

@@ -8,7 +8,6 @@
   import LookupForm from "./components/LookupForm.svelte";
   import Messages from "./components/Messages.svelte";
   import ReauthCard from "./components/ReauthCard.svelte";
-  import RemoveSheet from "./components/RemoveSheet.svelte";
   import ReplySheet from "./components/ReplySheet.svelte";
   import ShortcutCard from "./components/ShortcutCard.svelte";
   import SignInForm from "./components/SignInForm.svelte";
@@ -36,7 +35,7 @@
 
   {#if app.view === "signed-out"}
     <section>
-      <h2>Act on Fediverse posts from your own account</h2>
+      <p>Act on Fediverse posts from your own account:</p>
       <ol>
         <li>Connect your Fediverse account.</li>
         <li>Open a post or profile link, or share one from your phone.</li>
@@ -50,10 +49,7 @@
       </section>
     {/if}
     <SignInForm />
-    <p class="quiet">
-      Works with Mastodon-compatible servers, WordPress (ActivityPub plugin) and servers that have
-      the ActivityPub API.
-    </p>
+    <p class="quiet">Works with Mastodon, WordPress and other ActivityPub servers.</p>
   {:else if app.view === "unsupported"}
     <Unsupported />
   {/if}
@@ -70,6 +66,7 @@
     >
       <TargetCard object={app.resolved} />
       {#if !app.resolved.isActor}<ActionButtons />{/if}
+      {#if app.accounts.length > 1}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
     </section>
   {:else if usable && app.opening && app.showProgress}
     <TargetCard host={openingHost} />
@@ -104,5 +101,4 @@
 </main>
 
 <AccountsSheet />
-<RemoveSheet />
 <ReplySheet />

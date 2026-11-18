@@ -8,11 +8,11 @@ FediTap works with Mastodon-compatible servers (Mastodon, GoToSocial, Pleroma, A
 
 1. Open [FediTap](https://kasparsd.github.io/fedi-tap/) and connect your account on your home server.
 2. Choose **Paste** in the link field (or type a link and choose **Open**), then choose an action.
-3. On iPhone or iPad, to use the Apple share sheet, choose **Add Shortcut for iOS** (**Add Shortcut**), open the file in Apple Shortcuts, and add it. Share a Fediverse link to **FediTap** to open the same page with the link filled in.
+3. On iPhone, iPad or Mac, to use the Apple share sheet, choose **Share to FediTap** (**Add Shortcut**), open the file in Apple Shortcuts, and add it. Share a Fediverse link to **FediTap** to open the same page with the link filled in.
 
 ## Use multiple accounts
 
-Connect each account once, then use the account menu at the top to switch accounts or choose **Connect account**. In the Accounts dialog, **Remove** clears that account from this browser. Clear or revoke its authorization on your home server if you want to end access there.
+Connect each account once, then use the account menu at the top to switch accounts or choose **Manage accounts**. In the Accounts dialog, **Remove** clears that account from this browser. Clear or revoke its authorization on your home server if you want to end access there.
 
 The browser stores accounts and tokens locally. The shortcut sends only the shared link and never receives credentials. If you used the earlier shortcut, replace it with the new launcher and connect again in your browser.
 

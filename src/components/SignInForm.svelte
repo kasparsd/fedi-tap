@@ -1,8 +1,11 @@
 <script>
+  // `label` names the account field when no profile link is asked for.
   import { standalone } from "../lib/support.js";
   import { app, isBusy, locked, onAccountInput, submitSignIn } from "../state.svelte.js";
   import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
+
+  let { label = "Account" } = $props();
 </script>
 
 <form
@@ -15,7 +18,7 @@
   <fieldset id="sign-in-controls">
     <legend>Connect account</legend>
     <label for="account-input" id="account-label">
-      {app.profileLinkMode ? "Profile link" : "Account"}
+      {app.profileLinkMode ? "Profile link" : label}
     </label>
     <div class="row">
       <input

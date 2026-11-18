@@ -48,7 +48,7 @@
       <button
         type="submit"
         id="open-link"
-        class={app.reauth ? undefined : "primary"}
+        class={app.reauth || app.view === "loaded" ? undefined : "primary"}
         aria-busy={isBusy("open") ? "true" : undefined}
         aria-disabled={locked("lookup") ? "true" : undefined}
       >

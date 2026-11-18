@@ -18,7 +18,7 @@
         @{account.handle}{account.needsReauth ? " (reconnect)" : ""}
       </option>
     {/each}
-    <option value="add">Connect account</option>
+    <option value="add">Manage accounts</option>
   </select>
   <!-- One progress cue for every task, laid over the header's rule so it takes no space. -->
   {#if app.showProgress}<progress aria-label={app.task?.announce}></progress>{/if}

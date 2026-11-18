@@ -19,7 +19,7 @@
     >
       <BusyLabel key="reauth-sign-in" idle="Reconnect" busy="Looking up…" />
     </button>
-    <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Connect account</button>
+    <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Use another account</button>
   </fieldset>
   <Messages section="reauth" />
 </section>

@@ -1,7 +1,7 @@
 <script>
   // One action: Like, Repost and Follow toggle (pressing one that is on undoes it); Reply opens its sheet.
   import { ACTIONS } from "../lib/constants.js";
-  import { actionLabel, app, openReply, perform, sentFor, undoLast } from "../state.svelte.js";
+  import { actionLabel, app, doneLabel, openReply, perform, sentFor, undoLast } from "../state.svelte.js";
   import BusyLabel from "./BusyLabel.svelte";
 
   let { name } = $props();
@@ -55,8 +55,8 @@
   {@render icon(name)}
   <BusyLabel
     {key}
-    idle={actionLabel(name)}
+    idle={sent ? doneLabel(name) : actionLabel(name)}
     busy={ACTIONS[name].doing}
-    reserve={[actionLabel(name), "Undoing…"]}
+    reserve={[actionLabel(name), doneLabel(name), "Undoing…"]}
   />
 </button>

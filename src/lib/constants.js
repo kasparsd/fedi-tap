@@ -11,11 +11,12 @@ export const MAX_RESPONSE = 1000000;
 export const MAX_HTML = 20000;
 export const DRAFT_KEY = "feditap.draft";
 
-// idle: button label. doing: label while sending. sent: the result, before " as @account".
+// idle: button label. done: button label once sent. doing: label while sending. sent: the result, before " as @account".
 // undone: the result of undoing. noun and verb name the action in errors.
 export const ACTIONS = {
   like: {
     idle: "Like",
+    done: "Liked",
     doing: "Liking…",
     sent: "Liked",
     undone: "Like undone",
@@ -24,6 +25,7 @@ export const ACTIONS = {
   },
   repost: {
     idle: "Repost",
+    done: "Reposted",
     doing: "Reposting…",
     sent: "Reposted",
     undone: "Repost undone",
@@ -33,6 +35,7 @@ export const ACTIONS = {
   reply: { idle: "Reply", doing: "Sending…", sent: "Reply sent", noun: "Reply", verb: "reply" },
   follow: {
     idle: "Follow",
+    done: "Requested",
     doing: "Sending…",
     sent: "Follow request sent",
     undone: "Follow undone",
