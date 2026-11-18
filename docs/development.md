@@ -155,7 +155,7 @@ The page stores accounts in browser local storage by ActivityPub actor ID, each 
 
 The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.
 
-The "Share to FediTap" panel (the Shortcut works on iPhone, iPad and Mac) shows on every device, signed out or in, and has no dismiss state or stored flag. The Add to Home Screen hint shows only on iPhone and iPad (user agent, or a touch-capable Mac platform for iPadOS), only in the browser (not once installed) and only while no sign-in has expired.
+The "Add Apple Shortcut" panel (the Shortcut works on iPhone, iPad and Mac) shows on every device, signed out or in, and has no dismiss state or stored flag. The Add to Home Screen hint shows only on iPhone and iPad (user agent, or a touch-capable Mac platform for iPadOS), only in the browser (not once installed) and only while no sign-in has expired.
 
 ## Actions, errors and the Home Screen app
 

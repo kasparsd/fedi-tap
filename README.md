@@ -8,7 +8,7 @@ FediTap works with Mastodon-compatible servers (Mastodon, GoToSocial, Pleroma, A
 
 1. Open [FediTap](https://kasparsd.github.io/fedi-tap/) and connect your account on your home server.
 2. Choose **Paste** in the link field (or type a link and choose **Open**), then choose an action.
-3. On iPhone, iPad or Mac, to use the Apple share sheet, choose **Share to FediTap** (**Add Shortcut**), open the file in Apple Shortcuts, and add it. Share a Fediverse link to **FediTap** to open the same page with the link filled in.
+3. On iPhone, iPad or Mac, to use the Apple share sheet, choose **Add Apple Shortcut** (**Add Shortcut**), open the file in Apple Shortcuts, and add it. Share a Fediverse link to **FediTap** to open the same page with the link filled in.
 
 ## Use multiple accounts
 

@@ -3,7 +3,7 @@
 </script>
 
 <section id="shortcut-card">
-  <h2>Share to FediTap</h2>
+  <h2>Add Apple Shortcut</h2>
   <p class="quiet">
     Add the Shortcut (<a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri"
       >view source</a
