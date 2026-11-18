@@ -1,0 +1,32 @@
+# Local development environment: static app + mock ActivityPub/OAuth server over HTTPS.
+#
+#   npm run certs           # once, on the host: browser-trusted certificate (needs mkcert)
+#   docker compose up       # https://localhost:8443/_dev/
+#
+# PORT must match on both sides because the OAuth client ID and redirect URI contain the
+# origin: PORT=9000 docker compose up  ->  https://localhost:9000/_dev/
+services:
+  dev:
+    build: .
+    init: true
+    working_dir: /app
+    command: npm run dev
+    environment:
+      PORT: "${PORT:-8443}"
+      DELAY_MS: "${DELAY_MS:-400}"
+    ports:
+      # Loopback only: the mock server accepts any sign-in and must not be reachable from the LAN.
+      - "127.0.0.1:${PORT:-8443}:${PORT:-8443}"
+    volumes:
+      # The repo is mounted so edits show up on reload; .local/dev-certs holds the host's certificate.
+      - .:/app
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('https').get('https://localhost:'+process.env.PORT+'/client.json',{rejectUnauthorized:false},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

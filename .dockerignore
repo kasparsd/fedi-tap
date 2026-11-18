@@ -1,0 +1,6 @@
+.git
+.local
+.claude
+node_modules
+*.shortcut
+docs

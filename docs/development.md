@@ -47,6 +47,17 @@ Sign in with a profile URL on the dev index page. Each user exercises a path:
 
 The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, missing post, legacy `#url=`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
 
+### Pinned Node and Docker
+
+Tooling targets Node 24 (`.nvmrc`, `engines` in `package.json`). The app itself is static and has no dependencies. To avoid installing Node, run the same server in a container:
+
+```bash
+npm run certs        # once, on the host (needs mkcert); creates .local/dev-certs
+docker compose up    # https://localhost:8443/_dev/
+```
+
+The container binds the repo, so edits show on reload, and publishes the port on `127.0.0.1` only. Use the host's mkcert certificate: a certificate made inside the container is not trusted by your browser, and the page needs a trusted HTTPS origin to work. If `.local/dev-certs` is missing the container falls back to a self-signed certificate and the browser shows a warning. Set `PORT` (and `DELAY_MS`) in the environment; the port is part of the OAuth client ID, so it must be the same on both sides. Building the Shortcut (`./build-shortcut.sh`) needs Cherri and Apple's Shortcuts command, so it only runs on a Mac and is not part of the container.
+
 ## Test the WordPress flow
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
