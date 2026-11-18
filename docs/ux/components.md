@@ -23,7 +23,7 @@ One `:root` block: seven custom properties for colour and border, three for spac
 |-------|-------|
 | `--quiet` | `CanvasText` 65% mixed into `Canvas` |
 | `--line` | `CanvasText` 45% mixed into `Canvas` |
-| `--accent` | `AccentColor` 85% mixed into `CanvasText` |
+| `--accent` | Brand blue `#00a6f5`: `light-dark(#006fa6, #00a6f5)` |
 | `--danger` | `red` 75% mixed into `CanvasText` |
 | `--space-1`, `--space-2`, `--space-3` | 0.5, 1, 1.5 rem |
 | `--small`, `--radius`, `--target` | 0.875rem, 0.5rem, 2.75rem |
@@ -122,7 +122,7 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 - **Native web, not iOS.** No navigation bar, bar buttons, inset grouped lists, action sheets, status bar or grabber. A header with the name, a native dropdown for accounts, and a dialog for secondary tasks do the same jobs with elements the browser already provides.
 - **One body size, one supportive size.** There are no large titles: a heading is the same size as the text under it and is told apart by weight and by the space above it. The screen title is the first line of the page, so it needs no size.
-- **Four colours and a line.** `--accent` is derived from `AccentColor` mixed with the text colour: darker in light mode, lighter in dark mode. That keeps links 5.5:1 against the page and lets the primary button use `Canvas` for its label in both schemes. The raw accent colour measures 4.2:1 against white. `LinkText` is not used, so links and the primary button share one blue.
+- **Four colours and a line.** `--accent` is the fixed brand blue `#00a6f5`, darkened in light mode (`#006fa6`, 5.5:1 against white; the brand blue itself is only 2.7:1) and used as is in dark mode (7.8:1 against black), so links read well and the primary button can use `Canvas` for its label in both schemes. The system `AccentColor` is not used. `LinkText` is not used, so links and the primary button share one blue.
 - **Disabled is quiet.** There is no `GrayText`. A disabled control has `--quiet` text and a `--line` border, which is also what the supportive text looks like, so a disabled control reads as inactive rather than as a different colour.
 - **Danger is one token.** CSS has no red system keyword, so `--danger` mixes `red` with the text colour.
 - **Pressed is inverted.** A bordered button's pressed fill is `--line`; the primary button's is `CanvasText`. Hover is a `CanvasText` border. Touch devices see only the pressed state.

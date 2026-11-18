@@ -1,6 +1,8 @@
 #define name FediTap
 #define inputs text, url
 #define from sharesheet
+#define color lightblue
+#define glyph asterisk
 
 #include 'actions/text'
 #include 'actions/web'

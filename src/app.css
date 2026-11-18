@@ -7,13 +7,13 @@
 /* Tokens */
 :root {
   color-scheme: light dark;
-  accent-color: AccentColor;
+  accent-color: var(--accent);
   font:
     1rem / 1.45 system-ui,
     sans-serif;
   --quiet: color-mix(in srgb, CanvasText 65%, Canvas); /* supportive text */
   --line: color-mix(in srgb, CanvasText 45%, Canvas); /* borders, separators, pressed fill */
-  --accent: color-mix(in srgb, AccentColor 85%, CanvasText); /* links and the one primary button */
+  --accent: light-dark(#006fa6, #00a6f5); /* brand blue: links and the one primary button */
   --danger: color-mix(in srgb, red 75%, CanvasText); /* errors and destructive actions */
   --space-1: 0.5rem; /* a pair that belongs together: label and input, field and help */
   --space-2: 1rem; /* the vertical rhythm, and horizontal padding */
