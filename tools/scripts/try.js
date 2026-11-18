@@ -45,7 +45,7 @@ async function readAccount(file) {
 function post(url, token, body, contentType) {
   const headers = {
     Authorization: `Bearer ${token}`,
-    Accept: "application/activity+json"
+    Accept: "application/activity+json",
   };
   if (contentType) headers["Content-Type"] = contentType;
   return fetch(url, { method: "POST", redirect: "manual", headers, body });
@@ -56,10 +56,14 @@ async function resolve(account, url) {
   const object = await response.json().catch(() => null);
   const type = Array.isArray(object?.type) ? object.type[0] : object?.type;
   if (!response.ok || !object?.id || !type) {
-    throw new Error(`The proxy did not return an ActivityPub object for ${url} (HTTP ${response.status})`);
+    throw new Error(
+      `The proxy did not return an ActivityPub object for ${url} (HTTP ${response.status})`,
+    );
   }
 
-  const attributedTo = Array.isArray(object.attributedTo) ? object.attributedTo[0] : object.attributedTo;
+  const attributedTo = Array.isArray(object.attributedTo)
+    ? object.attributedTo[0]
+    : object.attributedTo;
   const author = typeof attributedTo === "string" ? attributedTo : attributedTo?.id;
   console.error(`Type:   ${type}\nID:     ${object.id}`);
   if (author) console.error(`Author: ${author}`);
@@ -81,7 +85,13 @@ function makeActivity(action, { id, author, isActor }, followers, reply) {
     return { ...context, type: "Like", object: id, ...addressing };
   }
   if (action === "repost") {
-    return { ...context, type: "Announce", object: id, to: [author], cc: [PUBLIC, followers].filter(Boolean) };
+    return {
+      ...context,
+      type: "Announce",
+      object: id,
+      to: [author],
+      cc: [PUBLIC, followers].filter(Boolean),
+    };
   }
 
   if (!reply) throw new Error('Reply needs text: reply "Your reply"');
@@ -90,7 +100,7 @@ function makeActivity(action, { id, author, isActor }, followers, reply) {
     ...context,
     type: "Create",
     ...addressing,
-    object: { type: "Note", inReplyTo: id, content: `<p>${escaped}</p>`, ...addressing }
+    object: { type: "Note", inReplyTo: id, content: `<p>${escaped}</p>`, ...addressing },
   };
 }
 
@@ -102,7 +112,12 @@ async function sendActivity(account, activity, dryRun) {
     return;
   }
 
-  const response = await post(account.outbox, account.token, JSON.stringify(activity), ACTIVITY_TYPE);
+  const response = await post(
+    account.outbox,
+    account.token,
+    JSON.stringify(activity),
+    ACTIVITY_TYPE,
+  );
   console.error(`HTTP ${response.status}`);
   const location = response.headers.get("location");
   if (location) console.error(`Activity ID (for undo): ${location}`);
@@ -135,12 +150,17 @@ async function main(args) {
   const account = await readAccount(file);
   console.error(`Account: ${account.handle || ""} → ${account.outbox}`);
   if (target === "undo") {
-    await sendActivity(account, { "@context": AS2, type: "Undo", object: action, cc: [PUBLIC] }, dryRun);
+    await sendActivity(
+      account,
+      { "@context": AS2, type: "Undo", object: action, cc: [PUBLIC] },
+      dryRun,
+    );
     return;
   }
 
   const object = await resolve(account, target);
-  if (action !== "resolve") await sendActivity(account, makeActivity(action, object, account.followers, reply), dryRun);
+  if (action !== "resolve")
+    await sendActivity(account, makeActivity(action, object, account.followers, reply), dryRun);
 }
 
 main(process.argv.slice(2)).catch((error) => {

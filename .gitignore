@@ -7,3 +7,6 @@
 /refreshed.json
 /fediverse.json
 /fediverse.txt
+
+# Dependencies.
+/node_modules/

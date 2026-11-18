@@ -1,0 +1,18 @@
+language js;
+
+or {
+  `$obj.innerHTML`,
+  `$obj.outerHTML`,
+  `$obj.innerHTML = $v`,
+  `$obj.outerHTML = $v`,
+  `$obj.innerHTML += $v`,
+  `$obj.insertAdjacentHTML`,
+  `document.write`,
+  `document.writeln`
+} as $sink where {
+  register_diagnostic(
+    span = $sink,
+    message = "Use textContent or DOM methods; remote data must not become markup.",
+    severity = "error"
+  )
+}

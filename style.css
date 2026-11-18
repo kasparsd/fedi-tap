@@ -1,56 +1,108 @@
-/* System fonts and colours only. Hex values are the fallback; where the browser knows the
-   -apple-system-* keywords (Safari) the live system colours replace them and follow
-   light and dark by themselves. Custom properties are never redeclared as fallbacks. */
+/* Interface components for the FediTap screens (see components.md).
+
+   One stylesheet for the mocks and, later, the app. System fonts and system colours only.
+   Hex values are the fallback; where the browser knows the -apple-system-* keywords
+   (Safari on iOS and macOS) the live system colours replace them and follow light and dark
+   by themselves. Custom properties are never redeclared as fallbacks: the override block
+   below is the only place a token gets a keyword value.
+
+   Markup contract (each block below repeats its own example):
+   - A screen is a stack: navbar (optional), large title (optional), then sections.
+   - A section is header + list + footer. A list holds rows. Status and errors live in footers.
+   - Interactive things have :active (or .is-pressed), :focus-visible (or .is-focus),
+     :disabled / [aria-disabled="true"] (or .is-disabled). The .is-* classes exist so that
+     static mocks can show a state without interaction.
+*/
+
+/* ---------- Tokens ---------- */
+
 :root {
   color-scheme: light dark;
-  font: 100%/1.4 system-ui, sans-serif;
+  font: 100%/1.3 system-ui, sans-serif;
+
+  --font: system-ui, -apple-system, sans-serif;
+
   --bg: #f2f2f7;
-  --card: #fff;
+  --surface: #fff;
+  --sheet-bg: #f2f2f7;
+  --sheet-surface: #fff;
   --label: #000;
-  --secondary: #6c6c70;
-  --sep: #c6c6c8;
+  --label-2: #6c6c70;
+  --label-3: #3c3c434d;
+  --separator: #c6c6c8;
   --fill: #7676801f;
   --tint: #007aff;
-  --red: #ff3b30;
-  --orange: #ff9500;
+  --destructive: #ff3b30;
+  --warning: #ff9500;
+  --on-tint: #fff;
+  --scrim: #00000066;
+
+  /* Sizes are relative to the body text size (1rem), so Dynamic Type scales everything. */
+  --text-large-title: 700 2rem/1.2 var(--font);
+  --text-title: 700 1.3rem/1.25 var(--font);
+  --text-headline: 600 1rem/1.3 var(--font);
+  --text-body: 400 1rem/1.3 var(--font);
+  --text-subhead: 400 0.875rem/1.35 var(--font);
+  --text-footnote: 400 0.8rem/1.35 var(--font);
+  --text-caption: 400 0.72rem/1.3 var(--font);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-8: 2rem;
+
+  --radius: 0.625rem;
+  --target: 2.75rem;
+  --ease: 200ms ease;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #000;
-    --card: #1c1c1e;
+    --surface: #1c1c1e;
+    --sheet-bg: #1c1c1e;
+    --sheet-surface: #2c2c2e;
     --label: #fff;
-    --secondary: #98989f;
-    --sep: #38383a;
+    --label-2: #98989f;
+    --label-3: #ebebf54d;
+    --separator: #38383a;
     --fill: #7676803d;
     --tint: #0a84ff;
-    --red: #ff453a;
-    --orange: #ff9f0a;
+    --destructive: #ff453a;
+    --warning: #ff9f0a;
   }
 }
 
+/* The sheet tokens have no system keyword; their hex values equal the system elevated colours. */
 @supports (color: -apple-system-label) {
   :root {
     --bg: -apple-system-grouped-background;
-    --card: -apple-system-secondary-grouped-background;
+    --surface: -apple-system-secondary-grouped-background;
     --label: -apple-system-label;
-    --secondary: -apple-system-secondary-label;
-    --sep: -apple-system-separator;
+    --label-2: -apple-system-secondary-label;
+    --label-3: -apple-system-tertiary-label;
+    --separator: -apple-system-separator;
     --fill: -apple-system-tertiary-fill;
     --tint: -apple-system-blue;
-    --red: -apple-system-red;
-    --orange: -apple-system-orange;
+    --destructive: -apple-system-red;
+    --warning: -apple-system-orange;
   }
 }
 
 @supports (font: -apple-system-body) {
   :root {
     font: -apple-system-body;
-    line-height: 1.4;
+    line-height: 1.3;
   }
 }
 
-* {
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -58,465 +110,584 @@
   display: none !important;
 }
 
-body {
-  min-block-size: 100dvh;
-  margin: 0;
-  background: var(--bg);
-  color: var(--label);
+button,
+input,
+textarea,
+summary {
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-main {
-  max-inline-size: 40rem;
-  margin-inline: auto;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-    calc(3rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* ---------- Screen ----------
+   <main class="screen"> <nav class="navbar">…</nav> <h1 class="large-title">Sign in</h1>
+   <p class="lede">One sentence.</p> <section class="section">…</section> </main>
+   Everything except the navbar and a scrim is inset 1rem. --inset-top, --inset-bottom and
+   --bottom-bar override the safe areas (the mocks set them for the phone frame). */
+
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-block-size: var(--screen-height, 100dvh);
+  padding-block-start: var(--inset-top, env(safe-area-inset-top, 0px));
+  padding-block-end: calc(1rem + var(--inset-bottom, env(safe-area-inset-bottom, 0px)) + var(--bottom-bar, 0px));
+  background: var(--bg);
+  color: var(--label);
+  font: var(--text-body);
   overflow-wrap: anywhere;
 }
 
-h1,
-h2,
-p {
-  margin: 0;
+.screen > :not(.navbar, .scrim),
+.sheet > :not(.navbar, .sheet-grabber) {
+  margin-inline: var(--space-4);
 }
 
-/* Views: one data-state on main decides what is visible. */
-[data-views],
-#pending-card,
-#reauth,
-#loading-card,
-#shortcut-card,
-.standalone-only {
-  display: none;
+.large-title {
+  margin-block: var(--space-1) var(--space-2);
+  font: var(--text-large-title);
 }
 
-main[data-state="signed-out"] [data-views~="signed-out"],
-main[data-state="ready"] [data-views~="ready"],
-main[data-state="loaded"] [data-views~="loaded"],
-main[data-state="unsupported"] [data-views~="unsupported"] {
-  display: block;
+.lede {
+  margin-block: 0 var(--space-4);
+  font: var(--text-subhead);
+  color: var(--label-2);
 }
 
-main[data-standalone] .standalone-only {
-  display: block;
-}
+/* ---------- Navigation bar and bar buttons ----------
+   <nav class="navbar"><button class="bar-button">Cancel</button>
+   <h1 class="navbar-title">Reply</h1><button class="bar-button is-strong">Send</button></nav>
+   Always three children: leading, title, trailing (use an empty <span> for a missing one).
+   The account button is a trailing bar button with .has-menu. */
 
-main[data-standalone] .browser-only,
-main[data-standalone] #a2hs {
-  display: none;
-}
-
-main[data-state="signed-out"][data-pending] #pending-card,
-main[data-reauth] #reauth,
-main[data-loading] #loading-card {
-  display: block;
-}
-
-main[data-reauth] #action-error,
-main[data-reauth] #lookup,
-main[data-loading] #lookup {
-  display: none;
-}
-
-main[data-shortcut][data-state="signed-out"] #shortcut-card,
-main[data-shortcut][data-state="ready"]:not([data-reauth], [data-loading]) #shortcut-card {
-  display: block;
-}
-
-main > * + *,
-#sign-in-panel > * + *,
-.card > * + * {
-  margin-block-start: 0.75rem;
-}
-
-#stage {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-#stage > * {
-  margin: 0;
-}
-
-main[data-state="ready"] #action-error {
-  order: -1;
-}
-
-#action-next {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 0.5rem;
-}
-
-#action-next .text-button {
-  padding-inline: 0;
-  min-inline-size: 0;
-}
-
-.bar {
-  display: flex;
+.navbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  min-block-size: 2.75rem;
+  min-block-size: var(--target);
+  padding-inline: var(--space-2);
 }
 
-h1 {
-  font-size: 1.5rem;
-  line-height: 1.2;
+.navbar > :first-child {
+  justify-self: start;
 }
 
-h2 {
-  font-size: 1rem;
+.navbar > :last-child {
+  justify-self: end;
 }
 
-.chip,
-.text-button {
-  border: 0;
-  background: transparent;
-  color: var(--tint);
-  font-weight: 400;
-}
-
-.chip {
-  min-inline-size: 0;
-  max-inline-size: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chip::after {
-  content: " ›";
-  content: " ›" / "";
-}
-
-.chip[data-warn] {
-  color: var(--orange);
-}
-
-.card {
-  padding: 0.75rem 0.875rem;
-  border-radius: 0.625rem;
-  background: var(--card);
-}
-
-.card.centered {
+.navbar-title {
+  margin: 0;
+  font: var(--text-headline);
   text-align: center;
 }
 
-.name {
+.bar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--target);
+  min-inline-size: var(--target);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius);
+  color: var(--tint);
+  font: var(--text-body);
+  text-decoration: none;
+}
+
+.bar-button.is-strong {
   font-weight: 600;
 }
 
-.meta,
-.help,
-.card small,
-#setup-unavailable {
-  color: var(--secondary);
+.bar-button.is-warning {
+  color: var(--warning);
 }
 
-.meta,
-.help,
-small {
-  font-size: 0.8125rem;
+.bar-button:active,
+.bar-button.is-pressed {
+  opacity: 0.4;
 }
 
-.help {
-  font-size: 0.9375rem;
+.bar-button:focus-visible,
+.bar-button.is-focus {
+  outline: 0.125rem solid var(--tint);
+  outline-offset: -0.125rem;
 }
 
-#target-excerpt {
-  white-space: pre-line;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 8;
-  line-clamp: 8;
-  overflow: hidden;
-}
-
-.card-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-#target-date:not(:empty)::before {
-  content: " · ";
-}
-
-.form-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-block-start: 0.25rem;
-}
-
-.paste-card {
-  text-align: center;
-  padding-block: 1.5rem;
-  margin-block-end: 1rem;
-}
-
-.banner {
-  padding: 0.625rem 0.75rem;
-  margin-block-end: 0.75rem;
-  border-radius: 0.625rem;
-  border-inline-start: 3px solid var(--orange);
-  background: var(--card);
-}
-
-.banner.err {
-  border-inline-start-color: var(--red);
-}
-
-.banner strong {
-  display: block;
-}
-
-.problem > * + *,
-.problem details > * + * {
-  margin-block-start: 0.5rem;
-}
-
-.problem summary {
-  color: var(--secondary);
-  font-size: 0.9375rem;
-}
-
-.problem button {
-  display: block;
-  inline-size: 100%;
-  background: var(--fill);
-}
-
-.problem .primary {
-  background: var(--tint);
-}
-
-.steps {
-  margin: 0.5rem 0 0;
-  padding-inline-start: 1.25rem;
-}
-
-#unsupported > * + * {
-  margin-block-start: 0.75rem;
-}
-
-#reauth button + button {
-  margin-block-start: 0.5rem;
-}
-
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-block-start: 0.75rem;
-}
-
-.action-grid [data-act="follow"] {
-  grid-column: 1 / -1;
-}
-
-#action-form[data-kind="profile"] [data-act="follow"] {
-  background: var(--tint);
-  color: #fff;
-}
-
-/* Used actions stay readable: filled for the three post actions, plain for Follow. */
-.action-grid button[data-done]:disabled {
+.bar-button:disabled,
+.bar-button.is-disabled,
+.bar-button[aria-disabled="true"] {
+  color: var(--label-3);
   opacity: 1;
-  background: var(--tint);
-  color: #fff;
+  pointer-events: none;
 }
 
-#action-form .action-grid [data-act="follow"][data-done]:disabled {
-  background: var(--card);
-  color: var(--tint);
+/* Chevron drawn with borders: bar button menu, row accessory and disclosure share it. */
+.bar-button.has-menu::after,
+.row-accessory.is-chevron::after,
+.disclosure > summary::after {
+  content: "";
+  flex: none;
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-inline-end: 0.125rem solid currentColor;
+  border-block-end: 0.125rem solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--ease);
 }
 
-#action-hint:not(:empty) {
-  margin-block-start: 0.5rem;
-  text-align: center;
+/* ---------- Section, header, footer, list ----------
+   <section class="section"><h2 class="section-header">Account</h2>
+   <div class="list">…rows…</div><p class="section-footer">Help text.</p></section>
+   The footer takes the status or the error of the list above it. */
+
+.section {
+  margin-block: 0 var(--space-5);
 }
 
-fieldset {
-  min-inline-size: 0;
+.section-header {
+  margin: 0;
+  padding: 0 var(--space-4) 0.375rem;
+  font: var(--text-footnote);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+
+.section-footer {
+  margin: 0;
+  padding: var(--space-2) var(--space-4) 0;
+  font: var(--text-footnote);
+  color: var(--label-2);
+}
+
+.section-footer > p {
+  margin: 0;
+}
+
+.section-footer > p + p {
+  margin-block-start: var(--space-1);
+}
+
+.section-footer.is-split {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.list {
   margin: 0;
   padding: 0;
-  border: 0;
-}
-
-fieldset > * + * {
-  margin-block-start: 0.5rem;
-}
-
-.visually-hidden {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
+  list-style: none;
   overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
-label {
-  display: block;
-  margin-block-end: 0.25rem;
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  color: var(--secondary);
+.list > * {
+  position: relative;
 }
 
-input,
-textarea,
-button,
-.button {
-  min-block-size: 2.75rem;
-  border-radius: 0.625rem;
-  padding: 0.5rem 0.75rem;
-  font: inherit;
-  touch-action: manipulation;
+/* Inset separator between children, aligned with the row text. */
+.list > :not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--space-4) 0;
+  inset-block-end: 0;
+  block-size: 1px;
+  background: var(--separator);
+  pointer-events: none;
 }
 
-input,
-textarea {
-  border: 1px solid var(--sep);
-  background: var(--card);
+/* ---------- Row ----------
+   <button class="row row-button"><span class="row-title">Like</span>
+   <span class="row-accessory is-check"></span></button>
+   <div class="row"><span class="row-main"><span class="row-title">@me</span>
+   <span class="row-subtitle">example.com</span></span><span class="row-accessory">Value</span></div>
+   Accessories: text value, .is-chevron, .is-check (shown when the row is selected or done),
+   .spinner, or a button/link with .is-button. Row states: .is-selected / aria-checked /
+   aria-current (check shown), .is-done (finished, not tappable), .is-disabled, .is-strong
+   (semibold, for the likely choice in a system list). */
+
+.row,
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  min-block-size: var(--target);
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
   color: var(--label);
-}
-
-input {
-  flex: 1 1 7rem;
-  min-inline-size: 0;
-  inline-size: 100%;
-}
-
-.form-row input {
-  inline-size: auto;
-}
-
-textarea {
-  display: block;
-  inline-size: 100%;
-  resize: vertical;
-}
-
-input::placeholder {
-  color: var(--secondary);
-  opacity: 1;
-}
-
-input[aria-invalid="true"] {
-  border-color: var(--red);
-}
-
-button,
-.button {
-  display: inline-block;
-  border: 0;
-  background: var(--card);
-  color: var(--tint);
-  font-weight: 600;
-  text-align: center;
+  font: var(--text-body);
+  text-align: start;
   text-decoration: none;
-  cursor: pointer;
 }
 
-.card button,
-.card .button {
+.row-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.row-title {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.row-main > .row-title {
+  flex: none;
+}
+
+.row-subtitle {
+  font: var(--text-footnote);
+  color: var(--label-2);
+}
+
+.row-accessory {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--label-2);
+}
+
+.row-accessory.is-chevron {
+  color: var(--label-3);
+}
+
+.row-accessory.is-button {
+  min-block-size: var(--target);
+  margin-block: calc(var(--space-2) * -1);
+  margin-inline: calc(var(--space-2) * -1) calc(var(--space-2) * -1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius);
+  color: var(--tint);
+  text-decoration: none;
+}
+
+.row-accessory.is-destructive {
+  color: var(--destructive);
+}
+
+.row-accessory.is-check {
+  color: var(--tint);
+}
+
+.row-accessory.is-check::before {
+  content: "";
+  inline-size: 0.45rem;
+  block-size: 0.85rem;
+  margin-block-start: -0.25rem;
+  border-inline-end: 0.1875rem solid currentColor;
+  border-block-end: 0.1875rem solid currentColor;
+  transform: rotate(45deg);
+}
+
+.row:not(.is-selected, .is-done, [aria-checked="true"], [aria-current="true"]) .row-accessory.is-check {
+  display: none;
+}
+
+.row.is-strong {
+  font-weight: 600;
+}
+
+.row-button {
+  color: var(--tint);
+}
+
+.row-destructive {
+  color: var(--destructive);
+}
+
+:is(a, button).row:active,
+.row.is-pressed,
+.disclosure > summary:active,
+.disclosure > summary.is-pressed {
   background: var(--fill);
 }
 
-#sign-in button,
-#reauth button,
-#shortcut-card .button,
-#shortcut-have,
-.sheet .card button,
-.action-sheet button {
-  display: block;
-  inline-size: 100%;
+.row:focus-visible,
+.row.is-focus,
+.disclosure > summary:focus-visible,
+.disclosure > summary.is-focus {
+  outline: 0.125rem solid var(--tint);
+  outline-offset: -0.125rem;
 }
 
-.primary,
-.card .primary {
-  background: var(--tint);
-  color: #fff;
-}
-
-.destructive,
-.card .destructive {
+.row:disabled,
+.row.is-disabled,
+.row[aria-disabled="true"] {
   background: transparent;
-  color: var(--red);
+  color: var(--label-3);
+  pointer-events: none;
 }
 
-.chip,
-.text-button,
-.card .text-button {
+.row:disabled .row-accessory:not(.is-check),
+.row.is-disabled .row-accessory:not(.is-check) {
+  color: var(--label-3);
+}
+
+.row.is-done {
+  color: var(--label-2);
+  pointer-events: none;
+}
+
+/* ---------- Text field ----------
+   <div class="row row-field"><input class="field" aria-label="Account" placeholder="you@example.com"></div>
+   <div class="row row-field"><span class="row-title">Server</span><input class="field"></div>
+   <div class="row row-field"><textarea class="field" aria-label="Reply" rows="5"></textarea></div>
+   The input is borderless and lives in a list row. Errors go in the footer; aria-invalid="true"
+   also turns the entered text red. The row shows the focus ring. */
+
+.row-field {
+  padding-block: 0;
+}
+
+.row-field > .row-title {
+  flex: none;
+  min-inline-size: 5rem;
+}
+
+.field {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: var(--target);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-  min-inline-size: 2.75rem;
-  font-weight: 400;
+  color: var(--label);
+  font: var(--text-body);
+  outline: none;
+  appearance: none;
 }
 
-button:active:not(:disabled),
-.button:active {
-  opacity: 0.7;
+.field::placeholder {
+  color: var(--label-3);
+  opacity: 1;
 }
 
-button:disabled {
-  opacity: 0.4;
-  cursor: default;
+textarea.field {
+  min-block-size: 8rem;
+  padding-block: 0.6875rem;
+  resize: none;
 }
 
-summary,
-a {
-  touch-action: manipulation;
+.field[aria-invalid="true"] {
+  color: var(--destructive);
 }
 
-a {
-  color: var(--tint);
-  text-underline-offset: 0.18em;
+.field:disabled {
+  color: var(--label-3);
 }
 
-summary {
-  min-block-size: 2.75rem;
+.row-field:focus-within,
+.row-field.is-focus {
+  outline: 0.125rem solid var(--tint);
+  outline-offset: -0.125rem;
+}
+
+/* ---------- Button ----------
+   <button class="button button-prominent">Continue</button>
+   <button class="button button-plain">Try again</button>
+   <button class="button button-destructive">Remove</button>
+   Full width, one prominent button per screen. Loading: aria-busy="true" plus a .spinner
+   inside. */
+
+.button {
   display: flex;
   align-items: center;
-  color: var(--secondary);
+  justify-content: center;
+  gap: var(--space-2);
+  inline-size: 100%;
+  min-block-size: var(--target);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--tint);
+  font: var(--text-body);
+  text-align: center;
+  text-decoration: none;
+}
+
+.button-prominent {
+  min-block-size: 3.125rem;
+  background: var(--tint);
+  color: var(--on-tint);
+  font: var(--text-headline);
+}
+
+.button-destructive {
+  color: var(--destructive);
+}
+
+.button:active,
+.button.is-pressed {
+  opacity: 0.6;
+}
+
+.button:focus-visible,
+.button.is-focus {
+  outline: 0.125rem solid var(--tint);
+  outline-offset: 0.125rem;
+}
+
+.button:disabled,
+.button.is-disabled,
+.button[aria-disabled="true"],
+.button[aria-busy="true"] {
+  opacity: 1;
+  pointer-events: none;
+  color: var(--label-3);
+}
+
+.button-prominent:disabled,
+.button-prominent.is-disabled,
+.button-prominent[aria-disabled="true"],
+.button-prominent[aria-busy="true"] {
+  background: var(--fill);
+}
+
+.button[aria-busy="true"] {
+  color: var(--label-2);
+}
+
+/* ---------- Link ----------
+   <a class="link" href="…">Setup instructions</a>
+   Inline text only; give anything standalone a row or a button. */
+
+.link {
+  color: var(--tint);
+  text-decoration: none;
+}
+
+.link:hover,
+.link:focus-visible,
+.link.is-focus {
+  text-decoration: underline;
+}
+
+.link:focus-visible,
+.link.is-focus {
+  outline: 0.125rem solid var(--tint);
+  outline-offset: 0.125rem;
+  border-radius: 0.125rem;
+}
+
+.link:active,
+.link.is-pressed {
+  opacity: 0.4;
+}
+
+/* ---------- Disclosure ----------
+   <div class="list"><details class="disclosure"><summary>Server not working?</summary>
+   <div class="disclosure-body"><p>Help text.</p></div></details></div>
+   Native details; the chevron turns when open. */
+
+.disclosure > summary {
+  justify-content: space-between;
+  list-style: none;
   cursor: pointer;
 }
 
-:focus-visible {
-  outline: 2px solid var(--tint);
-  outline-offset: 2px;
+.disclosure > summary::-webkit-details-marker {
+  display: none;
 }
 
-[role="status"]:not(:empty),
-[role="alert"]:not(:empty) {
-  margin-block-start: 0.75rem;
+.disclosure > summary::after {
+  color: var(--label-3);
 }
 
-#stage > [role="alert"]:not(:empty) {
-  margin-block-start: 0;
+.disclosure[open] > summary::after {
+  transform: rotate(45deg);
 }
 
-[role="status"] {
-  color: var(--secondary);
+.disclosure-body {
+  padding: 0 var(--space-4) var(--space-3);
+  font: var(--text-footnote);
+  color: var(--label-2);
 }
 
-[role="status"][data-busy]::before,
-button[data-busy]::before {
-  content: "";
+.disclosure-body > p {
+  margin: 0;
+}
+
+.disclosure-body > p + p {
+  margin-block-start: var(--space-2);
+}
+
+/* ---------- Post ----------
+   <article class="post"><p class="post-author">Dana</p><p class="post-handle">@dana@social.example</p>
+   <p class="post-body">Text.</p></article>
+   Sits inside a .list as one row. A profile uses the same markup. While loading, put
+   .placeholder bars inside it. */
+
+.post {
+  padding: var(--space-3) var(--space-4);
+}
+
+.post > p {
+  margin: 0;
+}
+
+.post-author {
+  font: var(--text-headline);
+}
+
+.post-handle {
+  font: var(--text-subhead);
+  color: var(--label-2);
+}
+
+.post > .post-body {
+  margin-block-start: var(--space-2);
+}
+
+/* ---------- Feedback: status, error, warning, spinner, placeholder ----------
+   <p class="section-footer status" role="status"><span class="spinner"></span>Loading post…</p>
+   <div class="section-footer" role="alert"><p class="error">Couldn’t find me@example.com.</p>
+   <p>Check the spelling, or use your profile link.</p></div>
+   Never a coloured panel: only text in the footer of the thing it refers to. */
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.error,
+.warning {
+  font-weight: 600;
+}
+
+.error {
+  color: var(--destructive);
+}
+
+.warning {
+  color: var(--warning);
+}
+
+.spinner {
   display: inline-block;
-  inline-size: 0.75em;
-  block-size: 0.75em;
-  margin-inline-end: 0.5em;
-  border: 2px solid currentColor;
+  flex: none;
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 0.125rem solid currentColor;
   border-block-start-color: transparent;
   border-radius: 50%;
-  vertical-align: -0.05em;
-  opacity: 0.6;
-  animation: spin 1s linear infinite;
+  animation: spin 0.9s linear infinite;
 }
 
 @keyframes spin {
@@ -525,209 +696,121 @@ button[data-busy]::before {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  [role="status"][data-busy]::before,
-  button[data-busy]::before {
-    animation: none;
-  }
+/* <span class="placeholder is-short" aria-hidden="true"></span>  Flat bars, no shimmer. */
+.placeholder {
+  display: block;
+  block-size: 0.875rem;
+  margin-block: var(--space-2);
+  border-radius: 0.25rem;
+  background: var(--fill);
 }
 
-#stage > [role="alert"]:empty,
-#feedback:has(#action-status:empty):has(#action-next[hidden]) {
-  display: none;
+.placeholder.is-short {
+  inline-size: 40%;
 }
 
-.count {
-  text-align: end;
+.placeholder.is-medium {
+  inline-size: 70%;
 }
 
-.count[data-over] {
-  color: var(--red);
-}
+/* ---------- Sheet and scrim ----------
+   <div class="scrim"><div class="sheet is-tall" role="dialog" aria-labelledby="t">
+   <div class="sheet-grabber" aria-hidden="true"></div><nav class="navbar">…</nav>
+   <section class="section">…</section></div></div>
+   The scrim covers the nearest positioned ancestor (the screen). A sheet is a bottom
+   panel with rounded top corners; .is-tall fills the screen below the safe area. */
 
-.strong {
-  font-weight: 600;
-}
-
-#reply-text {
-  margin-block-start: 0.5rem;
-  min-block-size: 8rem;
-}
-
-/* Sheets: native dialogs pinned to the bottom edge. */
-.sheet {
-  inline-size: 100%;
-  max-inline-size: 40rem;
-  max-block-size: 85dvh;
-  margin: auto auto 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0.75rem 0.75rem 0 0;
-  border-block-start: 1px solid var(--sep);
-  background: var(--bg);
-  color: var(--label);
-  overflow: auto;
-  overflow-wrap: anywhere;
-}
-
-.sheet::backdrop {
-  background: rgb(0 0 0 / 0.4);
-}
-
-.sheet-body {
-  padding: 0.5rem max(1rem, env(safe-area-inset-right)) calc(1.5rem + env(safe-area-inset-bottom))
-    max(1rem, env(safe-area-inset-left));
-}
-
-.sheet-body > * + * {
-  margin-block-start: 0.75rem;
-}
-
-.sheet-nav {
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: var(--scrim);
 }
 
-.sheet-nav button {
-  inline-size: 5rem;
+.sheet {
+  max-block-size: 100%;
+  padding-block-end: calc(var(--space-4) + var(--inset-bottom, env(safe-area-inset-bottom, 0px)));
+  overflow: auto;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--sheet-bg);
+  color: var(--label);
+  font: var(--text-body);
 }
 
-.sheet-nav button:first-child {
-  text-align: start;
-  padding-inline-start: 0;
+.sheet.is-tall {
+  block-size: calc(100% - var(--inset-top, env(safe-area-inset-top, 0px)) - var(--space-2));
 }
 
-.sheet-nav button:last-child {
-  text-align: end;
-  padding-inline-end: 0;
+.sheet-grabber {
+  inline-size: 2.25rem;
+  block-size: 0.3125rem;
+  margin: 0.375rem auto 0;
+  border-radius: 0.2rem;
+  background: var(--label-3);
 }
 
-.sheet-nav h2 {
+.sheet .list {
+  background: var(--sheet-surface);
+}
+
+/* ---------- Action sheet ----------
+   <div class="scrim"><div class="action-sheet" role="dialog" aria-labelledby="t">
+   <div class="list"><header class="action-sheet-header"><h2 id="t">Remove @me?</h2><p>Why.</p></header>
+   <button class="row row-button row-destructive">Remove account</button></div>
+   <div class="list"><button class="row row-button">Cancel</button></div></div></div>
+   Choices are centred rows; the destructive one is red; Cancel is its own group. */
+
+.action-sheet {
+  margin: 0 var(--space-2) calc(var(--space-2) + var(--inset-bottom, env(safe-area-inset-bottom, 0px)));
+  color: var(--label);
+  font: var(--text-body);
+}
+
+.action-sheet .list {
+  background: var(--sheet-surface);
+}
+
+.action-sheet .list + .list {
+  margin-block-start: var(--space-2);
+}
+
+.action-sheet .row {
+  justify-content: center;
   text-align: center;
 }
 
-.action-sheet {
-  background: transparent;
+.action-sheet .list:last-child .row {
+  font-weight: 600;
 }
 
-.action-sheet .card {
-  padding-block-end: 0;
+.action-sheet-header {
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
 }
 
-.action-sheet .card button {
-  margin-block-start: 0.75rem;
-  border-block-start: 1px solid var(--sep);
-  border-radius: 0;
-  margin-inline: -0.875rem;
-  inline-size: calc(100% + 1.75rem);
-}
-
-.group {
+.action-sheet-header > h2 {
   margin: 0;
-  padding: 0;
-  list-style: none;
-  border-radius: 0.625rem;
-  background: var(--card);
-  overflow: hidden;
+  font: var(--text-footnote);
+  font-weight: 600;
+  color: var(--label-2);
 }
 
-.group + .group,
-.group + .help,
-#sheet-list-view > .help {
-  margin-block-start: 0.75rem;
+.action-sheet-header > p {
+  margin: var(--space-1) 0 0;
+  font: var(--text-footnote);
+  color: var(--label-2);
 }
 
-.group li {
-  display: flex;
-  align-items: center;
-  border-block-end: 1px solid var(--sep);
-}
+/* ---------- Motion ---------- */
 
-.group li:last-child {
-  border-block-end: 0;
-}
-
-.row-main {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  min-block-size: 3rem;
-  border-radius: 0;
-  background: transparent;
-  color: var(--label);
-  font-weight: 400;
-  text-align: start;
-}
-
-.row-main:disabled {
-  opacity: 1;
-}
-
-.row-main .grow {
-  flex: 1;
-  min-inline-size: 0;
-}
-
-.row-main small {
-  display: block;
-  color: var(--secondary);
-}
-
-.row-main small.warn {
-  color: var(--orange);
-}
-
-.add-row {
-  color: var(--tint);
-}
-
-.check {
-  inline-size: 0.5rem;
-  block-size: 0.9rem;
-  border: solid var(--tint);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-  visibility: hidden;
-}
-
-.row-main[aria-current="true"] .check {
-  visibility: visible;
-}
-
-.row-remove {
-  background: transparent;
-  color: var(--red);
-  border-radius: 0;
-}
-
-.sheet:not([data-mode="edit"]) .row-remove,
-.sheet[data-mode="edit"] .check,
-.sheet[data-mode="edit"] .add-group,
-.sheet[data-mode="edit"] #sheet-list-view > .help,
-.sheet[data-mode="add"] #sheet-list-view {
-  display: none;
-}
-
-.sheet:not([data-mode="list"]) #sheet-right {
-  visibility: hidden;
-}
-
-.sheet:not([data-mode="add"]) #sheet-sign-in {
-  display: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .sheet[open] {
-    animation: sheet-in 0.2s ease-out;
-  }
-
-  @keyframes sheet-in {
-    from {
-      transform: translateY(1.5rem);
-      opacity: 0;
-    }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

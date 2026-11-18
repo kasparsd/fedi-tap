@@ -8,10 +8,10 @@
 // so this server serves a generated client.json for whatever origin it runs on.
 // Nothing here is used in production.
 
-import { createServer } from "node:https";
 import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { createServer } from "node:https";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,10 +27,27 @@ const AS2 = "https://www.w3.org/ns/activitystreams";
 // refresh and error paths in the app.
 const USERS = {
   alice: { name: "Alice Example", about: "Normal account. Everything works." },
-  shorty: { name: "Shorty", about: "Access token lives 61 s: every action refreshes first.", tokenSeconds: 61 },
-  flaky: { name: "Flaky", about: "First access token is rejected with 401: tests refresh and retry.", quirk: "flaky" },
-  erin: { name: "Erin (revoked)", about: "Refresh fails with invalid_grant: tests 'sign in again'.", quirk: "revoked", tokenSeconds: 61 },
-  mismatch: { name: "Mismatch", about: "Authorizes as a different profile: tests identity check.", quirk: "mismatch" }
+  shorty: {
+    name: "Shorty",
+    about: "Access token lives 61 s: every action refreshes first.",
+    tokenSeconds: 61,
+  },
+  flaky: {
+    name: "Flaky",
+    about: "First access token is rejected with 401: tests refresh and retry.",
+    quirk: "flaky",
+  },
+  erin: {
+    name: "Erin (revoked)",
+    about: "Refresh fails with invalid_grant: tests 'sign in again'.",
+    quirk: "revoked",
+    tokenSeconds: 61,
+  },
+  mismatch: {
+    name: "Mismatch",
+    about: "Authorizes as a different profile: tests identity check.",
+    quirk: "mismatch",
+  },
 };
 
 const actorId = (name) => `${ORIGIN}/users/${name}`;
@@ -42,20 +59,29 @@ const AUTHORS = {
   mismatch: { id: actorId("mismatch"), name: "Mismatch" },
   // Remote authors the signed-in account can interact with.
   zed: { id: `${ORIGIN}/users/zed`, name: "Zed Remote", summary: "A profile you can follow." },
-  dana: { id: `${ORIGIN}/users/dana`, name: "Dana Writer" }
+  dana: { id: `${ORIGIN}/users/dana`, name: "Dana Writer" },
 };
 
 const NOTES = {
-  1: { author: "dana", content: "<p>Just shipped a tiny share sheet shortcut for the Fediverse. It stays out of the way until you need it.</p>" },
-  2: { author: "zed", content: "<p>A longer post to see how the card truncates. ".repeat(1) + "Progressive disclosure means the first screen shows only what matters, and the rest waits behind a tap. Details live in sheets, destructive actions ask first, and the main task never moves. </p><p>Second paragraph with <a href=\"https://example.com\">a link</a> and some <strong>markup</strong> that must render as plain text.</p>" },
-  3: { author: "dana", content: "<p>Reply target: a short post.</p>" }
+  1: {
+    author: "dana",
+    content:
+      "<p>Just shipped a tiny share sheet shortcut for the Fediverse. It stays out of the way until you need it.</p>",
+  },
+  2: {
+    author: "zed",
+    content:
+      "<p>A longer post to see how the card truncates. ".repeat(1) +
+      'Progressive disclosure means the first screen shows only what matters, and the rest waits behind a tap. Details live in sheets, destructive actions ask first, and the main task never moves. </p><p>Second paragraph with <a href="https://example.com">a link</a> and some <strong>markup</strong> that must render as plain text.</p>',
+  },
+  3: { author: "dana", content: "<p>Reply target: a short post.</p>" },
 };
 
 const TARGET_ALIASES = {
   // Realistic-looking URLs that resolve to fixtures, as a remote server would.
   "https://social.example/@dana/1": { type: "note", key: 1 },
   "https://social.example/@zed/2": { type: "note", key: 2 },
-  "https://social.example/@zed": { type: "actor", key: "zed" }
+  "https://social.example/@zed": { type: "actor", key: "zed" },
 };
 
 function noteObject(key) {
@@ -68,7 +94,7 @@ function noteObject(key) {
     attributedTo: author.id,
     content: note.content,
     published: "2026-11-17T09:30:00Z",
-    url: `https://social.example/@${note.author}/${key}`
+    url: `https://social.example/@${note.author}/${key}`,
   };
 }
 
@@ -81,7 +107,7 @@ function actorObject(name, { forLogin = false } = {}) {
     preferredUsername: name,
     name: author.name,
     summary: author.summary,
-    url: author.id
+    url: author.id,
   };
   if (!forLogin) return base;
   return {
@@ -92,11 +118,13 @@ function actorObject(name, { forLogin = false } = {}) {
     followers: `${author.id}/followers`,
     endpoints: {
       proxyUrl: `${ORIGIN}/proxy`,
-      ...(flags.apiOff ? {} : {
-        oauthAuthorizationEndpoint: `${ORIGIN}/oauth/authorize`,
-        oauthTokenEndpoint: `${ORIGIN}/oauth/token`
-      })
-    }
+      ...(flags.apiOff
+        ? {}
+        : {
+            oauthAuthorizationEndpoint: `${ORIGIN}/oauth/authorize`,
+            oauthTokenEndpoint: `${ORIGIN}/oauth/token`,
+          }),
+    },
   };
 }
 
@@ -134,15 +162,27 @@ function issueTokens(user) {
   if (dead) flakyIssued.add(user);
   accessTokens.set(access, { user, expires: Date.now() + seconds * 1000, dead });
   refreshTokens.set(refresh, user);
-  return { access_token: access, refresh_token: refresh, token_type: "Bearer", expires_in: seconds, scope: "read write" };
+  return {
+    access_token: access,
+    refresh_token: refresh,
+    token_type: "Bearer",
+    expires_in: seconds,
+    scope: "read write",
+  };
 }
 
 // ---- HTTP helpers ---------------------------------------------------------
 
 const MIME = {
-  ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8", ".json": "application/json", ".webmanifest": "application/manifest+json", ".md": "text/markdown; charset=utf-8",
-  ".shortcut": "application/octet-stream", ".png": "image/png", ".svg": "image/svg+xml"
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json",
+  ".webmanifest": "application/manifest+json",
+  ".md": "text/markdown; charset=utf-8",
+  ".shortcut": "application/octet-stream",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
 };
 
 function send(res, status, body, type = "application/json", extra = {}) {
@@ -154,7 +194,7 @@ function send(res, status, body, type = "application/json", extra = {}) {
     "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Expose-Headers": "Location",
-    ...extra
+    ...extra,
   });
   res.end(payload);
 }
@@ -184,13 +224,21 @@ li{margin:.4rem 0} small{opacity:.7} .tag{font-size:.75rem;background:#8882;bord
 </style>${body}`;
 }
 
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const esc = (s) =>
+  String(s).replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+  );
 
 // ---- Routes ---------------------------------------------------------------
 
 function devIndex() {
-  const users = Object.entries(USERS).map(([name, def]) =>
-    `<li><code>${ORIGIN}/users/${name}</code><br><small>${esc(def.about)}</small></li>`).join("");
+  const users = Object.entries(USERS)
+    .map(
+      ([name, def]) =>
+        `<li><code>${ORIGIN}/users/${name}</code><br><small>${esc(def.about)}</small></li>`,
+    )
+    .join("");
   const share = (url) => `/?url=${encodeURIComponent(url)}`;
   const links = [
     ["Shared post (Dana)", share(`${ORIGIN}/notes/1`)],
@@ -199,9 +247,13 @@ function devIndex() {
     ["Shared profile", share(`${ORIGIN}/users/zed`)],
     ["Shared missing post (404)", share(`${ORIGIN}/notes/404`)],
     ["Opened from the Shortcut, no link", "/?via=shortcut"],
-    ["No link", "/"]
-  ].map(([label, href]) => `<li><a href="${href}">${label}</a></li>`).join("");
-  return page("FediTap dev", `<h1>FediTap dev server</h1>
+    ["No link", "/"],
+  ]
+    .map(([label, href]) => `<li><a href="${href}">${label}</a></li>`)
+    .join("");
+  return page(
+    "FediTap dev",
+    `<h1>FediTap dev server</h1>
 <p>Mock ActivityPub + OAuth on <code>${ORIGIN}</code>. Sign in by entering one of these <b>profile URLs</b>:</p>
 <ul>${users}</ul>
 <p>Or enter <code>alice@localhost</code> to see the WebFinger fallback (the mock has no WebFinger on port 443).</p>
@@ -211,22 +263,37 @@ function devIndex() {
 <li><form method=post action="/_dev/api-off"><button>${flags.apiOff ? "API is OFF: turn on" : "API is on: turn off"}</button></form><small>Simulates a server without the ActivityPub API.</small></li>
 <li><form method=post action="/_dev/reset"><button>Reset server state</button></form></li>
 <li><a href="/docs/ux/mocks.html">UX mocks</a></li></ul>
-<p><small>Response delay: ${DELAY_MS} ms (set DELAY_MS). Clear the app's saved accounts by removing them in the app or clearing site data.</small></p>`);
+<p><small>Response delay: ${DELAY_MS} ms (set DELAY_MS). Clear the app's saved accounts by removing them in the app or clearing site data.</small></p>`,
+  );
 }
 
 function authorizePage(url) {
   const q = url.searchParams;
-  const options = Object.entries(USERS).map(([name]) => `<option value="${name}">${name}</option>`).join("");
-  const hidden = ["client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method", "scope", "response_type"]
-    .map((key) => `<input type=hidden name="${key}" value="${esc(q.get(key) ?? "")}">`).join("");
-  return page("Authorize", `<h1>Authorize FediTap</h1>
+  const options = Object.entries(USERS)
+    .map(([name]) => `<option value="${name}">${name}</option>`)
+    .join("");
+  const hidden = [
+    "client_id",
+    "redirect_uri",
+    "state",
+    "code_challenge",
+    "code_challenge_method",
+    "scope",
+    "response_type",
+  ]
+    .map((key) => `<input type=hidden name="${key}" value="${esc(q.get(key) ?? "")}">`)
+    .join("");
+  return page(
+    "Authorize",
+    `<h1>Authorize FediTap</h1>
 <p><code>${esc(q.get("client_id"))}</code> wants to act on your behalf.</p>
 <p>Scope: <span class=tag>${esc(q.get("scope"))}</span></p>
 <form method=post action="/oauth/decision">${hidden}
 <p><label>Sign in as <select name=user>${options}</select></label></p>
 <button class=primary name=decision value=approve>Authorize</button>
 <button name=decision value=deny>Deny</button></form>
-<p><small>Mock server page. Pick the account that approves the request.</small></p>`);
+<p><small>Mock server page. Pick the account that approves the request.</small></p>`,
+  );
 }
 
 async function route(req, res) {
@@ -236,7 +303,8 @@ async function route(req, res) {
   if (req.method === "OPTIONS") return send(res, 204, "");
 
   // Dev tools
-  if (path === "/_dev" || path === "/_dev/") return send(res, 200, devIndex(), "text/html; charset=utf-8");
+  if (path === "/_dev" || path === "/_dev/")
+    return send(res, 200, devIndex(), "text/html; charset=utf-8");
   if (path === "/_dev/activities") return send(res, 200, activities);
   if (path === "/_dev/reset" && req.method === "POST") {
     for (const store of [codes, accessTokens, refreshTokens, flakyIssued]) store.clear();
@@ -255,14 +323,19 @@ async function route(req, res) {
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
-      scope: "read write"
+      scope: "read write",
     });
   }
 
   // ActivityPub actors
   const userMatch = /^\/users\/([a-z]+)$/.exec(path);
   if (userMatch && AUTHORS[userMatch[1]]) {
-    return send(res, 200, actorObject(userMatch[1], { forLogin: Boolean(USERS[userMatch[1]]) }), `application/activity+json`);
+    return send(
+      res,
+      200,
+      actorObject(userMatch[1], { forLogin: Boolean(USERS[userMatch[1]]) }),
+      `application/activity+json`,
+    );
   }
 
   if (path === "/_dev/api-off" && req.method === "POST") {
@@ -278,17 +351,23 @@ async function route(req, res) {
       token_endpoint: `${ORIGIN}/oauth/token`,
       authorization_response_iss_parameter_supported: true,
       code_challenge_methods_supported: ["S256"],
-      grant_types_supported: ["authorization_code", "refresh_token"]
+      grant_types_supported: ["authorization_code", "refresh_token"],
     });
   }
 
-  if (path === "/oauth/authorize") return send(res, 200, authorizePage(url), "text/html; charset=utf-8");
+  if (path === "/oauth/authorize")
+    return send(res, 200, authorizePage(url), "text/html; charset=utf-8");
 
   if (path === "/oauth/decision" && req.method === "POST") {
     const form = new URLSearchParams(await readBody(req));
     const redirect = form.get("redirect_uri");
     if (redirect !== `${ORIGIN}/` || form.get("client_id") !== `${ORIGIN}/client.json`) {
-      return send(res, 400, page("Error", "<p>Invalid client or redirect URI.</p>"), "text/html; charset=utf-8");
+      return send(
+        res,
+        400,
+        page("Error", "<p>Invalid client or redirect URI.</p>"),
+        "text/html; charset=utf-8",
+      );
     }
     const back = new URL(redirect);
     if (form.get("decision") !== "approve") {
@@ -311,9 +390,14 @@ async function route(req, res) {
     if (grant === "authorization_code") {
       const entry = codes.get(form.get("code"));
       codes.delete(form.get("code"));
-      const challenge = createHash("sha256").update(form.get("code_verifier") || "").digest("base64url");
+      const challenge = createHash("sha256")
+        .update(form.get("code_verifier") || "")
+        .digest("base64url");
       if (!entry || entry.challenge !== challenge || entry.redirect !== form.get("redirect_uri")) {
-        return send(res, 400, { error: "invalid_grant", error_description: "Bad code or PKCE verifier." });
+        return send(res, 400, {
+          error: "invalid_grant",
+          error_description: "Bad code or PKCE verifier.",
+        });
       }
       const shown = USERS[entry.user].quirk === "mismatch" ? "dana" : entry.user;
       return send(res, 200, { ...issueTokens(entry.user), activitypub_actor_id: actorId(shown) });
@@ -321,7 +405,10 @@ async function route(req, res) {
     if (grant === "refresh_token") {
       const user = refreshTokens.get(form.get("refresh_token"));
       if (!user || USERS[user].quirk === "revoked") {
-        return send(res, 400, { error: "invalid_grant", error_description: "The refresh token was revoked." });
+        return send(res, 400, {
+          error: "invalid_grant",
+          error_description: "The refresh token was revoked.",
+        });
       }
       refreshTokens.delete(form.get("refresh_token"));
       return send(res, 200, issueTokens(user));
@@ -372,11 +459,36 @@ function certificate() {
   if (!existsSync(cert)) {
     mkdirSync(dir, { recursive: true });
     try {
-      execFileSync("mkcert", ["-cert-file", cert, "-key-file", key, "localhost", "127.0.0.1", "::1"], { stdio: "ignore" });
+      execFileSync(
+        "mkcert",
+        ["-cert-file", cert, "-key-file", key, "localhost", "127.0.0.1", "::1"],
+        { stdio: "ignore" },
+      );
     } catch {
-      console.error("mkcert not found or failed; using a self-signed certificate. Your browser will warn about it.");
-      execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "30", "-keyout", key,
-        "-out", cert, "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost,IP:127.0.0.1"], { stdio: "ignore" });
+      console.error(
+        "mkcert not found or failed; using a self-signed certificate. Your browser will warn about it.",
+      );
+      execFileSync(
+        "openssl",
+        [
+          "req",
+          "-x509",
+          "-newkey",
+          "rsa:2048",
+          "-nodes",
+          "-days",
+          "30",
+          "-keyout",
+          key,
+          "-out",
+          cert,
+          "-subj",
+          "/CN=localhost",
+          "-addext",
+          "subjectAltName=DNS:localhost,IP:127.0.0.1",
+        ],
+        { stdio: "ignore" },
+      );
     }
   }
   return { cert: readFileSync(cert), key: readFileSync(key) };
