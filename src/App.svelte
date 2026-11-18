@@ -24,7 +24,8 @@
 
 <main>
   <Header />
-  <h1 id="title">{app.title}</h1>
+  <!-- Signed in, the link field's own label is the visible title. -->
+  <h1 id="title" class={usable ? "sr" : undefined}>{app.title}</h1>
   <p id="task-announce" role="status">{app.task?.announce ?? ""}</p>
   {#if app.slow}
     <section id="slow">

@@ -105,6 +105,7 @@ fieldset {
   min-inline-size: 0;
 }
 legend,
+.sr,
 #task-announce,
 :is([role="status"], [role="alert"]):empty {
   position: absolute;

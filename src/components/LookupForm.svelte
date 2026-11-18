@@ -20,7 +20,7 @@
 >
   <fieldset id="lookup-controls">
     <legend>Open a post or profile</legend>
-    <label for="post-url">Link</label>
+    <label for="post-url">Open a post or profile</label>
     <div class="row">
       <div class="field">
         <input
