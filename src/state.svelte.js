@@ -710,13 +710,16 @@ async function run() {
   window.addEventListener("storage", onStorage);
 
   const callback = new URL(location.href);
-  const shared = httpsUrl(callback.searchParams.get("url"));
+  // The Shortcut sends `url`; the Android share target may send the link inside `text`.
+  const sharedText = /https:\/\/\S+/u.exec(callback.searchParams.get("text") ?? "")?.[0];
+  const shared = httpsUrl(callback.searchParams.get("url")) ?? httpsUrl(sharedText);
   const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
   const params = ["code", "state", "error"].some((key) => callback.searchParams.has(key))
     ? new URLSearchParams(callback.search)
     : null;
   if (params) for (const key of oauthParams) callback.searchParams.delete(key);
   callback.searchParams.delete("via");
+  for (const key of ["text", "title"]) callback.searchParams.delete(key);
   if (params || callback.href !== location.href)
     history.replaceState(history.state, "", callback.href);
   if (shared) setTarget(shared, Boolean(history.state?.local));
