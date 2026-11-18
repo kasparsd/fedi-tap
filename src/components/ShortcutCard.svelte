@@ -7,7 +7,7 @@
   <p class="quiet">
     Add the Shortcut (<a href="https://github.com/kasparsd/fedi-tap/blob/main/fedi-tap.cherri"
       >view source</a
-    >), then choose FediTap in the share sheet of any app to open a shared link here.
+    >), then choose ⁂tap in the share sheet of any app to open a shared link here.
     Works on iPhone, iPad and Mac.
   </p>
   {#if standalone}<p class="quiet">The Shortcut opens Safari, not this app.</p>{/if}
