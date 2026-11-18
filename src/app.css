@@ -2,7 +2,6 @@
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
    cannot do the job: .row .field .group .list .post .quiet .primary .destructive .button .sheet
    plus the header (see Header)
-   The last block holds the app's view states (data-state, data-views and flags on main).
    Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
 
 /* Tokens */
@@ -390,30 +389,4 @@ section:empty {
 }
 #target-excerpt {
   white-space: pre-line;
-}
-
-/* App states: one data-state on main decides what is visible; flags on main add detail. */
-[data-views],
-#pending-card,
-#reauth,
-[data-standalone-only] {
-  display: none;
-}
-main[data-state="signed-out"] [data-views~="signed-out"],
-main[data-state="ready"] [data-views~="ready"],
-main[data-state="loaded"] [data-views~="loaded"],
-main[data-state="unsupported"] [data-views~="unsupported"],
-main[data-standalone] [data-standalone-only] {
-  display: block;
-}
-main[data-state="signed-out"][data-pending] #pending-card,
-main[data-reauth] #reauth {
-  display: block;
-}
-main[data-standalone] [data-browser-only],
-main[data-standalone] #a2hs,
-main:not([data-shortcut]) #shortcut-card,
-main:not([data-ios]) :is(#a2hs, #shortcut-card),
-main[data-reauth] :is(#a2hs, #shortcut-card) {
-  display: none;
 }

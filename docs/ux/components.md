@@ -1,6 +1,6 @@
 # Interface components
 
-The page is a web page, also usable as a Home Screen web app. It should look like a clean, well-made web page that uses the browser's own elements, not like an iPhone app. This document describes the small system behind it: a base layer for HTML elements, a handful of classes and a short token list, all in [`style.css`](../../style.css) (about 150 lines). The mocks in [`mocks.html`](mocks.html) show every screen and every component using that file alone. The file is meant to be adopted unchanged as the app's `style.css`.
+The page is a web page, also usable as a Home Screen web app. It should look like a clean, well-made web page that uses the browser's own elements, not like an iPhone app. This document describes the small system behind it: a base layer for HTML elements, a handful of classes and a short token list, all in [`src/app.css`](../../src/app.css) (about 150 lines). The mocks in [`mocks.html`](mocks.html) show every screen and every component using that file alone. It is the app's stylesheet.
 
 ## Principles
 
@@ -17,7 +17,7 @@ Taken as ideas from Apple's guidelines and component thinking, without copying a
 
 ## Tokens
 
-One `:root` block: seven custom properties for colour and border, three for space, plus size, radius and target. The full set of values in use is in Scale below; nothing else appears in `style.css` or `mocks.html`.
+One `:root` block: seven custom properties for colour and border, three for space, plus size, radius and target. The full set of values in use is in Scale below; nothing else appears in `src/app.css` or `mocks.html`.
 
 | Token | Value |
 |-------|-------|
@@ -142,4 +142,4 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 ## App states and live regions
 
-`style.css` ends with the rules the app needs on top of the components: `main[data-state]` (`signed-out`, `ready`, `loaded`, `unsupported`) shows the elements whose `data-views` lists that state, flags on `main` (`data-pending`, `data-reauth`, `data-shortcut`, `data-standalone`) add detail, and `data-standalone-only` and `data-browser-only` pick copy for the Home Screen app or Safari. The sign-in screen, its fallback message and the unsupported-browser screen are plain HTML that needs no JavaScript-added classes. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. There are no animations, so no reduced-motion rule is needed.
+`src/app.css` holds only the components. Which parts of the page show is decided by the Svelte components (`{#if}` on `app.view`: `signed-out`, `ready`, `loaded`, `unsupported`), not by CSS, and copy for the Home Screen app or Safari is chosen the same way. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. There are no animations, so no reduced-motion rule is needed.

@@ -1,0 +1,30 @@
+<script>
+  import {
+    app,
+    buttonLabel,
+    isBusy,
+    openAccountsSheet,
+    reauthenticate,
+  } from "../state.svelte.js";
+  import Messages from "./Messages.svelte";
+</script>
+
+<section id="reauth">
+  <fieldset id="reauth-controls" disabled={app.busy}>
+    <legend>Sign-in expired</legend>
+    <p role="alert">
+      <strong>Sign-in expired.</strong> <span id="reauth-text">Sign in again as @{app.current.handle}.</span>
+    </p>
+    <button
+      type="button"
+      id="reauth-sign-in"
+      class="primary"
+      aria-busy={isBusy("reauth-sign-in") ? "true" : undefined}
+      onclick={reauthenticate}
+    >
+      {buttonLabel("reauth-sign-in", "Sign in")}
+    </button>
+    <button type="button" id="reauth-other" onclick={() => openAccountsSheet()}>Add account</button>
+  </fieldset>
+  <Messages section="reauth" />
+</section>

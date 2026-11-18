@@ -1,22 +1,21 @@
-// Local dev server: serves the static app over HTTPS and fakes an ActivityPub
-// server with an OAuth 2.0 (PKCE) provider on the same origin.
+// Mock ActivityPub server with an OAuth 2.0 (PKCE) provider, used by `npm run dev` and
+// `npm run preview` as Vite middleware on the same origin as the app.
 //
 //   npm run dev            # https://localhost:8443/_dev/
 //   PORT=9000 DELAY_MS=1500 npm run dev
 //
 // The app only works over HTTPS and checks client.json against the page URL,
-// so this server serves a generated client.json for whatever origin it runs on.
+// so this middleware serves a generated client.json for whatever origin it runs on.
 // Nothing here is used in production.
 
 import { execFileSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { createServer } from "node:https";
-import { extname, join, normalize, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const PORT = Number(process.env.PORT || 8443);
+const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
+export const PORT = Number(process.env.PORT || 8443);
 const DELAY_MS = Number(process.env.DELAY_MS ?? 400);
 const ORIGIN = `https://localhost:${PORT}`;
 const AS2 = "https://www.w3.org/ns/activitystreams";
@@ -173,18 +172,6 @@ function issueTokens(user) {
 
 // ---- HTTP helpers ---------------------------------------------------------
 
-const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json",
-  ".webmanifest": "application/manifest+json",
-  ".md": "text/markdown; charset=utf-8",
-  ".shortcut": "application/octet-stream",
-  ".png": "image/png",
-  ".svg": "image/svg+xml",
-};
-
 function send(res, status, body, type = "application/json", extra = {}) {
   const payload = typeof body === "string" || Buffer.isBuffer(body) ? body : JSON.stringify(body);
   res.writeHead(status, {
@@ -296,9 +283,14 @@ function authorizePage(url) {
   );
 }
 
+// Resolves to true when the request was answered, false when it is not one of the mock's routes.
+const ROUTES =
+  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|proxy$|\.well-known\/oauth-authorization-server$)/;
+
 async function route(req, res) {
   const url = new URL(req.url, ORIGIN);
   const path = url.pathname;
+  if (!ROUTES.test(path)) return false;
   log(req.method, path + url.search.slice(0, 80));
   if (req.method === "OPTIONS") return send(res, 204, "");
 
@@ -438,21 +430,12 @@ async function route(req, res) {
     return send(res, 201, "", "text/plain", { Location: id });
   }
 
-  // Static files
-  const file = normalize(join(ROOT, path === "/" ? "index.html" : path));
-  if (!file.startsWith(ROOT) || /\/\.|node_modules|\/\.local/.test(file) || !existsSync(file)) {
-    return send(res, 404, "Not found", "text/plain");
-  }
-  try {
-    return send(res, 200, readFileSync(file), MIME[extname(file)] ?? "application/octet-stream");
-  } catch {
-    return send(res, 404, "Not found", "text/plain");
-  }
+  return false;
 }
 
 // ---- TLS ------------------------------------------------------------------
 
-function certificate() {
+export function certificate() {
   const dir = join(ROOT, ".local", "dev-certs");
   const cert = join(dir, "localhost.pem");
   const key = join(dir, "localhost-key.pem");
@@ -494,11 +477,25 @@ function certificate() {
   return { cert: readFileSync(cert), key: readFileSync(key) };
 }
 
-createServer(certificate(), (req, res) => {
-  route(req, res).catch((error) => {
-    log("error", error);
-    send(res, 500, { error: "server_error" });
-  });
-}).listen(PORT, () => {
-  console.log(`FediTap dev server: ${ORIGIN}/_dev/`);
-});
+/** Vite plugin: answers the mock's routes first and leaves everything else to Vite. */
+export function mockServer() {
+  const middleware = (req, res, next) => {
+    route(req, res)
+      .then((handled) => {
+        if (handled === false) next();
+      })
+      .catch((error) => {
+        log("error", error);
+        send(res, 500, { error: "server_error" });
+      });
+  };
+  return {
+    name: "feditap-mock-server",
+    configureServer(server) {
+      server.middlewares.use(middleware);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(middleware);
+    },
+  };
+}

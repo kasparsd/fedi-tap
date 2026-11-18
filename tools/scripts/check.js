@@ -1,77 +1,72 @@
-// Static checks the linter cannot do: the page, its script and its stylesheet must agree.
-// Run with `npm run check`. No dependencies.
+// Static checks on the built page (dist/) and its sources that the linter cannot do: the strict
+// Content Security Policy must hold, nothing may be inline, and every file the page names exists.
+// Run with `npm run build && npm run check`. No dependencies.
 
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
 const root = new URL("../..", import.meta.url).pathname;
-const read = (file) => readFileSync(join(root, file), "utf8");
-const html = read("index.html");
-const js = read("app.js");
-const css = read("style.css");
+const dist = join(root, "dist");
 const errors = [];
-const warnings = [];
 
-// Ids the markup defines, and every place the code or styles refer to one.
-const defined = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
-const fromJs = [...js.matchAll(/\$\("([^"]+)"\)|getElementById\("([^"]+)"\)/g)].map(
-  (match) => match[1] ?? match[2],
-);
-const fromCss = [...css.matchAll(/#([A-Za-z][\w-]*)/g)].map((match) => match[1]);
-const fromMarkup = [
-  ...[
-    ...html.matchAll(
-      /\s(?:for|aria-controls|aria-labelledby|aria-describedby|commandfor)="([^"]+)"/g,
-    ),
-  ].flatMap((match) => match[1].split(/\s+/)),
-  ...[...html.matchAll(/href="#([^"]+)"/g)].map((match) => match[1]),
-];
+if (!existsSync(join(dist, "index.html"))) {
+  console.error("error: dist/index.html is missing. Run `npm run build` first.");
+  process.exit(1);
+}
+const html = readFileSync(join(dist, "index.html"), "utf8");
 
-for (const id of fromJs) {
-  if (!defined.has(id)) errors.push(`app.js uses #${id}, which index.html does not define`);
-}
-for (const id of fromMarkup) {
-  if (!defined.has(id)) errors.push(`index.html refers to #${id}, which it does not define`);
-}
-for (const id of new Set(fromCss)) {
-  // Hex colours look like ids; only report names that are not valid colours.
-  if (!defined.has(id) && !/^[0-9a-f]{3,8}$/i.test(id)) {
-    warnings.push(`style.css selects #${id}, which index.html does not define`);
-  }
-}
-// Ids can also be built at run time ("sheet-" + kind), so a quoted id or a "-suffix" counts as used.
-const used = new Set([...fromJs, ...fromCss, ...fromMarkup]);
-for (const id of defined) {
-  const suffix = id.includes("-") ? id.slice(id.lastIndexOf("-")) : null;
-  const dynamic = js.includes(`"${id}"`) || (suffix && js.includes(suffix));
-  if (!used.has(id) && !dynamic) {
-    warnings.push(`index.html defines #${id}, which nothing refers to`);
-  }
-}
-
-// Content Security Policy: the script hash must match the file, and nothing inline may exist.
-const hash = `sha256-${createHash("sha256")
-  .update(readFileSync(join(root, "app.js")))
-  .digest("base64")}`;
+// Content Security Policy: present, and with no way to run or style anything inline.
 const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]*)"/.exec(html)?.[1] ?? "";
-if (!csp.includes(`script-src '${hash}'`)) errors.push("CSP script hash does not match app.js");
-if (!html.includes(`integrity="${hash}"`)) errors.push("script integrity does not match app.js");
-if (/<script(?![^>]*\ssrc=)[^>]*>/i.test(html)) errors.push("index.html has an inline script");
-if (/\sstyle="/i.test(html) || /<style[\s>]/i.test(html))
-  errors.push("index.html has inline styles");
-if (/\son[a-z]+="/i.test(html)) errors.push("index.html has an inline event handler");
-if (/\.style\b|setAttribute\(["']style["']/.test(js)) errors.push("app.js sets inline styles");
+const policy = csp.replaceAll("&#39;", "'");
+if (!policy) errors.push("dist/index.html has no Content Security Policy");
+if (!/(^|;\s*)script-src 'self'(;|$)/.test(policy)) errors.push("CSP script-src is not 'self'");
+if (!/(^|;\s*)style-src 'self'(;|$)/.test(policy)) errors.push("CSP style-src is not 'self'");
+if (/unsafe-|data:|blob:/.test(policy)) errors.push("CSP allows inline code, data: or blob:");
 
-// Local files the page and manifest point at must exist.
+// Nothing inline in the built page.
+if (/<script(?![^>]*\ssrc=)[^>]*>/i.test(html)) errors.push("dist/index.html has an inline script");
+if (/<style[\s>]/i.test(html) || /\sstyle="/i.test(html)) {
+  errors.push("dist/index.html has inline styles");
+}
+if (/\son[a-z]+="/i.test(html)) errors.push("dist/index.html has an inline event handler");
+
+// Local files the page and the manifest point at must exist.
 const files = [...html.matchAll(/\s(?:href|src)="([^"#:]+)"/g)].map((match) => match[1]);
-const manifest = JSON.parse(read("manifest.webmanifest"));
+const manifest = JSON.parse(readFileSync(join(dist, "manifest.webmanifest"), "utf8"));
 for (const icon of manifest.icons ?? []) files.push(icon.src);
 for (const file of new Set(files)) {
-  if (!existsSync(join(root, file))) errors.push(`missing file: ${file}`);
+  if (!existsSync(join(dist, file))) errors.push(`missing file in dist: ${file}`);
 }
 
-for (const message of warnings) console.warn(`warning: ${message}`);
+// The OAuth client identity names the page it is published at.
+const client = JSON.parse(readFileSync(join(dist, "client.json"), "utf8"));
+if (client.client_id !== new URL("client.json", client.client_uri).href) {
+  errors.push("client.json: client_id must be client.json under client_uri");
+}
+if (!client.redirect_uris?.includes(client.client_uri)) {
+  errors.push("client.json: redirect_uris must include client_uri");
+}
+
+// Sources: remote text may only reach the page as text, and styles may only come from stylesheets.
+function walk(dir) {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    return statSync(path).isDirectory() ? walk(path) : [path];
+  });
+}
+for (const file of walk(join(root, "src"))) {
+  const source = readFileSync(file, "utf8");
+  const name = relative(root, file);
+  if (/\{@html\b/.test(source)) errors.push(`${name} uses {@html}`);
+  if (file.endsWith(".svelte")) {
+    const markup = source.replace(/<script[\s\S]*?<\/script>/g, "");
+    if (/\sstyle[:=]/.test(markup)) errors.push(`${name} sets inline styles`);
+  }
+  if (/\.style\b|setAttribute\(["']style["']/.test(source)) {
+    errors.push(`${name} sets inline styles`);
+  }
+}
+
 for (const message of errors) console.error(`error: ${message}`);
 if (errors.length) process.exit(1);
-console.log(`check: ok (${defined.size} ids, ${warnings.length} warnings)`);
+console.log("check: ok");

@@ -7,10 +7,14 @@
   },
   "files": {
     "includes": [
-      "app.js",
-      "style.css",
+      "src/**/*.js",
+      "src/**/*.css",
       "index.html",
-      "manifest.webmanifest",
+      "vite.config.js",
+      "svelte.config.js",
+      "jsconfig.json",
+      "public/manifest.webmanifest",
+      "public/client.json",
       "package.json",
       "biome.json",
       "tools/**/*.js"
@@ -41,8 +45,7 @@
       "suspicious": {
         "noDoubleEquals": "error",
         "noVar": "error",
-        "noShadow": "error",
-        "noRedundantUseStrict": "off"
+        "noShadow": "error"
       },
       "correctness": {
         "noUnusedVariables": "error"

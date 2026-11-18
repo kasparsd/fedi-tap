@@ -1,4 +1,4 @@
-# Local development environment: static app + mock ActivityPub/OAuth server over HTTPS.
+# Local development environment: Vite dev server + mock ActivityPub/OAuth server over HTTPS.
 #
 #   npm run certs           # once, on the host: browser-trusted certificate (needs mkcert)
 #   docker compose up       # https://localhost:8443/_dev/
@@ -13,13 +13,20 @@ services:
     command: npm run dev
     environment:
       PORT: "${PORT:-8443}"
+      # Vite must listen on all interfaces inside the container; the published port stays on loopback.
+      HOST: "0.0.0.0"
+      # Bind mounts on macOS and Windows don't deliver file events; poll instead.
+      POLL: "1"
       DELAY_MS: "${DELAY_MS:-400}"
     ports:
       # Loopback only: the mock server accepts any sign-in and must not be reachable from the LAN.
       - "127.0.0.1:${PORT:-8443}:${PORT:-8443}"
     volumes:
-      # The repo is mounted so edits show up on reload; .local/dev-certs holds the host's certificate.
+      # The repo is mounted so edits show up live; .local/dev-certs holds the host's certificate.
       - .:/app
+      # Linux dependencies from the image, not the host's. After changing package.json run
+      # `docker compose build` and `docker compose down -v`.
+      - node_modules:/app/node_modules
     healthcheck:
       test:
         - CMD
@@ -30,3 +37,6 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+
+volumes:
+  node_modules:

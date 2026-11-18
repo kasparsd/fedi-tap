@@ -2,24 +2,15 @@
 
 ## Hosting
 
-Publish the root of the `main` branch of `kasparsd/fedi-tap` using **Settings › Pages › Deploy from a branch**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. GitHub Pages serves the checked-in `index.html`, `app.js`, `client.json`, and signed `FediTap.shortcut` directly. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+The app is a Svelte 5 single-page app built with Vite into a static `dist/` folder. `.github/workflows/pages.yml` validates, builds and publishes `dist/` to GitHub Pages on every push to `main`. One-time setup: **Settings › Pages › Build and deployment › Source: GitHub Actions**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 
-For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `client.json` together, and update `page` in `FediTap.cherri` before signing another copy. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
+Everything under `public/` (`client.json`, `manifest.webmanifest`, the icons and the signed `FediTap.shortcut`) is copied to `dist/` unchanged. The build uses relative URLs (`base: "./"`), so the page works under any path.
 
-After editing `app.js`, update its script integrity attribute and Content Security Policy hash in `index.html` from the repository root. Hosting requires no build step.
+For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `public/client.json` together, and update `page` in `FediTap.cherri` before signing another copy. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
 
-```sh
-node --input-type=module <<'JS'
-import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
-const html = readFileSync('index.html', 'utf8');
-const hash = 'sha256-' + createHash('sha256').update(readFileSync('app.js')).digest('base64');
-const updated = html
-  .replace(/script-src 'sha256-[^']+'/, "script-src '" + hash + "'")
-  .replace(/(src="app\.js" integrity=")sha256-[^"]+"/, '$1' + hash + '"');
-writeFileSync('index.html', updated);
-JS
-```
+### Content Security Policy
+
+The build adds a strict policy to `dist/index.html` (`vite.config.js`): `script-src 'self'`, `style-src 'self'`, `connect-src https:`, no inline code and no `data:` URIs. The build emits one script and one stylesheet, so there is no hash to maintain. The policy is not applied by the dev server, because Vite injects styles inline for hot reload; use `npm run preview` to see the page under it. `npm run check` fails if the built page loses the policy or gains anything inline.
 
 ## ActivityPub compatibility
 
@@ -30,10 +21,11 @@ Use the canonical HTTPS profile URL. The actor ID, OAuth authorization and token
 ## Local dev server with a mock OAuth server
 
 ```bash
+npm install
 npm run dev
 ```
 
-Opens `https://localhost:8443/_dev/`. The app only runs over HTTPS and checks `client.json` against the page URL, so the server uses HTTPS (a certificate from [mkcert](https://github.com/FiloSottile/mkcert) if installed, otherwise self-signed) and serves a generated `client.json` for its own origin. It also fakes an ActivityPub server and an OAuth 2.0 PKCE provider on the same origin, so the whole flow works offline without a real account.
+Starts the Vite dev server (hot reload) at `https://localhost:8443/`, with the mock server's index at `https://localhost:8443/_dev/`. The app only runs over HTTPS and checks `client.json` against the page URL, so the server uses HTTPS (a certificate from [mkcert](https://github.com/FiloSottile/mkcert) if installed, otherwise self-signed) and serves a generated `client.json` for its own origin. `tools/mock-server.js` is a Vite plugin that fakes an ActivityPub server and an OAuth 2.0 PKCE provider on the same origin, so the whole flow works offline without a real account. `npm run preview` serves the production build (with its Content Security Policy) and the same mock.
 
 Sign in with a profile URL on the dev index page. Each user exercises a path:
 
@@ -49,28 +41,47 @@ The index also has a toggle that simulates a server with the API turned off, sam
 
 ### Pinned Node and Docker
 
-Tooling targets Node 24 (`.nvmrc`, `engines` in `package.json`). The app itself is static and has no dependencies. To avoid installing Node, run the same server in a container:
+Tooling targets Node 24 (`.nvmrc`, `engines` in `package.json`). To avoid installing Node, run the same server in a container:
 
 ```bash
 npm run certs        # once, on the host (needs mkcert); creates .local/dev-certs
 docker compose up    # https://localhost:8443/_dev/
 ```
 
-The container binds the repo, so edits show on reload, and publishes the port on `127.0.0.1` only. Use the host's mkcert certificate: a certificate made inside the container is not trusted by your browser, and the page needs a trusted HTTPS origin to work. If `.local/dev-certs` is missing the container falls back to a self-signed certificate and the browser shows a warning. Set `PORT` (and `DELAY_MS`) in the environment; the port is part of the OAuth client ID, so it must be the same on both sides. Building the Shortcut (`./build-shortcut.sh`) needs Cherri and Apple's Shortcuts command, so it only runs on a Mac and is not part of the container.
+The container binds the repo, so edits show live (it polls for changes), and publishes the port on `127.0.0.1` only. Its dependencies are installed for Linux in the image and kept in a `node_modules` volume; after changing `package.json` run `docker compose build` and `docker compose down -v`. Use the host's mkcert certificate: a certificate made inside the container is not trusted by your browser, and the page needs a trusted HTTPS origin to work. If `.local/dev-certs` is missing the container falls back to a self-signed certificate and the browser shows a warning. Set `PORT` (and `DELAY_MS`) in the environment; the port is part of the OAuth client ID, so it must be the same on both sides. Building the Shortcut (`./build-shortcut.sh`) needs Cherri and Apple's Shortcuts command, so it only runs on a Mac and is not part of the container.
 
-## Lint, format and validate
+## Project layout
 
-```bash
-npm install          # dev tools only; the app itself has no dependencies
-npm run validate     # Biome (lint + format check) + static checks
-npm run lint:fix     # apply safe lint fixes and format
-npm run format       # format only
+```
+index.html              Vite entry
+src/main.js             mounts the app
+src/App.svelte          chooses what to show (signed out, ready, loaded, unsupported)
+src/app.css             the whole stylesheet (see docs/ux/components.md)
+src/state.svelte.js     reactive state and every action that changes it
+src/components/         one Svelte component per screen part
+src/lib/                protocol code with no framework or page access: discovery, OAuth, tokens,
+                        account store, activities (unit-tested)
+public/                 copied to dist/ as is: client.json, manifest, icons, FediTap.shortcut
+tools/mock-server.js    the mock ActivityPub and OAuth server (Vite plugin)
+tools/scripts/          check.js (static checks), try.js (command-line client)
 ```
 
-- **[Biome](https://biomejs.dev)** (`biome.json`) lints and formats JS, CSS, HTML, JSON and the manifest in one fast tool, replacing the usual ESLint + Prettier pair. Rules: the recommended set plus `const`, no `var`, strict equality, no unused variables and no shadowed names. A GritQL plugin (`tools/biome/no-html-sinks.grit`) bans `innerHTML`, `outerHTML`, `insertAdjacentHTML` and `document.write`, so remote data can only reach the page as text. `noRedundantUseStrict` is off because `app.js` is a classic script, not a module. Docs and `.local` are not touched; docs use soft line breaks.
-- **Static checks** (`tools/scripts/check.js`): every id that `app.js` or `style.css` refers to exists in `index.html`; the CSP script hash and `integrity` match `app.js` (so a forgotten hash update fails here, not in the browser); no inline scripts, styles or event handlers; local files and manifest icons exist. Ids defined but never referenced are reported as warnings.
+Components read `app` from `state.svelte.js` and call its functions. Views are `{#if}` blocks on `app.view`. A running task sets `app.busy`, which turns off the controls; the pressed button shows its working label through `isBusy` and `buttonLabel`. Message sections (`status` line plus one problem) are the `Messages` component and must stay mounted so screen readers announce them. Dialogs are the `Sheet` component, a native `<dialog>` driven by an `open` flag; its content exists only while open.
 
-Run `npm run validate` before committing. After editing `app.js`, run `npm run format` first, then regenerate the script hash, because formatting changes the file.
+## Lint, format, test and validate
+
+```bash
+npm install
+npm run validate     # Biome + svelte-check + unit tests + build + static checks
+npm run lint:fix     # apply safe lint fixes and format
+npm test             # Vitest unit tests for src/lib
+```
+
+- **[Biome](https://biomejs.dev)** (`biome.json`) lints and formats JS, CSS, HTML and JSON in one tool. Rules: the recommended set plus `const`, no `var`, strict equality, no unused variables and no shadowed names. A GritQL plugin (`tools/biome/no-html-sinks.grit`) bans `innerHTML`, `outerHTML`, `insertAdjacentHTML` and `document.write`, so remote data can only reach the page as text. Biome does not read `.svelte` files.
+- **[svelte-check](https://svelte.dev/docs/svelte/svelte-check)** compiles every component and fails on any warning, including accessibility warnings.
+- **Static checks** (`tools/scripts/check.js`, after `npm run build`): the built page has the strict Content Security Policy and nothing inline; local files and manifest icons exist; `client.json` is consistent; no source uses `{@html}` or inline styles.
+
+Run `npm run validate` before committing. CI runs the same command before it publishes.
 
 ## Test the WordPress flow
 
@@ -104,7 +115,7 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 ## Build the shortcut
 
-On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
+On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `public/FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
 The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, which tells the page the person has the Shortcut (so the Shortcut card stays hidden); the page removes the parameter from the address bar. Shortcuts built before this change open the bare page and keep showing the card until a link is shared once or the person taps **Dismiss**. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 

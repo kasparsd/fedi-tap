@@ -23,5 +23,5 @@ else
   fi
 fi
 
-cp "$stage/$artifact" "$project_dir/$artifact"
-printf 'Built %s\n' "$project_dir/$artifact"
+cp "$stage/$artifact" "$project_dir/public/$artifact"
+printf 'Built %s\n' "$project_dir/public/$artifact"
