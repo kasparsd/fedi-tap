@@ -2,28 +2,34 @@
 
 ## Hosting
 
-Publish the root of the `main` branch of `kasparsd/fedi-tap` using **Settings › Pages › Deploy from a branch**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. GitHub Pages serves the checked-in `index.html`, `client.json`, and signed `FediTap.shortcut` directly. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+Publish the root of the `main` branch of `kasparsd/fedi-tap` using **Settings › Pages › Deploy from a branch**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. GitHub Pages serves the checked-in `index.html`, `app.js`, `client.json`, and signed `FediTap.shortcut` directly. [GitHub Pages publishing sources](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
 For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `client.json` together, and update `setupPage` in `FediTap.cherri` before signing another copy. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
 
-Run this from the directory containing `index.html` whenever you edit its inline script. Node is used only for updating the hash during editing. Hosting requires no build step.
+After editing `app.js`, update its script integrity attribute and Content Security Policy hash in `index.html` from the repository root. If you distribute the shortcut through iCloud, set `SHORTCUT_ICLOUD_URL` in `app.js` and update the hash. Hosting requires no build step.
 
 ```sh
 node --input-type=module <<'JS'
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 const html = readFileSync('index.html', 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-const hash = createHash('sha256').update(script).digest('base64');
-writeFileSync('index.html', html.replace(/script-src 'sha256-[^']+'/, "script-src 'sha256-" + hash + "'"));
+const hash = 'sha256-' + createHash('sha256').update(readFileSync('app.js')).digest('base64');
+const updated = html
+  .replace(/script-src 'sha256-[^']+'/, "script-src '" + hash + "'")
+  .replace(/(src="app\.js" integrity=")sha256-[^"]+"/, '$1' + hash + '"');
+writeFileSync('index.html', updated);
 JS
 ```
+
+## ActivityPub compatibility
+
+FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD, OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
 
 ## Test the WordPress flow
 
 1. Open the published page, enter `kaspars@kaspars.net` or another WordPress ActivityPub handle, and approve access as the same WordPress user. Repeat with the HTTPS actor URL to check direct discovery.
 2. On the Connect screen, verify the handle and server. Check that the address bar no longer contains the OAuth code or state and that browser storage contains no tokens or pending OAuth transaction.
-3. On desktop, click **Copy settings** and save the copied JSON to a private `settings.json`. Run `./feditap-try.sh settings.json https://example.org/path/to/a/fediverse-post` with a real federated post URL. The default action reads through the account’s proxy and should print the resolved object type and ID.
+3. On desktop, click **Copy settings** and save the copied JSON to a private `settings.json`. With Node.js 22 or later, run `npm run try -- settings.json https://example.org/path/to/a/fediverse-post` with a real federated post URL. The default action reads through the account’s proxy and should print the resolved object type and ID. Run `npm run try -- --help` for the other actions and `--dry-run`.
 4. Use the refresh grant below on a disposable test connection. Check that the response includes a new token pair and that the previous refresh token is rejected. The refresh call can be made before the access token expires. To exercise automatic refresh on an iPhone, set the saved account’s `expires` to less than 60 seconds from now, then run a shortcut action.
 5. On an iPhone, open the page in Safari, sign in, install **FediTap** using **Download Shortcut** and tap **Connect FediTap**. Confirm that Shortcuts receives JSON as text and writes the account to `fediverse.json`. Repeat with the same handle, then a different handle, to check replacement and addition.
 

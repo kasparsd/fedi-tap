@@ -1,0 +1,11 @@
+{
+  "name": "fedi-tap",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "try": "node tools/scripts/try.js"
+  }
+}
