@@ -61,44 +61,45 @@ figcaption b { color: CanvasText; }
 <p class="quiet">Default, hover, pressed, focus</p>
 <div class="row"><button>Cancel</button><button data-force="hover">Hover</button><button data-force="pressed">Pressed</button><button data-force="focus">Focus</button></div>
 <p class="quiet">Primary, hover, pressed, disabled, busy</p>
-<div class="row"><button class="primary">Continue</button><button class="primary" data-force="hover pressed">Pressed</button><button class="primary" disabled>Disabled</button><button class="primary" disabled aria-busy="true">Opening…</button></div>
-<p class="quiet">Link, destructive, disabled</p>
-<div class="row"><button class="link">Change link</button><button class="link destructive">Remove</button><button class="destructive">Remove</button><button class="link" disabled>Undo</button></div>
-<p class="quiet">Done: aria-pressed</p>
-<div class="row"><button aria-pressed="true" disabled>Liked</button><a class="button" href="#components">Link as button</a></div>
+<div class="row"><button class="primary">Continue</button><button class="primary" data-force="hover pressed">Pressed</button><button class="primary" disabled>Disabled</button><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div>
+<p class="quiet">Destructive, disabled</p>
+<div class="row"><button class="destructive">Remove</button><button disabled>Undo like</button></div>
+<p class="quiet">Done: aria-pressed, and a link that looks like a button</p>
+<div class="row"><button aria-pressed="true" disabled>Liked</button><a class="button" href="#components">Add Shortcut</a></div>
 </div>
 </section>
 <section>
-<h2>Field</h2>
+<h2>Fields</h2>
 <div class="frame">
 <label for="s-a">Account</label>
-<input id="s-a" placeholder="you@example.com">
+<div class="row"><input id="s-a" placeholder="you@example.com"><button class="primary">Continue</button></div>
+<p class="quiet">Link: input with Paste inside, Open beside it</p>
+<div class="row"><div class="field"><input type="url" placeholder="https://" aria-label="Link"><button type="button">Paste</button></div><button class="primary">Open</button></div>
 <p class="quiet">Focus</p>
-<input value="anna@social.example" data-force="focus" aria-label="Focus">
-<p class="quiet">Invalid, with its message</p>
-<input value="anna@exmple.social" aria-invalid="true" aria-label="Invalid" aria-describedby="s-e">
-<p id="s-e" role="alert"><strong>Can’t find that handle.</strong> Check the spelling.</p>
-<p class="quiet">Disabled</p>
-<input value="anna@social.example" disabled aria-label="Disabled">
+<div class="row"><div class="field"><input type="url" value="https://social.example/@anna" data-force="focus" aria-label="Focus"><button type="button">Paste</button></div><button class="primary">Open</button></div>
+<p class="quiet">Invalid, with its message below</p>
+<div class="row"><div class="field"><input type="url" value="https://exmple.social/x" aria-invalid="true" aria-label="Invalid" aria-describedby="s-e"><button type="button">Paste</button></div><button class="primary">Open</button></div>
+<p id="s-e" role="alert"><strong>Couldn’t open this link.</strong> Your server can’t find it.</p>
+<p class="quiet">Busy: read-only, buttons aria-disabled</p>
+<div class="row"><div class="field"><input type="url" value="https://social.example/@anna" readonly aria-label="Busy"><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div>
 <p class="quiet">Text area</p>
 <textarea rows="3" aria-label="Reply">Thanks for sharing.</textarea>
-<div class="row quiet"><p>Public reply.</p><p>20 / 500</p></div>
+<div class="row quiet"><p>Replies are public.</p><p>20 / 500</p></div>
 </div>
 </section>
 <section>
-<h2>List</h2>
+<h2>Group and list</h2>
 <div class="frame">
-<ul class="list"><li><button class="link">Like</button></li><li><button class="link" data-force="pressed">Repost (pressed)</button></li><li><button class="link" aria-pressed="true" disabled>Replied</button></li><li><button class="link" disabled>Follow (disabled)</button></li></ul>
-<p class="quiet">Choices and a trailing control</p>
-<ul class="list"><li><button aria-current="true">@me@example.social</button></li><li><button>@alex@other.example</button><button class="link destructive">Remove</button></li></ul>
+<p class="quiet">Group: buttons that wrap</p>
+<div class="group"><button>Like</button><button data-force="pressed">Repost (pressed)</button><button aria-pressed="true" disabled>Replied</button><button disabled>Follow (disabled)</button><button>Undo like</button></div>
+<p class="quiet">List: choices, with a second button</p>
+<ul class="list"><li><button aria-current="true">@me@example.social</button></li><li><button>@alex@other.example</button><button class="destructive">Remove</button></li></ul>
 </div>
 </section>
 <section>
 <h2>Post and feedback</h2>
 <div class="frame">
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#components">social.example</a><button class="link">Change link</button></footer></article>
-<p class="quiet">Loading</p>
-<article class="post" aria-busy="true"><p class="quiet">https://social.example/@anna/1234</p></article>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#components">social.example</a></footer></article>
 <p class="quiet">Status and alert</p>
 <p role="status">Liked as @me@example.social.</p>
 <p role="alert"><strong>Couldn’t send the like.</strong> Your server didn’t answer. Try again.</p>
@@ -109,337 +110,342 @@ figcaption b { color: CanvasText; }
 </section>
 <section>
 <h2>Dialog</h2>
-<div class="frame"><p>Page behind.</p><dialog open aria-labelledby="s-d1"><form method="dialog"><h2 id="s-d1">Remove @alex?</h2><p class="quiet">This only signs out on this device.</p><div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></form></dialog></div>
-<div class="frame"><p>Page behind.</p><dialog open class="sheet" aria-labelledby="s-d2"><form method="dialog"><h2 id="s-d2">Reply</h2><label for="s-d2t">Your reply</label><textarea id="s-d2t" rows="3"></textarea><div class="row"><button>Cancel</button><button class="primary" disabled>Send</button></div></form></dialog></div>
+<div class="frame"><p>Page behind.</p><dialog open aria-labelledby="s-d1"><h2 id="s-d1">Remove @alex?</h2><p class="quiet">This only signs out on this device.</p><div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></dialog></div>
+<div class="frame"><p>Page behind.</p><dialog open class="sheet" aria-labelledby="s-d2"><h2 id="s-d2">Reply</h2><label for="s-d2t">Your reply</label><textarea id="s-d2t" rows="3"></textarea><div class="row"><button>Cancel</button><button class="primary" disabled>Send</button></div></dialog></div>
 </section>
 </div>
 
 <h2 id="A">A · First run and sign-in</h2>
-<p>Goal: connect an account so I can act on posts. One field, one button. Help and extras are collapsed.</p>
-<div class="flow">
-<figure id="A1"><p class="quiet">Home Screen app</p><div class="frame"><main>
+<p>Goal: connect an account so I can act on posts. One field with its button beside it. Help and extras are collapsed.</p>
+<div class="flow"><figure id="A1"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <h1>Sign in</h1>
 <form><fieldset><legend>Account sign-in</legend>
 <label for="a1-in">Account</label>
-<input id="a1-in" placeholder="you@example.com" autocomplete="off" autocapitalize="none" spellcheck="false">
-<p class="quiet">This app keeps its own sign-in, separate from Safari.</p>
-<button class="primary">Continue</button></fieldset></form>
-<section><h2>Share from any app</h2><p class="quiet">The Shortcut opens Safari, where you sign in too.</p><a class="button" href="#A1">Add Shortcut</a><button class="link">Hide</button></section>
+<div class="row"><input id="a1-in" placeholder="you@example.com"><button class="primary">Continue</button></div><p class="quiet">This app keeps its own sign-in, separate from Safari.</p></fieldset></form>
+<section><h2>Share from any app</h2><p class="quiet">Send links here from the share sheet.</p><a class="button" href="#">Add Shortcut</a><button>Hide</button></section>
 <details><summary>Server not working?</summary><p class="quiet">Your server needs an ActivityPub client API.</p></details>
-</main></div><figcaption><b>A1 Welcome.</b> The title states the task. A labelled field with the placeholder showing the shape, and Continue as the one filled button. No help text. The Shortcut is a plain section directly below, shown because this person did not arrive from the share sheet. Help stays a disclosure.</figcaption></figure>
-
+</main></div><figcaption><b>A1 Welcome.</b> The title states the task. One labelled field with the placeholder showing the shape, and Continue to its right in the same row; no help text. The Shortcut is a plain section directly below, shown because this person did not arrive from the share sheet. Help stays a disclosure.</figcaption></figure>
 <figure id="A2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <h1>Sign in</h1>
-<form><fieldset disabled><legend>Account sign-in</legend>
+<form><fieldset><legend>Account sign-in</legend>
 <label for="a2-in">Account</label>
-<input id="a2-in" value="anna@social.example">
-<button class="primary" aria-busy="true">Looking up…</button></fieldset></form>
-</main></div><figcaption><b>A2 Looking up.</b> Progress is shown on the button that was pressed, and the field is disabled.</figcaption></figure>
-
+<div class="row"><input id="a2-in" value="anna@social.example" readonly><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
+</main></div><figcaption><b>A2 Looking up.</b> The field stays in place with its value (read-only while the request runs, never disabled, so focus and text are kept). Progress is on the button that was pressed.</figcaption></figure>
 <figure id="A3"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <h1>Sign in</h1>
 <form><fieldset><legend>Account sign-in</legend>
 <label for="a3-in">Account</label>
-<input id="a3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="a3-e">
-<p id="a3-e" role="alert"><strong>Can’t find anna@exmple.social.</strong> Check the spelling, or use a profile link.</p>
-<button class="primary">Use profile link</button>
-<button>Try again</button></fieldset></form>
-</main></div><figcaption><b>A3 Handle not found.</b> The typed value stays. The problem is text under the field it belongs to, not a box. The fallback is the filled button; retrying is the plain one. Today the field is cleared and silently changes type.</figcaption></figure>
-
+<div class="row"><input id="a3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="a3-in-e"><button class="primary">Continue</button></div>
+<p id="a3-in-e" role="alert"><strong>Can’t find anna@exmple.social.</strong> Check the spelling, or use a profile link.</p>
+<button>Use profile link</button></fieldset></form>
+</main></div><figcaption><b>A3 Handle not found.</b> The typed value stays and the field is marked invalid. The problem is text directly below the field it belongs to, not a box. The person can edit the value and press Continue at once; the one extra button is the fallback.</figcaption></figure>
 <figure id="A4"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <h1>Sign in</h1>
 <form><fieldset><legend>Account sign-in</legend>
 <label for="a4-in">Account</label>
-<input id="a4-in" value="anna@social.example">
-<p role="alert"><strong>Couldn’t read your profile.</strong> Your server returned no matching profile, or blocked this page (CORS).</p>
-<button class="primary">Try again</button></fieldset></form>
-<details><summary>Details</summary><p class="quiet">Request blocked by the server’s CORS policy: no Access-Control-Allow-Origin header.</p></details>
-</main></div><figcaption><b>A4 Server problem.</b> Cause in plain words as the error text, fix next, technical detail last behind a disclosure. Same layout for CORS, issuer or origin mismatch and redirects.</figcaption></figure>
-
+<div class="row"><input id="a4-in" value="anna@social.example" aria-invalid="true" aria-describedby="a4-in-e"><button class="primary">Continue</button></div>
+<p id="a4-in-e" role="alert"><strong>Couldn’t read your profile.</strong> Your server returned no matching profile, or blocked this page (CORS).</p>
+<details><summary>Details</summary><p class="quiet">Request blocked by the server’s CORS policy: no Access-Control-Allow-Origin header.</p></details></fieldset></form>
+</main></div><figcaption><b>A4 Server problem.</b> Cause in plain words below the field, technical detail last behind a disclosure. The field is still there to edit and submit again. Same layout for CORS, issuer or origin mismatch and redirects.</figcaption></figure>
 <figure id="A5"><p class="quiet">Your server’s page</p><div class="frame"><main>
 <h1>Allow access?</h1>
 <p><strong>FediTap</strong> wants to act as <strong>@anna@social.example</strong>: like, repost, reply and follow.</p>
 <form><button class="primary">Allow</button><button>Deny</button></form>
 </main></div><figcaption><b>A5 Server consent.</b> Not our page. It is drawn with the same components so the flow reads as one system. In a Home Screen app iOS shows it inside a system sheet with a Done button (see I3).</figcaption></figure>
-
 <figure id="A6"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@anna@social.example</button></header>
-<p role="status">Signed in as @anna@social.example.</p>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
 <label for="a6-in">Link</label>
-<div class="row"><input id="a6-in" type="url" placeholder="https://"><button>Open</button></div></fieldset></form>
-<section><h2>Share from any app</h2><p class="quiet">The Shortcut opens Safari, where you sign in too.</p><a class="button" href="#A6">Add Shortcut</a><button class="link">Hide</button></section>
-</main></div><figcaption><b>A6 Signed in.</b> Confirmation names the account in plain text near the thing the person is about to use, and clears itself. Paste is the first task; the Shortcut section stays below until the person adds it, dismisses it or arrives from it.</figcaption></figure>
+<div class="row"><div class="field"><input id="a6-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div><p role="status">Signed in as @anna@social.example.</p></fieldset></form>
+<section><h2>Share from any app</h2><p class="quiet">Send links here from the share sheet.</p><a class="button" href="#">Add Shortcut</a><button>Hide</button></section>
+</main></div><figcaption><b>A6 Signed in.</b> The confirmation names the account under the link field and clears itself. Paste sits inside the field, Open to its right. The Shortcut section stays below until the person adds it, hides it or arrives from it.</figcaption></figure>
 </div>
-
 <h2 id="B">B · A shared link, signed in</h2>
-<p>Goal: act on the post I just shared. The Shortcut opens the page with ?url=…, which iOS loads in Safari. The URL field never shows.</p>
-<div class="flow">
-<figure id="B1"><p class="quiet">iOS share sheet (system UI)</p><div class="frame"><main>
-<h1>Anna Ruiz</h1><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p></main>
-<dialog open class="sheet" aria-labelledby="b1-t"><form method="dialog"><h2 id="b1-t">Share</h2>
+<p>Goal: act on the post I just shared. The Shortcut opens the page with ?url=…, which iOS loads in Safari. The link field is already filled in and stays there.</p>
+<div class="flow"><figure id="B1"><p class="quiet">iOS share sheet (system UI)</p><div class="frame"><main>
+<h1>Anna Ruiz</h1><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p>
+</main><dialog open class="sheet" aria-labelledby="b1-t"><h2 id="b1-t">Share</h2>
 <ul class="list"><li><button type="button">Messages</button></li><li><button type="button" aria-current="true">FediTap shortcut</button></li><li><button type="button">Copy</button></li></ul>
-<button>Cancel</button></form></dialog></div><figcaption><b>B1 Share sheet.</b> Entry point, drawn by iOS. The Shortcut passes only the first link.</figcaption></figure>
-
+<button>Cancel</button></dialog></div><figcaption><b>B1 Share sheet.</b> Entry point, drawn by iOS. The Shortcut passes only the first link.</figcaption></figure>
 <figure id="B2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<article class="post" aria-busy="true"><p class="quiet">https://social.example/@anna/1234</p></article>
-<fieldset disabled><legend>Actions</legend>
-<ul class="list"><li><button class="link" type="button" disabled>Like</button></li><li><button class="link" type="button" disabled>Repost</button></li><li><button class="link" type="button" disabled>Reply</button></li><li><button class="link" type="button" disabled>Follow</button></li></ul></fieldset>
-</main></div><figcaption><b>B2 Loading.</b> The post area says what is loading, so the layout doesn’t jump. The actions are visible but disabled. No URL field.</figcaption></figure>
-
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="b2-in">Link</label>
+<div class="row"><div class="field"><input id="b2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
+</main></div><figcaption><b>B2 Loading.</b> The link field stays where it is with its value and focus; the busy state is on Open (“Opening…”) and Paste, and a status line says Loading…. The previous post is removed while the new one loads, so it cannot be mistaken for the new link.</figcaption></figure>
 <figure id="B3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#B3">social.example</a><button class="link">Change link</button></footer></article>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="b3-in">Link</label>
+<div class="row"><div class="field"><input id="b3-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
-<ul class="list"><li><button class="link" type="button">Like</button></li><li><button class="link" type="button">Repost</button></li><li><button class="link" type="button" aria-haspopup="dialog">Reply</button></li><li><button class="link" type="button">Follow</button></li></ul></fieldset>
-</main></div><figcaption><b>B3 Loaded.</b> The post proves it is the right one. The account button shows who acts. The actions are a list with separators instead of tiles; Follow is the last row. The URL field hides behind “Change link”.</figcaption></figure>
-
+<div class="group"><button type="button">Like</button>
+<button type="button">Repost</button>
+<button type="button" aria-haspopup="dialog">Reply</button>
+<button type="button">Follow</button></div></fieldset>
+</main></div><figcaption><b>B3 Loaded.</b> The field stays at the top with the link in it; the post appears below it and is replaced when another link is submitted. Like, Repost, Reply and Follow are ordinary buttons in a wrapping group. There is no Change link: the field is always there.</figcaption></figure>
 <figure id="B4"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#B4">social.example</a><button class="link">Change link</button></footer></article>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="b4-in">Link</label>
+<div class="row"><div class="field"><input id="b4-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 <fieldset><legend>Actions</legend>
-<ul class="list"><li><button class="link" type="button" aria-pressed="true" disabled>Liked</button><button class="link" type="button">Undo</button></li><li><button class="link" type="button">Repost</button></li><li><button class="link" type="button" aria-haspopup="dialog">Reply</button></li><li><button class="link" type="button">Follow</button></li></ul></fieldset>
+<div class="group"><button type="button" aria-pressed="true" disabled>Liked</button>
+<button type="button">Undo like</button>
+<button type="button">Repost</button>
+<button type="button" aria-haspopup="dialog">Reply</button>
+<button type="button">Follow</button></div></fieldset>
 <p role="status">Liked as @me@example.social.</p>
-<div class="row"><button class="link">Open another link</button></div>
-</main></div><figcaption><b>B4 After Like.</b> The Like row reads “Liked”, turns bold and can’t be sent twice. The confirmation is plain text under the actions it refers to. Undo sits in the row of the action it undoes, only if the server exposes the activity ID, so each action has its own.</figcaption></figure>
-
+</main></div><figcaption><b>B4 After Like.</b> The finished action is a filled, disabled button that reads “Liked”; Undo like sits next to it as a plain button, only if the server exposes the activity ID. The confirmation is plain text under the buttons.</figcaption></figure>
 <figure id="B5"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<section><p class="quiet">https://social.example/@anna/9999</p>
-<p role="alert"><strong>Couldn’t open this link.</strong> Your server can’t find it. It may be private or deleted.</p>
-<button class="primary">Try again</button><button class="link">Change link</button>
-<details><summary>Details</summary><p class="quiet">HTTP 404 from social.example.</p></details></section>
-</main></div><figcaption><b>B5 Lookup failed.</b> The failure sits with the link it concerns. Try again is the filled button, Change link is plain. The HTTP code is under Details.</figcaption></figure>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="b5-in">Link</label>
+<div class="row"><div class="field"><input id="b5-in" type="url" value="https://social.example/@anna/9999" aria-invalid="true" aria-describedby="b5-in-e"><button type="button">Paste</button></div><button class="primary">Open</button></div>
+<p id="b5-in-e" role="alert"><strong>Couldn’t open this link.</strong> Your server can’t find it. It may be private or deleted.</p>
+<details><summary>Details</summary><p class="quiet">HTTP 404 from social.example.</p></details></fieldset></form>
+</main></div><figcaption><b>B5 Lookup failed.</b> The error is directly below the field (marked invalid and described by the message); the old post is gone. The person edits the link and presses Open again. The HTTP code is under Details.</figcaption></figure>
 </div>
-
 <h2 id="C">C · A shared link, signed out</h2>
 <p>Today the link is stored but invisible until sign-in (finding 1).</p>
-<div class="flow">
-<figure id="C1"><p class="quiet">Safari</p><div class="frame"><main>
+<div class="flow"><figure id="C1"><p class="quiet">Safari</p><div class="frame"><main>
 <h1>Sign in</h1>
 <section><h2>Link waiting</h2><p class="quiet">https://social.example/@anna/1234</p></section>
 <form><fieldset><legend>Account sign-in</legend>
 <label for="c1-in">Account</label>
-<input id="c1-in" placeholder="you@example.com">
-<button class="primary">Continue</button></fieldset></form>
+<div class="row"><input id="c1-in" placeholder="you@example.com"><button class="primary">Continue</button></div></fieldset></form>
 <details><summary>Server not working?</summary><p class="quiet">Your server needs an ActivityPub client API.</p></details>
-</main></div><figcaption><b>C1 Pending link.</b> The link is shown above the form so the person knows it arrived. It survives sign-in (already implemented through sessionStorage).</figcaption></figure>
-
+</main></div><figcaption><b>C1 Pending link.</b> The link is shown above the form so the person knows it arrived. It survives sign-in (through sessionStorage). The field is the same one A1 uses.</figcaption></figure>
 <figure id="C2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<p role="status">Loading…</p>
-<article class="post" aria-busy="true"><p class="quiet">https://social.example/@anna/1234</p></article>
-</main></div><figcaption><b>C2 Return from server.</b> Goes straight to B2, then B3. No extra tap.</figcaption></figure>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="c2-in">Link</label>
+<div class="row"><div class="field"><input id="c2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
+</main></div><figcaption><b>C2 Return from server.</b> Goes straight to the loading state, then B3. The link field is filled and busy; no extra tap.</figcaption></figure>
 </div>
-
 <h2 id="D">D · Open directly</h2>
-<p>Goal: act on a link I copied. Paste is the first task.</p>
-<div class="flow">
-<figure id="D1"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
+<p>Goal: act on a link I copied. The link field is the first task, with Paste inside it.</p>
+<div class="flow"><figure id="D1"><p class="quiet">Home Screen app</p><div class="frame"><main>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
 <label for="d1-in">Link</label>
-<div class="row"><input id="d1-in" type="url" placeholder="https://"><button>Open</button></div></fieldset></form>
-<section><h2>Share from any app</h2><p class="quiet">The Shortcut opens Safari, where you sign in too.</p><a class="button" href="#D1">Add Shortcut</a><button class="link">Hide</button></section>
-</main></div><figcaption><b>D1 Ready.</b> Paste is the filled button (iOS shows its own “Allow Paste” prompt) and loads the link at once. Typing is the second path. The Shortcut section sits below as the way to skip this screen next time.</figcaption></figure>
-
+<div class="row"><div class="field"><input id="d1-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<section><h2>Share from any app</h2><p class="quiet">Send links here from the share sheet.</p><a class="button" href="#">Add Shortcut</a><button>Hide</button></section>
+</main></div><figcaption><b>D1 Ready.</b> The link field with Paste inside it and Open beside it. Paste (iOS shows its own “Allow Paste” prompt) reads the clipboard, fills the field and opens the link at once. The Shortcut section sits below as the way to skip this screen next time.</figcaption></figure>
 <figure id="D2"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
-<form><fieldset disabled><legend>Open a link</legend>
-<label for="d2-in">Link</label>
-<div class="row"><input id="d2-in" type="url" value="https://social.example/@anna/1234"><button aria-busy="true">Opening…</button></div></fieldset>
-<p role="status">Loading…</p></form>
-</main></div><figcaption><b>D2 Pasted.</b> Paste loads the link straight away; progress is the status line under the field. Today Paste only fills the field and Open is a second tap.</figcaption></figure>
-
-<figure id="D3"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
+<label for="d2-in">Link</label>
+<div class="row"><div class="field"><input id="d2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
+</main></div><figcaption><b>D2 Pasted.</b> The field keeps the pasted link; progress is on Open and a status line. Paste and Open are aria-disabled, not disabled, so focus is not lost.</figcaption></figure>
+<figure id="D3"><p class="quiet">Home Screen app</p><div class="frame"><main>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
 <label for="d3-in">Link</label>
-<input id="d3-in" type="url" value="social example anna" aria-invalid="true" aria-describedby="d3-e">
-<p id="d3-e" role="alert"><strong>That isn’t a link.</strong> Use a full address that starts with https://.</p>
-<button disabled>Open</button></fieldset></form>
-</main></div><figcaption><b>D3 Invalid link.</b> The message sits under the field it refers to. A denied clipboard falls back to typing; the typed path has its own Open button, disabled until the input is a valid link.</figcaption></figure>
+<div class="row"><div class="field"><input id="d3-in" type="text" value="social example anna" aria-invalid="true" aria-describedby="d3-in-e"><button type="button">Paste</button></div><button class="primary">Open</button></div>
+<p id="d3-in-e" role="alert"><strong>That isn’t a link.</strong> Use a full address that starts with https://.</p></fieldset></form>
+</main></div><figcaption><b>D3 Invalid link.</b> The message sits under the field it refers to. A denied clipboard prints a short hint in the same place and returns focus to the field.</figcaption></figure>
 </div>
-
 <h2 id="E">E · Reply</h2>
-<div class="flow">
-<figure id="E1"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p></article>
-<ul class="list"><li><button class="link">Like</button></li><li><button class="link">Repost</button></li></ul></main>
-<dialog open class="sheet" aria-labelledby="e1-t"><form method="dialog"><h2 id="e1-t">Reply</h2>
+<div class="flow"><figure id="E1"><p class="quiet">Safari</p><div class="frame"><main>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="e1-u">Link</label>
+<div class="row"><div class="field"><input id="e1-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset><legend>Actions</legend>
+<div class="group"><button type="button">Like</button>
+<button type="button">Repost</button>
+<button type="button" aria-haspopup="dialog">Reply</button>
+<button type="button">Follow</button></div></fieldset>
+</main><dialog open class="sheet" aria-labelledby="e1-t"><h2 id="e1-t">Reply</h2>
 <p class="quiet">To Anna Ruiz, as @me@example.social.</p>
 <fieldset><legend>Write a reply</legend>
 <label for="e1-in">Your reply</label>
 <textarea id="e1-in" rows="5">Thanks, that matches my experience.</textarea>
-<div class="row"><p class="quiet">Replies are public.</p><p class="quiet">36 / 500</p></div></fieldset>
-<div class="row"><button>Cancel</button><button class="primary">Send</button></div></form></dialog></div><figcaption><b>E1 Composer.</b> A bottom-docked dialog: a heading, the field and a button row. A line above names the account and says in words that the reply is public; the counter sits under the field. Send stays disabled until there is text.</figcaption></figure>
-
+<div class="row quiet"><p>Replies are public.</p><p>36 / 500</p></div>
+<div class="row"><button>Cancel</button><button class="primary">Send</button></div></fieldset></dialog></div><figcaption><b>E1 Composer.</b> A bottom-docked dialog: a heading, a line naming the post and account, the field with the visibility said in words and the counter under it, and a button row. Send stays disabled until there is text.</figcaption></figure>
 <figure id="E2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p></article>
-<ul class="list"><li><button class="link">Like</button></li><li><button class="link">Repost</button></li></ul></main>
-<dialog open class="sheet" aria-labelledby="e2-t"><form method="dialog"><h2 id="e2-t">Reply</h2>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="e2-u">Link</label>
+<div class="row"><div class="field"><input id="e2-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset><legend>Actions</legend>
+<div class="group"><button type="button">Like</button>
+<button type="button">Repost</button>
+<button type="button" aria-haspopup="dialog">Reply</button>
+<button type="button">Follow</button></div></fieldset>
+</main><dialog open class="sheet" aria-labelledby="e2-t"><h2 id="e2-t">Reply</h2>
+<p class="quiet">To Anna Ruiz, as @me@example.social.</p>
 <fieldset disabled><legend>Write a reply</legend>
 <label for="e2-in">Your reply</label>
-<textarea id="e2-in" rows="5">Thanks, that matches my experience.</textarea></fieldset>
-<div class="row"><button disabled>Cancel</button><button class="primary" disabled aria-busy="true">Sending…</button></div></form></dialog></div><figcaption><b>E2 Sending.</b> Text stays. Controls are off; the Send button says “Sending…”. A failure keeps the draft and shows error text in the dialog.</figcaption></figure>
-
+<textarea id="e2-in" rows="5">Thanks, that matches my experience.</textarea>
+<div class="row quiet"><p>Replies are public.</p><p>36 / 500</p></div>
+<div class="row"><button disabled>Cancel</button><button class="primary" disabled aria-busy="true">Sending…</button></div></fieldset></dialog></div><figcaption><b>E2 Sending.</b> Text stays. Controls are off; the Send button says “Sending…”. A failure keeps the draft and shows error text in the dialog; Send is the retry.</figcaption></figure>
 <figure id="E3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p></article>
-<ul class="list"><li><button class="link">Like</button></li><li><button class="link">Repost</button></li><li><button class="link" aria-pressed="true" disabled>Replied</button></li><li><button class="link">Follow</button></li></ul>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="e3-in">Link</label>
+<div class="row"><div class="field"><input id="e3-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset><legend>Actions</legend>
+<div class="group"><button type="button">Like</button>
+<button type="button">Repost</button>
+<button type="button" aria-pressed="true" disabled>Replied</button>
+<button type="button">Follow</button></div></fieldset>
 <p role="status">Reply sent as @me@example.social.</p>
-<button class="link">Open another link</button>
-</main></div><figcaption><b>E3 Sent.</b> The dialog closes and the Reply row reads “Replied”. The next step is a plain button.</figcaption></figure>
+</main></div><figcaption><b>E3 Sent.</b> The dialog closes and the Reply button reads “Replied”, filled and disabled. The link field above still holds the link.</figcaption></figure>
 </div>
-
 <h2 id="F">F · Profile link</h2>
-<div class="flow">
-<figure id="F1"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Profile</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#F1">social.example/@anna</a><button class="link">Change link</button></footer></article>
-<ul class="list"><li><button class="link">Follow</button></li></ul>
-</main></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so they’re absent. One row; it is the only thing to tap.</figcaption></figure>
-
+<div class="flow"><figure id="F1"><p class="quiet">Safari</p><div class="frame"><main>
+<header class="row"><h1>Profile</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="f1-in">Link</label>
+<div class="row"><div class="field"><input id="f1-in" type="url" value="https://social.example/@anna"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset><legend>Actions</legend>
+<div class="group"><button type="button">Follow</button></div></fieldset>
+</main></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so they’re absent. One button; it is the only thing to press.</figcaption></figure>
 <figure id="F2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Profile</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p></article>
-<ul class="list"><li><button class="link" aria-pressed="true" disabled>Follow requested</button></li></ul>
+<header class="row"><h1>Profile</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="f2-in">Link</label>
+<div class="row"><div class="field"><input id="f2-in" type="url" value="https://social.example/@anna"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset><legend>Actions</legend>
+<div class="group"><button type="button" aria-pressed="true" disabled>Follow requested</button><button type="button">Undo follow</button></div></fieldset>
 <p role="status">Follow request sent as @me@example.social.</p>
-<button class="link">Open another link</button>
-</main></div><figcaption><b>F2 Requested.</b> The label says what actually happened: a request, not a confirmed follow.</figcaption></figure>
+</main></div><figcaption><b>F2 Requested.</b> The label says what actually happened: a request, not a confirmed follow. Undo follow appears only if the server exposes the ID.</figcaption></figure>
 </div>
-
 <h2 id="G">G · Connected accounts</h2>
 <p>Goal: act as the right account, add another, or remove one. Today the picker, “Manage accounts”, the sign-in form and Remove share one area. Proposed: the account button opens one dialog.</p>
-<div class="flow">
-<figure id="G1"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p></article></main>
-<dialog open class="sheet" aria-labelledby="g1-t"><form method="dialog">
-<div class="row"><h2 id="g1-t">Accounts</h2><button type="button" class="link">Edit</button></div>
-<ul class="list"><li><button type="button" aria-current="true">@me@example.social</button></li><li><button type="button">@alex@other.example</button></li><li><button type="button" class="link">Add account</button></li></ul>
-<button>Done</button></form></dialog></div><figcaption><b>G1 Accounts.</b> A list with the active account in bold replaces the dropdown and the Manage toggle. Add account is the last row.</figcaption></figure>
-
+<div class="flow"><figure id="G1"><p class="quiet">Home Screen app</p><div class="frame"><main>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="g1-u">Link</label>
+<div class="row"><div class="field"><input id="g1-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main><dialog open class="sheet" aria-labelledby="g1-t"><div class="row"><h2 id="g1-t">Accounts</h2><button type="button">Edit</button></div>
+<ul class="list"><li><button type="button" aria-current="true">@me@example.social</button></li><li><button type="button">@alex@other.example</button></li></ul>
+<button type="button">Add account</button>
+<button>Done</button></dialog></div><figcaption><b>G1 Accounts.</b> A list of buttons with the active account in bold and outlined replaces the dropdown and the Manage toggle. Add account and Done are buttons below the list.</figcaption></figure>
 <figure id="G2"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@alex@other.example</button></header>
-<p role="status">Loading…</p>
-<article class="post" aria-busy="true"><p class="quiet">https://social.example/@anna/1234</p></article>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@alex@other.example</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="g2-in">Link</label>
+<div class="row"><div class="field"><input id="g2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
 </main></div><figcaption><b>G2 Switched.</b> Choosing a row closes the dialog, updates the account button and reloads the post for the new account; the status line says so.</figcaption></figure>
-
 <figure id="G3"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p></article></main>
-<dialog open class="sheet" aria-labelledby="g3-t"><form method="dialog">
-<div class="row"><h2 id="g3-t">Accounts</h2><button type="button" class="link">Done</button></div>
-<ul class="list"><li><button type="button" aria-current="true">@me@example.social</button><button type="button" class="link destructive">Remove</button></li><li><button type="button">@alex@other.example</button><button type="button" class="link destructive">Remove</button></li></ul></form></dialog></div><figcaption><b>G3 Edit.</b> Removal appears only while editing, away from sign-in, as a red plain button at the end of each account row.</figcaption></figure>
-
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="g3-u">Link</label>
+<div class="row"><div class="field"><input id="g3-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main><dialog open class="sheet" aria-labelledby="g3-t"><div class="row"><h2 id="g3-t">Accounts</h2><button type="button">Done</button></div>
+<ul class="list"><li><button type="button" aria-current="true">@me@example.social</button><button type="button" class="destructive">Remove</button></li><li><button type="button">@alex@other.example</button><button type="button" class="destructive">Remove</button></li></ul></dialog></div><figcaption><b>G3 Edit.</b> Removal appears only while editing, away from sign-in, as a red button at the end of each account row.</figcaption></figure>
 <figure id="G4"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p></article></main>
-<dialog open aria-labelledby="g4-t" aria-describedby="g4-d"><form method="dialog"><h2 id="g4-t">Remove @alex@other.example?</h2>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="g4-u">Link</label>
+<div class="row"><div class="field"><input id="g4-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main><dialog open aria-labelledby="g4-t" aria-describedby="g4-d"><h2 id="g4-t">Remove @alex@other.example?</h2>
 <p id="g4-d" class="quiet">This only signs out on this device. To end access, revoke it on your server.</p>
-<div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></form></dialog></div><figcaption><b>G4 Confirm.</b> The same dialog element, centred, with a heading, one sentence and a button row. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
-
+<div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></dialog></div><figcaption><b>G4 Confirm.</b> The same dialog element, centred, with a heading, one sentence and a button row. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
 <figure id="G5"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p></article>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <section><p role="alert"><strong>Session ended.</strong> Sign in again as @me@example.social.</p>
 <button class="primary">Sign in</button><button>Add account</button></section>
-</main></div><figcaption><b>G5 Session ended.</b> The problem is plain text where the action would happen, not “(sign in again)” inside a dropdown. One filled recovery button.</figcaption></figure>
-
+<form><fieldset><legend>Open a link</legend>
+<label for="g5-in">Link</label>
+<div class="row"><div class="field"><input id="g5-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+</main></div><figcaption><b>G5 Session ended.</b> The problem is plain text where the action would happen. One filled recovery button, one plain alternative; the link field is still there.</figcaption></figure>
 <figure id="G6"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p></article></main>
-<dialog open class="sheet" aria-labelledby="g6-t"><form><h2 id="g6-t">Add account</h2>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="g6-u">Link</label>
+<div class="row"><div class="field"><input id="g6-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main><dialog open class="sheet" aria-labelledby="g6-t"><h2 id="g6-t">Add account</h2>
 <fieldset><legend>Account sign-in</legend>
 <label for="g6-in">Account</label>
-<input id="g6-in" placeholder="you@example.com">
-<button class="primary">Continue</button></fieldset>
-<button type="button" class="link">Cancel</button></form></dialog></div><figcaption><b>G6 Add account.</b> The same sign-in form as A1 inside the dialog, with the A2 to A4 states. It returns to G1 with the new account selected.</figcaption></figure>
+<div class="row"><input id="g6-in" placeholder="you@example.com"><button class="primary">Continue</button></div></fieldset>
+<button type="button">Cancel</button></dialog></div><figcaption><b>G6 Add account.</b> The same field-and-button row as A1 inside the dialog, with the A2 to A4 states (errors appear below the field). Cancel is a button; it returns to G1 with the new account selected.</figcaption></figure>
 </div>
-
 <h2 id="H">H · Edge cases</h2>
-<div class="flow">
-<figure id="H1"><p class="quiet">Safari</p><div class="frame"><main>
+<div class="flow"><figure id="H1"><p class="quiet">Safari</p><div class="frame"><main>
 <h1>Storage is blocked</h1>
 <p role="alert"><strong>This browser can’t save your sign-in.</strong> Allow website data for this page.</p>
-<section><h2>Try this</h2>
-<ul><li>Turn off Private Browsing, or allow website data.</li><li>Use the current version of Safari.</li><li>Use the published https address.</li><li>Clear this site’s data in your browser settings.</li></ul></section>
+<h2>Try this</h2><ul><li>Turn off Private Browsing, or allow website data.</li><li>Use the current version of Safari.</li><li>Use the published https address.</li><li>Clear this site’s data in your browser settings.</li></ul>
 </main></div><figcaption><b>H1 Storage blocked or browser too old.</b> Today: a disabled form and one line. Proposed: the cause as error text under the title, then the steps as a plain list. With no field to attach it to, the error sits under the title.</figcaption></figure>
-
 <figure id="H2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair. The chain was the whole problem.</p></article>
-<fieldset disabled><legend>Actions</legend>
-<ul class="list"><li><button class="link" type="button" disabled>Like</button></li><li><button class="link" type="button" disabled>Repost</button></li><li><button class="link" type="button" disabled>Reply</button></li><li><button class="link" type="button" disabled>Follow</button></li></ul></fieldset>
-<p role="status">Reconnecting…</p>
-</main></div><figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly, with the actions disabled. Today they must tap again.</figcaption></figure>
-
-<figure id="H3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link">@me@example.social</button></header>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
+<label for="h2-in">Link</label>
+<div class="row"><div class="field"><input id="h2-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example · 2 Nov</p><p>Finished the bike repair. The chain was the whole problem.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+<fieldset disabled><legend>Actions</legend>
+<div class="group"><button type="button" disabled>Like</button>
+<button type="button" disabled>Repost</button>
+<button type="button" disabled aria-haspopup="dialog">Reply</button>
+<button type="button" disabled>Follow</button></div></fieldset>
+<p role="status">Reconnecting…</p>
+</main></div><figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly, with the action buttons disabled.</figcaption></figure>
+<figure id="H3"><p class="quiet">Safari</p><div class="frame"><main>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
 <label for="h3-in">Link</label>
-<div class="row"><input id="h3-in" type="url" placeholder="https://"><button>Open</button></div></fieldset></form>
-<section><h2>Share from any app</h2><p class="quiet">Send links here from the share sheet.</p><a class="button" href="#H3">Add Shortcut</a><button class="link">Hide</button></section>
+<div class="row"><div class="field"><input id="h3-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<section><h2>Share from any app</h2><p class="quiet">Send links here from the share sheet.</p><a class="button" href="#">Add Shortcut</a><button>Hide</button></section>
 <details><summary>Add to Home Screen</summary><p class="quiet">In Safari, tap Share, then Add to Home Screen. The app keeps its own sign-in.</p></details>
 </main></div><figcaption><b>H3 Shortcut section in Safari.</b> The Shortcut section is the only extra. “Add to Home Screen” is a one-line disclosure under it (Safari only; hidden once the page runs standalone).</figcaption></figure>
-
 <figure id="H4"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link">@me@example.social</button></header>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
 <label for="h4-in">Link</label>
-<div class="row"><input id="h4-in" type="url" placeholder="https://"><button>Open</button></div></fieldset></form>
+<div class="row"><div class="field"><input id="h4-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <details><summary>Add to Home Screen</summary><p class="quiet">In Safari, tap Share, then Add to Home Screen. The app keeps its own sign-in.</p></details>
 </main></div><figcaption><b>H4 Arrived from the Shortcut.</b> No Shortcut section. The page opened with a link or ?via=shortcut, so the person has it. The app remembers this on the device and never shows it again.</figcaption></figure>
 </div>
-
 <h2 id="I">I · Added to the Home Screen</h2>
 <p>Goal: open the tool like an app, with no browser bar. iOS keeps a Home Screen web app’s storage separate from Safari’s, so sign-ins are not shared. A link opened from the Shortcut loads in Safari, not in the Home Screen app. The design has to work well in both. The Web Share Target API isn’t available on iOS, so the Shortcut stays for sharing.</p>
-<div class="flow">
-<figure id="I1"><p class="quiet">iOS share sheet in Safari (system UI)</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link">@me@example.social</button></header>
-<details open><summary>Add to Home Screen</summary><p class="quiet">In Safari, tap Share, then Add to Home Screen.</p></details></main>
-<dialog open class="sheet" aria-labelledby="i1-t"><form method="dialog"><h2 id="i1-t">Share</h2>
+<div class="flow"><figure id="I1"><p class="quiet">iOS share sheet in Safari (system UI)</p><div class="frame"><main>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="i1-in">Link</label>
+<div class="row"><div class="field"><input id="i1-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<details open><summary>Add to Home Screen</summary><p class="quiet">In Safari, tap Share, then Add to Home Screen.</p></details>
+</main><dialog open class="sheet" aria-labelledby="i1-t"><h2 id="i1-t">Share</h2>
 <ul class="list"><li><button type="button">Copy</button></li><li><button type="button">Add to Favourites</button></li><li><button type="button" aria-current="true">Add to Home Screen</button></li></ul>
-<button>Cancel</button></form></dialog></div><figcaption><b>I1 Install.</b> Done with the system share sheet in Safari. The page can’t trigger it; the H3 disclosure explains where to tap. The app name and icon in this dialog come from the manifest.</figcaption></figure>
-
+<button>Cancel</button></dialog></div><figcaption><b>I1 Install.</b> Done with the system share sheet in Safari. The page can’t trigger it; the H3 disclosure explains where to tap. The app name and icon in this dialog come from the manifest.</figcaption></figure>
 <figure id="I2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <h1>Sign in</h1>
 <form><fieldset><legend>Account sign-in</legend>
 <label for="i2-in">Account</label>
-<input id="i2-in" placeholder="you@example.com">
-<p class="quiet">This app keeps its own sign-in, separate from Safari.</p>
-<button class="primary">Continue</button></fieldset></form>
+<div class="row"><input id="i2-in" placeholder="you@example.com"><button class="primary">Continue</button></div><p class="quiet">This app keeps its own sign-in, separate from Safari.</p></fieldset></form>
 </main></div><figcaption><b>I2 First launch.</b> Standalone: the content respects the safe areas. The extra hint explains separate storage, and only in this context.</figcaption></figure>
-
 <figure id="I3"><p class="quiet">System sheet over the Home Screen app</p><div class="frame"><main>
-<h1>Sign in</h1></main>
-<dialog open class="sheet" aria-labelledby="i3-t"><form method="dialog"><h2 id="i3-t">Allow access?</h2>
+<h1>Sign in</h1>
+</main><dialog open class="sheet" aria-labelledby="i3-t"><h2 id="i3-t">Allow access?</h2>
 <p><strong>FediTap</strong> wants to act as <strong>@anna@social.example</strong>: like, repost, reply and follow.</p>
-<button type="button" class="primary">Allow</button><button>Deny</button></form></dialog></div><figcaption><b>I3 Server consent.</b> iOS opens sign-in in a system sheet. Risk: returning to the app through the redirect may land in Safari instead of the Home Screen app. Must be tested on a device (see plan, phase 5).</figcaption></figure>
-
+<button type="button" class="primary">Allow</button><button>Deny</button></dialog></div><figcaption><b>I3 Server consent.</b> iOS opens sign-in in a system sheet. Risk: returning to the app through the redirect may land in Safari instead of the Home Screen app. Must be tested on a device (see plan, phase 5).</figcaption></figure>
 <figure id="I4"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Open a link</h1><button class="link" aria-haspopup="dialog">@me@example.social</button></header>
+<header class="row"><h1>Open a link</h1><button aria-haspopup="dialog">@me@example.social</button></header>
 <form><fieldset><legend>Open a link</legend>
-<button type="button" class="primary">Paste link</button>
 <label for="i4-in">Link</label>
-<div class="row"><input id="i4-in" type="url" placeholder="https://"><button>Open</button></div></fieldset></form>
-</main></div><figcaption><b>I4 Everyday use.</b> The app opens straight to the paste screen. No install hint, no Shortcut section. Same as D1.</figcaption></figure>
-
+<div class="row"><div class="field"><input id="i4-in" type="url" placeholder="https://"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+</main></div><figcaption><b>I4 Everyday use.</b> The app opens straight to the link field. No install hint, no Shortcut section. Same as D1.</figcaption></figure>
 <figure id="I5"><p class="quiet">System sheet over the Home Screen app</p><div class="frame"><main>
-<header class="row"><h1>Post</h1><button class="link">@me@example.social</button></header>
-<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#I5">social.example</a><button class="link">Change link</button></footer></article></main>
-<dialog open class="sheet" aria-labelledby="i5-t"><form method="dialog"><div class="row"><h2 id="i5-t">social.example</h2><button class="link">Done</button></div>
-<p class="quiet">The original post opens here.</p></form></dialog></div><figcaption><b>I5 Leaving the app.</b> The post link is the only link to another site. In standalone mode it opens in a system sheet with a Done button, so the person can return.</figcaption></figure>
-</div>
-</div>
+<header class="row"><h1>Post</h1><button aria-haspopup="dialog">@me@example.social</button></header>
+<form><fieldset><legend>Open a link</legend>
+<label for="i5-in">Link</label>
+<div class="row"><div class="field"><input id="i5-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
+<article class="post"><h2>Anna Ruiz</h2><p class="quiet">@anna@social.example</p><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
+</main><dialog open class="sheet" aria-labelledby="i5-t"><div class="row"><h2 id="i5-t">social.example</h2><button>Done</button></div>
+<p class="quiet">The original post opens here.</p></dialog></div><figcaption><b>I5 Leaving the app.</b> The post link is the only link to another site. In standalone mode it opens in a system sheet with a Done button, so the person can return.</figcaption></figure>
+</div></div>
 </body>
 </html>

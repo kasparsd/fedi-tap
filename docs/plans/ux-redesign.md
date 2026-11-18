@@ -23,16 +23,22 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 - [ ] Review against the plan and the security checks
 - [x] Browser test of the Phase 3 to 4b flows in light, dark and 320 px width (Playwright against the mock server); Phase 0 to 2 flows were tested earlier. A final full pass is still open.
 - [ ] Real-device test of the Home Screen OAuth round trip (owner)
-- [x] Adopt the component stylesheet as `style.css` and align `index.html` and `app.js`: semantic markup, `.list` actions with a per-row Undo, `dialog.sheet`, plain-text alerts and statuses, copy trimmed to the rules in components.md, review findings fixed in `app.js` (see below). Verified in Playwright in light, dark and 320 px.
+- [x] Adopt the component stylesheet as `style.css` and align `index.html` and `app.js`: semantic markup, action buttons in a `.group`, `dialog.sheet`, plain-text alerts and statuses, copy trimmed to the rules in components.md, review findings fixed in `app.js` (see below). Verified in Playwright in light, dark and 320 px.
 
 ## Decisions made while adopting the stylesheet
 
-- Undo is per action: a second control in the action's own row (replaces the single Undo under the list).
+- Undo is per action: a plain button next to the finished action (Undo like, Undo repost, Undo follow).
 - Sent actions are remembered by account, target and kind for the page session, so a send that finishes after the person moved to another link is still recorded and cannot be sent twice. Reload resets them.
-- A send that ends ambiguously (timeout, dropped connection, HTTP 5xx or 408) offers Dismiss only and says it may already have gone through.
+- A send that ends ambiguously (timeout, dropped connection, HTTP 5xx or 408) says it may already have gone through and adds no retry button; the action button itself is the retry.
 - Posts need the author's actor to prove its own id; otherwise the card shows only the host and Follow is hidden. A returned object must live on the opened link's origin (or name that address in `url`).
 - The theme-color meta tags are gone: Safari takes the colour from the page background, which is now a system colour.
 - A reply draft survives a session ending: the sheet stays open and "Sign in" stores the draft in session storage for the return trip.
+
+## Decisions: inputs stay, buttons are buttons
+
+- An input that has been shown is never hidden or disabled: the link field stays in the ready, loading and loaded states and the account field in every sign-in state and in the add-account sheet. While a request runs the input is read-only and its buttons `aria-disabled` (so value and focus survive); a failure prints below the input (`aria-invalid`, `aria-describedby`) and the value is editable at once. There is no loading card and no "Change link"; the stale post is removed while a new link loads and when it fails.
+- Paste is a button inside the link field (`.field`); the submit button (Continue, Open) is one row with the input, which shrinks at 320 px.
+- Like, Repost, Reply, Follow and Undo are ordinary buttons in a wrapping `.group`; a finished action is disabled and filled (`aria-pressed`). The "list row that is really a button" and the `.link` button style are retired; two styles remain, a button and a real link. "Open another link" is gone. Failures add a button only when there is a different way forward (Use profile link, Sign in), since the primary button next to the field is the retry.
 
 ## Open items for the owner
 

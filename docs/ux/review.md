@@ -78,11 +78,11 @@ S1 download Shortcut, S2 view source, S3 WordPress help link, S4 CORS help link.
 Three states instead of one long page. Each reveals only what the person needs next.
 
 1. **Signed out** (A1–A4): app name, one sentence, one field, one button. Help and the shortcut are collapsed disclosures. If a shared link is pending, show it as its own section at the top.
-2. **Ready** (D1): account name (`@handle`) as a plain button beside the title; one primary "Paste link" control; the Shortcut card directly under it until added or dismissed.
-3. **Link loaded** (B3): a post/profile block with author, excerpt and host; a list with separators of action buttons (Like, Repost, Reply…, Follow) with the status as text under it; the URL field disappears behind "Change link". The account button stays beside the title.
+2. **Ready** (D1): account name (`@handle`) as a button beside the title; the link field with Paste inside it and a primary Open button beside it; the Shortcut card directly under it until added or dismissed.
+3. **Link loaded** (B3): a post/profile block with author, excerpt and host; ordinary action buttons (Like, Repost, Reply, Follow) in a wrapping group with the status as text under them; the link field stays above the post with its value, so there is no "Change link". The account button stays beside the title.
 
 Secondary tasks move into dialogs:
-- **Accounts dialog** (G1): list with the active account in bold and marked Current, "Add account…" row, Edit mode for removal.
+- **Accounts dialog** (G1): a list of account buttons with the current one outlined and bold, an Add account button, Edit mode for removal.
 - **Reply composer** (E1): bottom-docked dialog with the account named, a character count and "Replies are public" in words.
 - **Remove account** (G4): centred confirmation dialog with a destructive button and an explanation.
 
@@ -92,7 +92,7 @@ What changes when the page runs as a Home Screen web app, and what iOS does not 
 
 - **Manifest and metadata.** Add `manifest.webmanifest` (`display: "standalone"`, `start_url` and `scope` equal to the page URL, `background_color` and `theme_color` set to system-neutral values for light and dark via two `theme-color` meta tags with `media`), a 180 px `apple-touch-icon`, `apple-mobile-web-app-capable`, and `viewport-fit=cover`. The CSP is `default-src 'none'`, so add `manifest-src 'self'` and check that icons still load. A minimal, undecorated icon is the only branding the system requires.
 - **Safe areas.** Pad with `env(safe-area-inset-*)` so content clears the status bar and home indicator; sheets and the bottom edge need this most. Avoid `100vh`; use `100dvh`.
-- **No browser chrome.** There is no back button or URL bar, so every screen needs an in-app way back (Cancel, Done, Change link). Leaving the app (server consent, "Open original") opens a system sheet with a Done button.
+- **No browser chrome.** There is no back button or URL bar, so every screen needs an in-app way back (Cancel, Done, the link field). Leaving the app (server consent, "Open original") opens a system sheet with a Done button.
 - **Separate storage.** iOS keeps a Home Screen app's `localStorage` apart from Safari's. A person signed in in Safari is signed out in the Home Screen app, and vice versa. Sign-in screens in the Home Screen app say so in one line (mock I2).
 - **The Shortcut opens Safari.** The Shortcut's open-URL action loads the page in Safari, not in an installed Home Screen app. So the share-sheet path (flows B, C) lives in Safari and the open-and-paste path (flow D) lives in the Home Screen app. Both must work on their own; both need a sign-in.
 - **No Web Share Target on iOS.** The Home Screen app cannot appear in the share sheet by itself, so the Shortcut remains the sharing mechanism.
@@ -117,7 +117,7 @@ No tracking is involved; nothing leaves the device.
 | A First run and sign-in | A1 welcome with Shortcut section, A2 looking up, A3 profile-link fallback, A4 server problem, A5 server consent, A6 signed in | Errors are plain text under the field, with a "Details" disclosure |
 | B Share sheet, already signed in | B1 share sheet, B2 loading, B3 loaded, B4 after Like, B5 lookup failed | Shortcut hands over `?url=`; the field never appears |
 | C Share sheet, signed out | C1 pending link plus sign-in, C2 returns to B2/B3 | Fixes finding 1 |
-| D Open directly | D1 ready, D2 pasted and loading | Paste is the primary control |
+| D Open directly | D1 ready, D2 pasted and loading | Paste sits inside the link field, Open is the primary control |
 | E Reply | E1 composer, E2 sending, E3 sent | Bottom dialog with text area, counter and "Replies are public" in words |
 | F Profile target | F1 profile, F2 follow requested | Single Follow button |
 | G Accounts | G1 account sheet, G2 switched, G3 edit mode, G4 confirm remove, G5 needs re-auth, G6 add account | Fixes findings 2 and 3 |
@@ -147,9 +147,9 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 - Pending-link card shown in the signed-out state (C1).
 - Target card: extend `resolveTarget` to keep `name`, `summary`/`content` (render with `textContent` after stripping tags; never `innerHTML`), `published`, and fetch the author actor through the existing proxy for display name. Fall back to host plus handle if any request fails.
 - Avatars: none. The card is text only (name, handle, excerpt, host), which also fits the no-decoration direction and the strict CSP (`default-src 'none'` blocks remote images). Loading remote images would need `img-src https:` and exposes the person's IP to third-party servers; treat as an explicit opt-in decision (see open questions).
-- Hide the URL field once a target is loaded; "Change link" reveals it. Auto-load flows (share sheet) never show it.
+- The link field stays visible (ready, loading and loaded), with its value; a new link replaces the post below it. (This replaces the earlier idea of hiding the field behind "Change link".)
 - Shortcut card directly under the primary control (under the sign-in form when signed out, under the paste field when signed in), with one sentence, an "Add Shortcut" button and an "I already have it" dismissal. Show it only when the person did not arrive from the Shortcut (rules in section 3b). It replaces the always-visible bottom section.
-- **Done when:** a shared link goes from tap to a content card with no extra taps and the field is only visible when the person asks for it.
+- **Done when:** a shared link goes from tap to a content card with no extra taps, and the field that holds the link is always there to edit.
 
 ### Phase 3 — Action feedback (finding 5, 9, 11)
 - Actions as one list with separators (no tiles, no icons); a pressed action shows a busy state, then its label changes and turns bold (Liked, Reposted, Follow requested). The used action is disabled for that target to prevent duplicates.
