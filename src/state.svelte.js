@@ -46,7 +46,6 @@ class AppState {
   busyLabel = $state.raw("");
 
   messages = $state.raw(Object.fromEntries(Object.keys(SLOTS).map((name) => [name, EMPTY])));
-  announce = $state.raw("");
   // Finished actions, by account, target and kind. Replaced as a whole on change.
   done = $state.raw({});
 
@@ -97,6 +96,11 @@ export const buttonLabel = (key, idle) => (isBusy(key) && app.busyLabel ? app.bu
 /** True while a task of this section runs, so its field keeps its value but can't be edited. */
 export const locked = (section) => app.busy && app.busySection === section;
 
+/** The button label for an action. Following a post's author is "Follow author". */
+export function actionLabel(name, object) {
+  return name === "follow" && !object.isActor ? "Follow author" : ACTIONS[name].idle;
+}
+
 /** What an action already sent for the loaded target (and the current account) returned, if any. */
 export function sentFor(action) {
   const { resolved, current } = app;
@@ -111,7 +115,6 @@ function setMessage(section, patch) {
 
 function clearMessages(section) {
   setMessage(section, EMPTY);
-  if (section === "actions") app.announce = "";
 }
 
 function showProblem(section, failure, title, actions) {
@@ -499,17 +502,20 @@ export async function perform(action, text = "") {
       );
       app.done = { ...app.done, [activityKey(actorId, object, action)]: result };
       const same = app.current?.actor === actorId && app.resolved === object;
-      message = same ? labels.sent : `${labels.noun} sent for the earlier link.`;
-      // Like and Repost are confirmed by the button itself; screen readers get a hidden line.
-      if (same && labels.quiet) {
-        app.announce = labels.sent;
-        return "";
+      if (!same) {
+        message = `${labels.noun} sent for the earlier link.`;
+        return inSheet ? "" : message;
       }
-      return inSheet ? "" : message;
+      message = `${labels.sent} as @${app.current.handle}.`;
+      if (inSheet) return "";
+      // A toggle says how to take it back, once, or why it can't be taken back.
+      return result.undo
+        ? `${message} Press ${actionLabel(action, object)} again to undo.`
+        : `${message} This server doesn’t allow undo from here.`;
     },
     {
       key: inSheet ? "reply-send" : `act:${action}`,
-      busyLabel: "Sending…",
+      busyLabel: labels.doing,
       title: `Couldn’t ${labels.verb}.`,
       actions: (failure) =>
         failure.sessionEnded && inSheet ? [{ label: "Sign in", run: signInFromReply }] : [],
@@ -538,10 +544,9 @@ export async function undoLast(action) {
       );
       const { [activityKey(actorId, object, action)]: _removed, ...rest } = app.done;
       app.done = rest;
-      if (app.current?.actor === actorId && app.resolved === object) {
-        app.announce = `${ACTIONS[action].noun} undone`;
-      }
-      return "";
+      return app.current?.actor === actorId && app.resolved === object
+        ? `${ACTIONS[action].undone}.`
+        : "";
     },
     { key: `undo:${action}`, busyLabel: "Undoing…", title: "Couldn’t undo." },
   );

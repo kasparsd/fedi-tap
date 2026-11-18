@@ -7,10 +7,10 @@ The page is a web page, also usable as a Home Screen web app. It should look lik
 Taken as ideas from Apple's guidelines and component thinking, without copying any iOS controls.
 
 - **Reuse before inventing.** Style the HTML elements first (`h1`, `p`, `label`, `input`, `button`, `a`, `fieldset`, `ul`, `details`, `dialog`). Add a class only where an element alone cannot do the job. Every class is used by at least one screen.
-- **One prominent action per screen.** At most one filled button per screen area; everything else is a bordered button. A finished action is filled to show its state.
+- **One prominent action per screen.** At most one filled button per screen area; everything else is a bordered button. An action that is on is outlined in the accent colour with a filled icon, never a solid fill.
 - **Progressive disclosure.** Show the one thing the person came to do. Help, details and secondary tasks sit behind `details` or a `dialog`.
 - **Plain text carries the state.** A status or an error is a line of text next to the thing it concerns (`role="status"`, `role="alert"`), told apart by weight and one colour, not by a box.
-- **No decoration.** No shadows, gradients, icons, emoji, tinted boxes, side borders or cards inside cards. Related actions are ordinary buttons in a wrapping group, not rows or tiles.
+- **No decoration.** No shadows, gradients, emoji, tinted boxes, side borders or cards inside cards. The one exception is the icon on the four actions (Like, Repost, Reply, Follow): state needs more than colour, and a label alone cannot show on or off. Related actions are buttons in one row, not tiles.
 - **Every control has its states.** Hover, active, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`, all from real pseudo-classes and attributes.
 - **Strict consistency.** Two font sizes, two weights, three spaces, four colours and a line colour (see Scale). The same element looks and measures the same on every screen.
 - **44 px targets, system fonts and colours, light and dark by themselves.** Minimum target 2.75rem, sizes in `rem` so the browser's text size scales them, `color-scheme: light dark`.
@@ -49,9 +49,9 @@ The complete set. A value that is not here does not belong in the CSS.
 | Token | Where it is used |
 |-------|------------------|
 | `Canvas` | Page, field and dialog backgrounds; the label on the primary button |
-| `CanvasText` | All content text; the hover border; the pressed primary fill; the label of a finished action |
+| `CanvasText` | All content text; the hover border; the pressed primary fill |
 | `--quiet` | Supportive text: `.quiet`, `role="status"`, placeholders, disabled text, a loading post |
-| `--accent` | Links, the one `.primary` fill, the filled state of a finished action (`aria-pressed`), the current choice's border, the focus ring |
+| `--accent` | Links, the one `.primary` fill, the border, label and filled icon of an action that is on (`aria-pressed`), the current choice's border, the focus ring |
 | `--danger` | `role="alert"` text, the border of an `aria-invalid` field, `.destructive` labels |
 | `--line` | Borders, list separators, the pressed fill of a bordered button, the disabled border, the backdrop |
 
@@ -75,7 +75,6 @@ Every screen starts with the same `header` (a `.row`, one line, a `--rule` line 
 
 - **Mark:** the text "⁂tap" as a plain link to the page start, `<a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>`. Body size, weight 600, inherited colour, no underline, no logo. The aria-label makes screen readers say "FediTap" instead of reading the symbol. It is the only place the product name shows in the visible UI besides the Shortcut and Home Screen copy.
 - **Dropdown:** a native `select` labelled "Account", hidden until an account is stored. Each account is `@handle@domain`, with " (sign in again)" appended when it needs signing in; the last option is "Add account". Choosing an account switches to it (the post reloads for it; one that needs signing in goes to its sign-in). Choosing the last option opens the Accounts dialog and the select stays on the active account. It uses the same control tokens as inputs, shrinks and clips its text (`max-inline-size: 70%`) and never pushes the mark off at 320 px.
-- **Retired:** the account chip button and the accounts sheet with its Edit mode. Accounts are removed from the Accounts dialog, behind the dropdown's last option.
 
 ## Classes
 
@@ -86,13 +85,13 @@ Every screen starts with the same `header` (a `.row`, one line, a `--rule` line 
 | `.destructive` | Red label on the normal button | `<button class="destructive">Remove</button>` |
 | `.button` | A link that looks like a button | `<a class="button" href download>Add Shortcut</a>` |
 | `.quiet` | Secondary text (hints, meta) | `<p class="quiet">Replies are public.</p>` |
+| `.actions` | Two columns of equal buttons under a post, so a label such as "Follow author" never crowds. Like, Repost and Follow are toggles (`aria-pressed`, an inline `svg` icon that goes from outline to filled); Reply is a plain button. The icon is an `aria-hidden` inline `svg`, so the CSP is unchanged | `<div class="actions"><button aria-pressed="false"><svg>…</svg>Like</button><button><svg>…</svg>Reply</button></div>` |
 | `.row` | Items side by side, wrapping, spread to the edges. A row that holds an input or `.field` never wraps: the input shrinks (`min-inline-size: 0`) and the button keeps its width, down to 320 px | `<div class="row"><input><button class="primary">Open</button></div>` |
-| `.group` | Buttons side by side from the start edge, wrapping | `<div class="group"><button>Like</button><button>Repost</button></div>` |
 | `.list` | A plain stack of choices. Each row is a real button, optionally followed by a second button | `<ul class="list"><li><button aria-current="true">@me</button></li><li><button>@other</button><button class="destructive">Remove</button></li></ul>` |
 | `.post` | The post or profile being acted on, set off by one rule above it | `<article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">…</footer></article>` |
 | `.sheet` | Dialog modifier: docked to the bottom edge, full width up to 36rem | `<dialog class="sheet" aria-labelledby="t"><form method="dialog"><h2 id="t">Reply</h2>…</form></dialog>` |
 
-Attributes the CSS also reads: `aria-pressed="true"` (a finished action, filled, readable even when disabled), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; the label says what is happening).
+Attributes the CSS also reads: `aria-pressed="true"` (an action that is on: accent border, label and filled icon; keeps its look under `aria-disabled`), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; the label says what is happening).
 
 ## Copy
 
@@ -111,7 +110,7 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 - **Sign in:** `header`, `h1`, an intro (a heading and three numbered steps: sign in, open or share a link, then like, repost, reply or follow) shown only while no account is stored, a `form` with a labelled `input` and `.primary` Sign in in one `.row`, the error directly below that row, one compatibility sentence below the form (Mastodon-compatible servers, WordPress and servers with the ActivityPub API), `details` "Supported servers" (what works as is, what WordPress needs, and that Lemmy and Misskey are not supported). The "Add Shortcut for iOS" panel shows below, as on every screen except the unsupported one.
 - **Open a link:** `header` with the mark and the account dropdown, `h1`; a labelled `.field` (input with Paste inside) and `.primary` Open in one `.row`; status and error below the row. The field stays visible in the ready, loading and loaded states and keeps its value. On iOS only, the Shortcut panel and the Add to Home Screen disclosure sit below.
-- **Post:** the link row, then `.post`, then a `fieldset` holding a `.group` of action buttons (Like, Repost, Reply, Follow, and Undo buttons next to a finished one); status text below. The post is removed while the next link loads or fails.
+- **Post:** the link row, then `.post`, then a `fieldset` holding the `.actions` row (Like, Repost, Reply, Follow); a status line below says what happened and how to undo. The post is removed while the next link loads or fails.
 - **Accounts:** `dialog.sheet` opened only from the dropdown's last option: a heading, a `.list` of stored accounts (text and a `.destructive` Remove button each), then the add-account `.row` (input and Sign in), and a Done button. It cannot be dismissed while a sign-in runs.
 - **Reply:** `dialog.sheet` with a label, `textarea`, a note on who can see the reply ("Replies are public." unless a Mastodon-compatible post is unlisted, followers-only or direct, in which case the reply keeps that reach and the note says so) and a `.row` of Cancel and `.primary` Send (disabled while empty). A reply mentions the author, so the author is notified.
 - **Remove account:** a plain `dialog` with a heading, one sentence and a `.row` of Cancel and `.destructive` Remove.
@@ -126,8 +125,10 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 - **Danger is one token.** CSS has no red system keyword, so `--danger` mixes `red` with the text colour.
 - **Pressed is inverted.** A bordered button's pressed fill is `--line`; the primary button's is `CanvasText`. Hover is a `CanvasText` border. Touch devices see only the pressed state.
 - **Status and errors are text, not boxes.** An alert's first line is a `<strong>` (its own line); the explanation follows in the same colour. Details sit under a `details` element. Session ended is an alert, not a separate warning colour.
-- **Done actions say so.** A finished action is disabled, bold and reads in the past tense: Liked, Reposted, Replied, Follow requested. No checkmark icon.
-- **Actions are real buttons.** Like, Repost, Reply and Follow use the same bordered button as everything else, in a wrapping `.group` under the post. Two styles exist for controls: a button looks like a button, navigation looks like a link (the header mark, Source code); there is no button dressed as a link and no row dressed as a button. A finished action is disabled and filled with `--accent` (`aria-pressed`), and its label is past tense; Undo is a separate plain button next to it.
+- **Actions are toggles, undone by pressing again.** Like, Repost and Follow keep their place and their label; the icon fills and the border and label take the accent colour when on (`aria-pressed`, the standard toggle pattern, so the label is constant). Pressing an on button undoes it. A status line below carries the past tense and the account: "Liked as @me. Press Like again to undo.", "Follow request sent as @me." (a request is all the client knows), "Like undone." Where the server does not expose the activity ID, the button keeps its on look but is `aria-disabled` and the status says "This server doesn’t allow undo from here." Reply is not a toggle and is never locked: more than one reply is fine.
+- **Busy and failure.** The pressed button says what it is doing (Liking…, Reposting…, Undoing…, Sending…) and the other actions are `aria-disabled`, not `disabled`, so focus stays put. A failed action returns the button to its previous state; pressing it again is the retry.
+- **Alternatives weighed and rejected** : label-only toggles ("Liked", no icon: a "Liked" button does not say it can be pressed), a result row with an inline Undo link (the row jumps, results stack and it is a button dressed as a link), and a delayed send with an Undo bar (closing the page during the delay silently drops the action). Mastodon, Elk, Ivory, Bluesky and X all toggle in place with a filled, coloured icon; Gmail-style undo bars are for actions that are not toggles.
+- **Actions are real buttons.** The same bordered button as everything else, in the two-column `.actions` grid under the post. Two styles exist for controls: a button looks like a button, navigation looks like a link (the header mark, Source code); there is no button dressed as a link and no row dressed as a button.
 - **The field is never hidden or disabled by an error.** An input that has been shown stays shown, with its value. While a request runs the input is `readonly` and its buttons `aria-disabled` with `aria-busy` on the pressed one, so text and focus are never lost; there is no loading card and no Change link. A failure prints below the field and the field is editable at once.
 - **Paste lives inside the link field.** A bordered button segment at the trailing end of the `.field`; it reads the clipboard, fills the field and submits. Open is the one filled button to the right of the row.
 - **Failures with no field sit under the title.** The storage-blocked screen has no field to attach the alert to.
