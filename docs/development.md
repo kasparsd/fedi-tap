@@ -27,6 +27,26 @@ FediTap uses the client-to-server ActivityPub API described in the [Social API B
 
 Use the canonical HTTPS profile URL. The actor ID, OAuth authorization and token endpoints, proxy, and outbox must share the profile’s origin. FediTap uses authorization server metadata when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
 
+## Local dev server with a mock OAuth server
+
+```bash
+npm run dev
+```
+
+Opens `https://localhost:8443/_dev/`. The app only runs over HTTPS and checks `client.json` against the page URL, so the server uses HTTPS (a certificate from [mkcert](https://github.com/FiloSottile/mkcert) if installed, otherwise self-signed) and serves a generated `client.json` for its own origin. It also fakes an ActivityPub server and an OAuth 2.0 PKCE provider on the same origin, so the whole flow works offline without a real account.
+
+Sign in with a profile URL on the dev index page. Each user exercises a path:
+
+| User | Behavior |
+|------|----------|
+| `alice` | Everything works |
+| `shorty` | Access token lasts 61 s, so each action refreshes first |
+| `flaky` | First access token is rejected with 401 (refresh and retry) |
+| `erin` | Refresh fails with `invalid_grant` (sign in again) |
+| `mismatch` | Authorizes as a different profile (identity check) |
+
+The index also has a toggle that simulates a server with the API turned off, sample shared-link URLs (post, long post, profile, missing post, legacy `#url=`), a reset button and a JSON list of activities the mock server received at `/_dev/activities`. `alice@localhost` demonstrates the WebFinger fallback because the mock cannot listen on port 443. Set `PORT` or `DELAY_MS` to change the port or response delay. The server is for development only and never ships.
+
 ## Test the WordPress flow
 
 1. Open the published page and sign in with a test account. Try both a Fediverse handle and an HTTPS actor URL. Confirm the callback clears the OAuth code and state from the address bar.
