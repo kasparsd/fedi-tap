@@ -3,20 +3,53 @@
 [![CI](https://github.com/kasparsd/fedi-tap/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kasparsd/fedi-tap/actions/workflows/ci.yml)
 [![Pages](https://github.com/kasparsd/fedi-tap/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/kasparsd/fedi-tap/actions/workflows/pages.yml)
 
-Like, repost, reply to or follow a Fediverse post from your own account. Use FediTap directly in your browser or open it from the Apple share sheet.
+Like, repost, reply to or follow a Fediverse post or profile from your own account, without leaving the page you found it on.
 
-## Install and connect
+FediTap is a small static web app. Open it in a browser, connect your account, paste a link and choose an action. On iPhone, iPad and Mac an Apple Shortcut adds FediTap to the share sheet, so sharing a link from any app opens FediTap with the link filled in.
 
-FediTap works with Mastodon-compatible servers (Mastodon, GoToSocial, Pleroma, Akkoma, and Pixelfed on a best-effort basis) and with servers that have a client-to-server ActivityPub API. It has been tested with ActivityPub for WordPress 9.4 or later; on WordPress, enable **ActivityPub API** under **Settings › ActivityPub › Advanced**. [WordPress setup instructions](https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/) Lemmy and Misskey are not supported.
+**Use it:** <https://kasparsd.github.io/fedi-tap/>
 
-1. Open [FediTap](https://kasparsd.github.io/fedi-tap/) and connect your account on your home server.
-2. Choose **Paste** in the link field (or type a link and choose **Open**), then choose an action.
-3. On iPhone, iPad or Mac, to use the Apple share sheet, choose **Add Apple Shortcut** (**Add Shortcut**), open the file in Apple Shortcuts, and add it. Share a Fediverse link to **FediTap** to open the same page with the link filled in.
+## What it does
 
-## Use multiple accounts
+- **Like, Repost and Follow** are toggles. Each shows its done state (Liked, Reposted, Follow requested) and offers **Undo**.
+- **Reply** opens a sheet that names the post and your account and says who can see the reply. The author is mentioned. A failed send keeps your draft.
+- **Posts and profiles.** A post link shows the post with its author. A profile link offers only Follow.
+- **Several accounts.** Connect as many as you like and switch from the account menu. Removing an account clears it from this browser only.
+- **Installable.** Add it to the Home Screen on iOS and Android. It keeps its own sign-in, separate from the browser.
 
-Connect each account once, then use the account menu at the top to switch accounts or choose **Manage accounts**. In the Accounts dialog, **Remove** clears that account from this browser. Clear or revoke its authorization on your home server if you want to end access there.
+## Supported servers
 
-The browser stores accounts and tokens locally. The shortcut sends only the shared link and never receives credentials. If you used the earlier shortcut, replace it with the new launcher and connect again in your browser.
+| Server | How FediTap connects |
+|---|---|
+| Mastodon, GoToSocial, Pleroma, Akkoma | Mastodon API. FediTap registers itself as an app on your server the first time you connect |
+| Pixelfed | Mastodon API, best effort (like, reply and follow) |
+| WordPress with the ActivityPub plugin 9.4 or later | Client-to-server ActivityPub. Enable **ActivityPub API** under **Settings › ActivityPub › Advanced** |
+| Other servers with an ActivityPub client API | The [Social API Basic Profile](https://swicg.github.io/activitypub-api/basicprofile) with OAuth and PKCE |
 
-[Build, hosting, and testing guide](docs/development.md)
+Lemmy and Misskey use different APIs and are not supported. FediTap picks the backend itself: it looks for the ActivityPub client API first, then for a Mastodon-compatible `/api/v1/instance`.
+
+## Connect and use
+
+1. Open FediTap and enter your handle (`@you@example.social`) or a link to your profile. Approve access on your home server.
+2. Choose **Paste** in the link field, or type a link and choose **Open**, then choose an action.
+3. On iPhone, iPad or Mac, choose **Add Apple Shortcut**, open the file in Shortcuts and add it. Share a Fediverse link to **FediTap** to open the page with the link filled in.
+
+## Privacy and security
+
+- Accounts and tokens live in your browser's local storage and are sent only to your own server. There is no FediTap backend.
+- The shortcut sends only the shared link, in the page address, and never receives credentials.
+- Remote text is shown as plain text; HTML from servers is never rendered. A strict Content Security Policy forbids inline code.
+- Sign-in uses OAuth with PKCE and checks that the account that signs in is the one you asked for. To end access completely, also revoke FediTap in your server's settings.
+
+## Develop
+
+```bash
+npm install
+npm run dev        # https://localhost:8443/_dev/ with a mock server, no real account needed
+npm run validate   # lint, svelte-check, unit tests, build and static checks
+npm run e2e        # Playwright end-to-end tests (first run: npm run e2e:install)
+```
+
+The app is Svelte 5 and Vite, built to a static `dist/` and published to GitHub Pages on every push to `main`. The dev server fakes ActivityPub, Mastodon API and OAuth servers, with sample users for each failure path.
+
+Details are in [docs/development.md](docs/development.md): hosting, backends, the mock server, testing, CORS and the shortcut build. Interface rules are in [docs/ux/components.md](docs/ux/components.md) and dated test evidence is in [docs/checkpoints/](docs/checkpoints/).
