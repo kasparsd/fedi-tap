@@ -1,6 +1,6 @@
 /* FediTap components (see components.md, section Scale). System fonts and colours only; light and dark
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
-   cannot do the job: .row .list .post .quiet .link .primary .destructive .button .sheet
+   cannot do the job: .row .field .group .list .post .quiet .primary .destructive .button .sheet
    The last block holds the app's view states (data-state, data-views and flags on main).
    Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
 
@@ -140,7 +140,7 @@ textarea {
 textarea {
   resize: vertical;
 }
-label + :is(input, textarea),
+label + :is(input, textarea, .row),
 :is(input, textarea) + .quiet {
   margin-block-start: var(--space-1);
 }
@@ -154,10 +154,10 @@ label + :is(input, textarea),
   border-color: var(--danger);
 }
 
-/* Buttons: one base rule, three modifiers. <button>Cancel</button>  <button class="primary">Continue</button>
-   <button class="link">Change link</button>  <button class="link destructive">Remove</button>
-   Direct children of main, section, form, fieldset and dialog fill the width unless they are .link.
-   Loading: disabled + aria-busy, and the label says what is happening. */
+/* Buttons: one base rule, two modifiers. <button>Cancel</button>  <button class="primary">Continue</button>
+   <button class="destructive">Remove</button>  Every control that acts is a bordered button; only real
+   navigation (a) looks like a link. Direct children of main, section, form, fieldset and dialog fill the width.
+   Loading: aria-busy (and aria-disabled while a field stays editable), and the label says what is happening. */
 button,
 .button {
   display: inline-flex;
@@ -173,7 +173,7 @@ button,
   text-decoration: none;
   cursor: pointer;
 }
-:is(main, section, form, fieldset, dialog) > :is(button, .button):not(.link) {
+:is(main, section, form, fieldset, dialog) > :is(button, .button) {
   display: flex;
   inline-size: 100%;
 }
@@ -192,64 +192,64 @@ button,
 .primary:active {
   background: CanvasText;
 }
-.link,
-.list button {
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
-.link {
-  margin-inline: calc(-1 * var(--space-2));
-  color: var(--accent);
-}
-:is(.link, .list button):hover {
-  text-decoration: underline;
-}
 .destructive {
   color: var(--danger);
 }
 [aria-pressed="true"],
 [aria-current="true"] {
   font-weight: 600;
-} /* a finished action or the current choice */
+}
+[aria-current="true"] {
+  border-color: var(--accent);
+} /* the current choice */
+button[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--accent);
+  color: Canvas;
+} /* a finished action */
 :is(button, .button):is(:disabled, [aria-disabled="true"]) {
   border-color: var(--line);
   background: Canvas;
   color: var(--quiet);
   cursor: default;
 }
-[aria-pressed="true"]:disabled {
-  color: CanvasText;
+button[aria-pressed="true"]:disabled {
+  border-color: transparent;
+  background: var(--accent);
+  color: Canvas;
 }
 [aria-busy="true"] {
   cursor: progress;
 }
 
-/* List: related actions or choices as rows with separators, never tiles.
-   <ul class="list"><li><button class="link">Like</button></li><li><button class="link">Repost</button></li></ul>
-   A row may end with text or a second control: <li><button aria-current="true">@me</button><span class="quiet">Current</span></li> */
+/* List: a plain stack of choices; a row is a button, optionally followed by a second button.
+   <ul class="list"><li><button aria-current="true">@me</button></li><li><button>@other</button><button class="destructive">Remove</button></li></ul> */
 .list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   list-style: none;
   padding: 0;
-  border-block-end: var(--rule);
 }
 .list > li {
   display: flex;
-  align-items: center;
   gap: var(--space-1);
-  border-block-start: var(--rule);
 }
 .list > li > :first-child {
   flex: 1;
   justify-content: flex-start;
   text-align: start;
 }
-.list .link {
-  margin-inline: 0;
+
+/* Group: buttons side by side that wrap, from the start edge. <div class="group"><button>Like</button>...</div> */
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 
-/* Row: items side by side that wrap, spread to the edges.
-   <div class="row"><input type="url"><button>Open</button></div>  <footer class="row quiet">link, Change link</footer> */
+/* Row: items side by side that wrap, spread to the edges. A row that holds an input never wraps: the
+   input shrinks, the button keeps its width. <div class="row"><input><button class="primary">Open</button></div> */
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -260,14 +260,49 @@ button,
 .row > * {
   margin-block: 0;
 }
-.row > input {
-  flex: 1 1 12rem;
+.row:has(> :is(input, .field)) {
+  flex-wrap: nowrap;
+}
+.row > :is(input, .field) {
+  flex: 1 1 0;
   inline-size: auto;
+  min-inline-size: 0;
 }
 .row > a {
   display: inline-flex;
   align-items: center;
   min-block-size: var(--target);
+}
+
+/* Field: an input with a button inside its trailing end. The wrapper draws the border (an inset outline, so
+   it adds no height), the input has none.
+   <div class="field"><input type="url"><button type="button">Paste</button></div> */
+.field {
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--radius);
+  outline: var(--rule);
+  outline-offset: -1px;
+  background: Canvas;
+}
+.field:has(input:focus-visible) {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+.field:has([aria-invalid="true"]) {
+  outline-color: var(--danger);
+}
+.field > input {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+}
+.field > button {
+  border: 0;
+  border-inline-start: var(--rule);
+  border-radius: 0;
 }
 
 /* Post: the thing being acted on, set off by one rule, not a box.
@@ -278,9 +313,6 @@ button,
 }
 .post > * + * {
   margin-block-start: var(--space-1);
-}
-.post[aria-busy="true"] {
-  color: var(--quiet);
 }
 
 /* Disclosure: progressive disclosure with the native element. <details><summary>Details</summary><p>...</p></details> */
@@ -331,7 +363,6 @@ section:empty {
 [data-views],
 #pending-card,
 #reauth,
-#loading-card,
 [data-standalone-only] {
   display: none;
 }
@@ -343,13 +374,12 @@ main[data-standalone] [data-standalone-only] {
   display: block;
 }
 main[data-state="signed-out"][data-pending] #pending-card,
-main[data-reauth] #reauth,
-main:is([data-loading], [data-failed]) #loading-card {
+main[data-reauth] #reauth {
   display: block;
 }
 main[data-standalone] [data-browser-only],
 main[data-standalone] #a2hs,
 main:not([data-shortcut]) #shortcut-card,
-main:is([data-reauth], [data-loading], [data-failed]) :is(#lookup, #a2hs, #shortcut-card) {
+main[data-reauth] :is(#a2hs, #shortcut-card) {
   display: none;
 }

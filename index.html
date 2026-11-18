@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-CH7lOADBNUEi+M2Gbcn9hrrp+S3+eahfitNIJ+Gpc7Q='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'"
+      content="default-src 'none'; img-src 'self'; manifest-src 'self'; script-src 'sha256-pYpeH+V3YU/y5MJlfiI0CxY/XqVXeuSReJrn5+g7LTI='; style-src 'self'; connect-src https:; form-action https:; base-uri 'none'; object-src 'none'"
     >
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -22,7 +22,7 @@
     <main data-state="signed-out">
       <header class="row">
         <h1 id="title">Sign in</h1>
-        <button type="button" id="account-chip" class="link" aria-haspopup="dialog" hidden></button>
+        <button type="button" id="account-chip" aria-haspopup="dialog" hidden></button>
       </header>
 
       <section id="pending-card">
@@ -38,23 +38,25 @@
         <fieldset id="sign-in-controls" disabled>
           <legend>Account sign-in</legend>
           <label for="account-input" id="account-label">Account</label>
-          <input
-            id="account-input"
-            name="account"
-            type="text"
-            placeholder="you@example.com"
-            autocomplete="off"
-            autocapitalize="none"
-            spellcheck="false"
-            required
-          >
+          <div class="row">
+            <input
+              id="account-input"
+              name="account"
+              type="text"
+              placeholder="you@example.com"
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+              required
+            >
+            <button type="submit" id="continue" class="primary">Continue</button>
+          </div>
+          <p id="status" role="status"></p>
+          <section id="error"></section>
           <p class="quiet" data-standalone-only>
             This app keeps its own sign-in, separate from Safari.
           </p>
-          <button type="submit" id="continue" class="primary">Continue</button>
         </fieldset>
-        <p id="status" role="status"></p>
-        <section id="error"></section>
       </form>
 
       <section id="unsupported" data-views="unsupported">
@@ -82,30 +84,30 @@
         <section id="reauth-error"></section>
       </section>
 
-      <form id="lookup" data-views="ready">
+      <form id="lookup" data-views="ready loaded">
         <fieldset id="lookup-controls" disabled>
           <legend>Open a link</legend>
-          <button type="button" id="paste-link" class="primary">Paste link</button>
           <label for="post-url">Link</label>
           <div class="row">
-            <input
-              id="post-url"
-              type="url"
-              placeholder="https://"
-              autocomplete="off"
-              spellcheck="false"
-              required
-            >
-            <button type="submit">Open</button>
+            <div class="field">
+              <input
+                id="post-url"
+                type="url"
+                placeholder="https://"
+                autocomplete="off"
+                spellcheck="false"
+                required
+              >
+              <button type="button" id="paste-link">Paste</button>
+            </div>
+            <button type="submit" id="open-link" class="primary">Open</button>
           </div>
+          <p id="lookup-status" role="status"></p>
+          <section id="lookup-error"></section>
         </fieldset>
       </form>
 
-      <article id="loading-card" class="post" aria-busy="true">
-        <p id="loading-link" class="quiet"></p>
-      </article>
-
-      <article id="target-card" class="post" data-views="loaded" tabindex="-1">
+      <article id="target-card" class="post" data-views="loaded">
         <h2 id="target-name">Post</h2>
         <p id="target-meta" class="quiet"></p>
         <p id="target-excerpt"></p>
@@ -113,44 +115,25 @@
           <a id="target-link" href="#target-card" target="_blank" rel="noopener noreferrer"
             >Original post</a
           >
-          <button type="button" id="change-link" class="link">Change link</button>
         </footer>
       </article>
 
       <fieldset id="action-controls" data-views="loaded" disabled>
         <legend>Actions</legend>
-        <ul class="list">
-          <li>
-            <button type="button" class="link" data-act="like">Like</button>
-            <button type="button" class="link" data-undo="like" hidden>Undo</button>
-          </li>
-          <li>
-            <button type="button" class="link" data-act="repost">Repost</button>
-            <button type="button" class="link" data-undo="repost" hidden>Undo</button>
-          </li>
-          <li>
-            <button
-              type="button"
-              class="link"
-              data-act="reply"
-              id="write-reply"
-              aria-haspopup="dialog"
-            >
-              Reply
-            </button>
-          </li>
-          <li>
-            <button type="button" class="link" data-act="follow">Follow</button>
-            <button type="button" class="link" data-undo="follow" hidden>Undo</button>
-          </li>
-        </ul>
+        <div class="group">
+          <button type="button" data-act="like">Like</button>
+          <button type="button" data-undo="like" hidden>Undo like</button>
+          <button type="button" data-act="repost">Repost</button>
+          <button type="button" data-undo="repost" hidden>Undo repost</button>
+          <button type="button" data-act="reply" id="write-reply" aria-haspopup="dialog">
+            Reply
+          </button>
+          <button type="button" data-act="follow">Follow</button>
+          <button type="button" data-undo="follow" hidden>Undo follow</button>
+        </div>
       </fieldset>
-
       <p id="action-status" role="status"></p>
       <section id="action-error"></section>
-      <div id="action-next" class="row" hidden>
-        <button type="button" id="another-link" class="link">Open another link</button>
-      </div>
 
       <section id="shortcut-card" data-views="signed-out ready">
         <h2>Share from any app</h2>
@@ -163,7 +146,7 @@
           <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source</a>
         </p>
         <a class="button" id="add-shortcut" href="FediTap.shortcut" download>Add Shortcut</a>
-        <button type="button" id="shortcut-have" class="link">Hide</button>
+        <button type="button" id="shortcut-have">Hide</button>
       </section>
 
       <details data-views="signed-out">
@@ -187,7 +170,7 @@
     <dialog id="accounts-sheet" class="sheet" aria-labelledby="sheet-title">
       <div class="row">
         <h2 id="sheet-title">Accounts</h2>
-        <button type="button" id="sheet-edit" class="link">Edit</button>
+        <button type="button" id="sheet-edit">Edit</button>
       </div>
       <fieldset id="sheet-controls" disabled>
         <legend>Accounts</legend>
@@ -195,8 +178,9 @@
       </fieldset>
       <p id="sheet-status" role="status"></p>
       <section id="sheet-error"></section>
+      <button type="button" id="add-account">Add account</button>
       <button type="button" id="sheet-done">Done</button>
-      <button type="button" id="sheet-cancel" class="link" hidden>Cancel</button>
+      <button type="button" id="sheet-cancel" hidden>Cancel</button>
     </dialog>
 
     <dialog id="remove-sheet" aria-labelledby="remove-title" aria-describedby="remove-text">
@@ -229,6 +213,6 @@
         </div>
       </fieldset>
     </dialog>
-    <script src="app.js" integrity="sha256-CH7lOADBNUEi+M2Gbcn9hrrp+S3+eahfitNIJ+Gpc7Q="></script>
+    <script src="app.js" integrity="sha256-pYpeH+V3YU/y5MJlfiI0CxY/XqVXeuSReJrn5+g7LTI="></script>
   </body>
 </html>

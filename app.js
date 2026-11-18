@@ -54,9 +54,9 @@ const sheet = $("accounts-sheet");
 const removeSheet = $("remove-sheet");
 const replySheet = $("reply-sheet");
 const replyText = $("reply-text");
+// Fieldsets and buttons switched off while a task runs. The two input forms are not here: their
+// fields stay editable-looking and keep focus (see FIELD_LOCKS).
 const controls = [
-  $("sign-in-controls"),
-  $("lookup-controls"),
   $("action-controls"),
   $("reauth-controls"),
   $("sheet-controls"),
@@ -65,16 +65,20 @@ const controls = [
   $("sheet-done"),
   $("sheet-cancel"),
 ];
+const gated = [$("sign-in-controls"), $("lookup-controls")];
+const FIELD_LOCKS = {
+  auth: { fields: [input], buttons: [$("continue")] },
+  lookup: { fields: [targetInput], buttons: [$("paste-link"), $("open-link")] },
+};
 const MESSAGE_IDS = {
   auth: ["status", "error"],
+  lookup: ["lookup-status", "lookup-error"],
   actions: ["action-status", "action-error"],
   sheet: ["sheet-status", "sheet-error"],
   reply: ["reply-status", "reply-error"],
   reauth: ["reauth-status", "reauth-error"],
 };
 let busy = false;
-let loading = false;
-let lookupFailed = false;
 let resolved = null;
 let accounts = [];
 let current = null;
@@ -328,10 +332,7 @@ async function discover(value) {
         `Can’t find ${account.handle}`,
         "Check the spelling, or use a profile link.",
         {
-          actions: [
-            { label: "Use profile link", run: useProfileLink },
-            { label: "Try again", run: retrySignIn },
-          ],
+          actions: [{ label: "Use profile link", run: useProfileLink }],
         },
       );
     }
@@ -405,13 +406,11 @@ function oauthProblem(error, description) {
     return new Problem("Sign-in cancelled", "Your server didn’t allow access.", {
       steps: "Try again and choose Allow on your server’s page.",
       detail,
-      actions: [{ label: "Try again", run: retrySignIn }],
     });
   }
   return new Problem("Sign-in failed", "Your server refused it.", {
     steps: "Try again. If it keeps failing, check the account on your server.",
     detail,
-    actions: [{ label: "Try again", run: retrySignIn }],
   });
 }
 
@@ -419,7 +418,6 @@ function signInProblem(cause, detail) {
   return new Problem("Sign-in couldn’t finish", cause, {
     steps: "Try signing in again.",
     detail,
-    actions: [{ label: "Try again", run: retrySignIn }],
   });
 }
 
@@ -467,7 +465,6 @@ async function exchange(endpoint, params) {
     throw new Problem("Sign-in failed", "Your server couldn’t finish it.", {
       steps: "Try again in a moment.",
       detail: `HTTP ${response.status}`,
-      actions: [{ label: "Try again", run: retrySignIn }],
     });
   }
   return result;
@@ -535,7 +532,6 @@ async function completeSignIn(params) {
       `Your server signed in another profile. Sign in as ${handle}.`,
       {
         detail: `Authorized: ${String(authenticatedActor).slice(0, 200)}`,
-        actions: [{ label: "Try again", run: retrySignIn }],
       },
     );
   }
@@ -985,8 +981,6 @@ function render() {
   main.dataset.state = state;
   flag("data-pending", pending);
   flag("data-reauth", reauth);
-  flag("data-loading", loading);
-  flag("data-failed", lookupFailed);
   flag("data-shortcut", !shortcut);
   flag("data-standalone", standalone);
   $("title").textContent =
@@ -1000,7 +994,6 @@ function render() {
           ? "Open a link"
           : "Sign in";
   $("pending-link").textContent = pending;
-  $("loading-link").textContent = pending;
   $("reauth-text").textContent = reauth ? `Sign in again as @${current.handle}.` : "";
   if (unsupported) {
     $("unsupported-title").textContent = unsupported.title;
@@ -1009,7 +1002,6 @@ function render() {
   }
   chip.hidden = !current;
   chip.textContent = current ? `@${current.handle}` : "";
-  $("action-next").hidden = !(resolved && Object.keys(ACTIONS).some(sentFor));
   renderActions();
   renderReply();
   renderSheet();
@@ -1035,9 +1027,7 @@ function renderActions() {
     if (finished) button.setAttribute("aria-pressed", "true");
     else button.removeAttribute("aria-pressed");
     // A profile offers only Follow; a post whose author couldn't be verified offers no Follow.
-    button.closest("li").hidden = resolved.isActor
-      ? act !== "follow"
-      : act === "follow" && !resolved.author;
+    button.hidden = resolved.isActor ? act !== "follow" : act === "follow" && !resolved.author;
   }
   for (const undo of actionControls.querySelectorAll("button[data-undo]")) {
     undo.hidden = !sentFor(undo.dataset.undo)?.id;
@@ -1072,31 +1062,23 @@ function refresh() {
 
 function accountRow(account) {
   const item = document.createElement("li");
-  const select = element("button", `@${account.handle}`);
+  const select = element(
+    "button",
+    `@${account.handle}${account.needsReauth ? " · sign in again" : ""}`,
+  );
   select.type = "button";
   select.dataset.action = "select";
   select.dataset.actor = account.actor;
   if (account.actor === current?.actor) select.setAttribute("aria-current", "true");
   item.append(select);
   if (sheetMode === "edit") {
-    const remove = element("button", "Remove", "link destructive");
+    const remove = element("button", "Remove", "destructive");
     remove.type = "button";
     remove.setAttribute("aria-label", `Remove @${account.handle}`);
     remove.dataset.action = "remove";
     remove.dataset.actor = account.actor;
     item.append(remove);
-  } else if (account.needsReauth) {
-    item.append(element("span", "Sign in again", "quiet"));
   }
-  return item;
-}
-
-function addAccountRow() {
-  const item = document.createElement("li");
-  const add = element("button", "Add account", "link");
-  add.type = "button";
-  add.dataset.action = "add";
-  item.append(add);
   return item;
 }
 
@@ -1115,13 +1097,11 @@ function renderSheet() {
   $("sheet-edit").textContent = sheetMode === "edit" ? "Done" : "Edit";
   $("sheet-edit").hidden = adding;
   $("sheet-controls").hidden = adding;
+  $("add-account").hidden = sheetMode !== "list";
   $("sheet-done").hidden = sheetMode !== "list";
   $("sheet-cancel").hidden = !adding;
   if (sheet.open) {
-    $("account-list").replaceChildren(
-      ...accounts.map(accountRow),
-      ...(sheetMode === "list" ? [addAccountRow()] : []),
-    );
+    $("account-list").replaceChildren(...accounts.map(accountRow));
   }
 }
 
@@ -1166,12 +1146,12 @@ function problemView(problem, slotId) {
   alert.tabIndex = -1;
   alert.append(element("strong", problem.title), " ", problem.message);
   const nodes = [alert];
-  (problem.actions ?? []).forEach((action, index) => {
-    const button = element("button", action.label, action.look ?? (index === 0 ? "primary" : ""));
+  for (const action of problem.actions ?? []) {
+    const button = element("button", action.label);
     button.type = "button";
     button.addEventListener("click", () => action.run());
     nodes.push(button);
-  });
+  }
   if (problem.steps || problem.link || problem.detail) {
     const more = element("details");
     more.append(element("summary", problem.steps || problem.link ? "What to do" : "Details"));
@@ -1205,14 +1185,6 @@ function fail(section, title, cause) {
   showProblem(section, new Problem(title, cause, { actions: [] }));
 }
 
-// A failed send may or may not have reached the server, so the offer is to dismiss, not to resend.
-function failureActions(section, retry) {
-  return (failure) =>
-    failure.ambiguous
-      ? [{ label: "Dismiss", look: "link", run: () => clearMessages(section) }]
-      : [{ label: "Try again", run: retry }];
-}
-
 function useProfileLink() {
   input.type = "url";
   input.value = "";
@@ -1222,11 +1194,6 @@ function useProfileLink() {
   input.placeholder = "https://";
   clearMessages("auth");
   input.focus();
-}
-
-function retrySignIn() {
-  if (input.value.trim() && input.reportValidity()) form.requestSubmit();
-  else input.focus();
 }
 
 function setTarget(target, local = true) {
@@ -1246,11 +1213,13 @@ function dropTargetParam() {
 
 function resetPreview(keepMessages = false) {
   resolved = null;
-  lookupFailed = false;
   if (replySheet.open) replySheet.close();
   replyText.value = "";
   clearMessages("reply");
-  if (!keepMessages) clearMessages("actions");
+  if (!keepMessages) {
+    clearMessages("actions");
+    clearMessages("lookup");
+  }
   render();
 }
 
@@ -1261,25 +1230,25 @@ function showPreview(object) {
   $("target-meta").textContent = [object.handle, object.date].filter(Boolean).join(" · ");
   $("target-excerpt").textContent = object.excerpt;
   $("target-excerpt").hidden = !object.excerpt;
-  $("target-card").setAttribute(
-    "aria-label",
-    `${object.isActor ? "Profile" : "Post"} ${object.name ? `by ${object.name}` : `on ${object.handle}`}`,
-  );
   const host = $("target-link");
   host.href = object.id;
   host.textContent = new URL(object.id).hostname;
   render();
 }
 
-// Runs one task with every control off. The pressed button says what it is doing, and a failure
-// becomes an alert with its own buttons.
+// Runs one task with the page's controls off. The pressed button says what it is doing, and a failure
+// becomes an alert. The input of a form keeps its value and focus: it turns read-only and its buttons
+// aria-disabled while the request is in flight, never disabled.
 async function runTask(section, message, task, { button, busyLabel, title, actions } = {}) {
   if (busy) return false;
   const [statusId] = MESSAGE_IDS[section];
   const status = $(statusId);
   const idleLabel = button?.textContent;
+  const lock = FIELD_LOCKS[section];
   busy = true;
   for (const control of controls) control.disabled = true;
+  for (const field of lock?.fields ?? []) field.readOnly = true;
+  for (const lockable of lock?.buttons ?? []) lockable.setAttribute("aria-disabled", "true");
   clearMessages(section);
   status.textContent = message;
   if (button) {
@@ -1318,28 +1287,41 @@ async function runTask(section, message, task, { button, busyLabel, title, actio
       if (busyLabel) button.textContent = idleLabel;
     }
     for (const control of controls) control.disabled = false;
+    for (const field of lock?.fields ?? []) field.readOnly = false;
+    for (const lockable of lock?.buttons ?? []) lockable.removeAttribute("aria-disabled");
   }
 }
 
-async function findTarget(focusResult = false) {
-  if (busy || !current || current.needsReauth) return;
+// Marks the input a message belongs to, so the alert below it is read with the field.
+function markInvalid(field, slotId) {
+  field.setAttribute("aria-invalid", "true");
+  field.setAttribute("aria-describedby", `${slotId}-text`);
+}
+
+function clearInvalid(field) {
+  field.removeAttribute("aria-invalid");
+  field.removeAttribute("aria-describedby");
+}
+
+async function findTarget() {
+  if (busy || !current) return;
+  if (current.needsReauth) {
+    focusFirst($("reauth-sign-in"));
+    return;
+  }
   resetPreview();
-  targetInput.removeAttribute("aria-invalid");
-  targetInput.removeAttribute("aria-describedby");
+  clearInvalid(targetInput);
   const target = httpsUrl(targetInput.value.trim());
   if (!target) {
-    fail("actions", "That isn’t a link.", "Use a full address that starts with https://.");
-    targetInput.setAttribute("aria-invalid", "true");
-    targetInput.setAttribute("aria-describedby", "action-error-text");
+    fail("lookup", "That isn’t a link.", "Use a full address that starts with https://.");
+    markInvalid(targetInput, "lookup-error");
     targetInput.focus();
     return;
   }
   setTarget(target);
   const actorId = current.actor;
-  loading = true;
-  render();
   const found = await runTask(
-    "actions",
+    "lookup",
     "Loading…",
     async () => {
       const object = await withAccount(actorId, (account, renew) =>
@@ -1348,25 +1330,13 @@ async function findTarget(focusResult = false) {
       if (current?.actor !== actorId || targetInput.value !== target.href) return;
       showPreview(object);
     },
-    {
-      title: "Couldn’t open this link",
-      actions: [
-        { label: "Try again", run: () => findTarget(true) },
-        { label: "Change link", look: "link", run: changeLink },
-      ],
-    },
+    { button: $("open-link"), busyLabel: "Opening…", title: "Couldn’t open this link" },
   );
-  loading = false;
-  lookupFailed = !found && Boolean(current) && !current.needsReauth && Boolean(targetInput.value);
-  render();
-  if (found && resolved && focusResult) $("target-card").focus();
-  else if (lookupFailed) focusProblem("actions");
-}
-
-function changeLink() {
-  resetPreview();
-  targetInput.focus();
-  targetInput.select();
+  if (found) return;
+  if (current && !current.needsReauth) {
+    markInvalid(targetInput, "lookup-error");
+    targetInput.focus();
+  }
 }
 
 function focusFirst(...candidates) {
@@ -1382,7 +1352,10 @@ function settleFocus() {
   const active = document.activeElement;
   if (active && active !== document.body && !active.matches(":disabled")) return;
   if (replySheet.open) focusFirst(replyText);
-  else if (!sheet.open && !removeSheet.open) focusFirst($("target-card"), chip);
+  else if (!sheet.open && !removeSheet.open) {
+    const enabled = [...actionControls.querySelectorAll("button:not(:disabled)")];
+    focusFirst(...enabled, targetInput, chip);
+  }
 }
 
 // Like, repost, follow and reply all end here. The target and account are captured up front, so a
@@ -1395,11 +1368,6 @@ async function perform(action, text = "") {
   const labels = ACTIONS[action];
   const inSheet = action === "reply";
   const section = inSheet ? "reply" : "actions";
-  const retry = () => {
-    const draft = replyText.value.trim();
-    if (!inSheet) void perform(action);
-    else if (draft) void perform(action, draft);
-  };
   let message = "";
   render();
   const sent = await runTask(
@@ -1421,11 +1389,7 @@ async function perform(action, text = "") {
       busyLabel: "Sending…",
       title: `Couldn’t send the ${labels.noun}`,
       actions: (failure) =>
-        failure.sessionEnded
-          ? inSheet
-            ? [{ label: "Sign in", run: signInFromReply }]
-            : []
-          : failureActions(section, retry)(failure),
+        failure.sessionEnded && inSheet ? [{ label: "Sign in", run: signInFromReply }] : [],
     },
   );
   if (sent && inSheet && message) {
@@ -1455,7 +1419,6 @@ async function undoLast(action) {
       button: actionControls.querySelector(`[data-undo="${action}"]`),
       busyLabel: "Undoing…",
       title: "Couldn’t undo",
-      actions: failureActions("actions", () => undoLast(action)),
     },
   );
   if (!undone) focusProblem("actions");
@@ -1520,45 +1483,37 @@ guardSheet(removeSheet);
 
 lookup.addEventListener("submit", (event) => {
   event.preventDefault();
-  void findTarget(true);
+  void findTarget();
 });
 
+// Paste sits inside the link field: it reads the clipboard, fills the field and opens the link at once.
 $("paste-link").addEventListener("click", async () => {
+  if (busy || !current) return;
   const previous = targetInput.value;
-  let copied;
+  let copied = "";
   try {
     copied = await navigator.clipboard.readText();
   } catch {
-    if (busy || !current || targetInput.value !== previous) return;
-    fail("actions", "Can’t paste.", "Type the link instead.");
-    targetInput.focus();
-    return;
+    // Denied or unavailable: the person types instead.
   }
   if (busy || !current || targetInput.value !== previous) return;
   const target = httpsUrl(copied.trim());
   if (!target) {
-    fail("actions", "No link copied.", "Copy a post or profile link first.");
+    if (copied) fail("lookup", "No link copied.", "Copy a post or profile link first.");
+    else fail("lookup", "Can’t paste.", "Type the link instead.");
+    targetInput.setAttribute("aria-describedby", "lookup-error-text");
+    targetInput.focus();
     return;
   }
   targetInput.value = target.href;
-  await findTarget(true);
+  await findTarget();
 });
 
+// Editing keeps the loaded post until the new link is submitted, and clears the old message.
 targetInput.addEventListener("input", () => {
-  targetInput.removeAttribute("aria-invalid");
-  targetInput.removeAttribute("aria-describedby");
-  resetPreview();
+  clearInvalid(targetInput);
+  clearMessages("lookup");
   dropTargetParam();
-});
-
-$("change-link").addEventListener("click", changeLink);
-
-$("another-link").addEventListener("click", () => {
-  resetPreview();
-  targetInput.value = "";
-  dropTargetParam();
-  render();
-  $("paste-link").focus();
 });
 
 $("write-reply").addEventListener("click", () => {
@@ -1602,15 +1557,13 @@ $("sheet-edit").addEventListener("click", () =>
 
 $("sheet-cancel").addEventListener("click", () => setSheetMode("list"));
 
+$("add-account").addEventListener("click", () => setSheetMode("add"));
+
 $("account-list").addEventListener("click", async (event) => {
   const button = event.target.closest("button");
   if (!button) return;
   const actorId = button.dataset.actor;
   const action = button.dataset.action;
-  if (action === "add") {
-    setSheetMode("add");
-    return;
-  }
   if (action === "remove") {
     const account = accounts.find((item) => item.actor === actorId);
     if (!account) {
@@ -1725,23 +1678,21 @@ window.addEventListener("storage", (event) => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  input.removeAttribute("aria-invalid");
-  input.removeAttribute("aria-describedby");
+  if (busy) return;
+  clearInvalid(input);
   const started = await runTask("auth", "", () => authorize(input.value.trim()), {
     button: $("continue"),
     busyLabel: "Looking up…",
     title: "Couldn’t sign in",
-    actions: [{ label: "Try again", run: retrySignIn }],
   });
   if (started) return;
-  if (input.hasAttribute("aria-invalid")) input.focus();
-  else focusProblem("auth");
+  markInvalid(input, "error");
+  input.focus();
 });
 
 input.addEventListener("input", () => {
   if (!input.hasAttribute("aria-invalid")) return;
-  input.removeAttribute("aria-invalid");
-  input.removeAttribute("aria-describedby");
+  clearInvalid(input);
   clearMessages("auth");
 });
 
@@ -1753,7 +1704,7 @@ async function start() {
   }
   refresh();
   $("setup-unavailable").hidden = true;
-  for (const control of controls) control.disabled = false;
+  for (const control of [...controls, ...gated]) control.disabled = false;
 
   const callback = new URL(location.href);
   const shared = httpsUrl(callback.searchParams.get("url"));
@@ -1776,7 +1727,7 @@ async function start() {
     if (current) openSheet("add", true);
     const signedIn = await runTask(
       "auth",
-      "Signing in…",
+      "",
       async () => {
         await completeSignIn(params);
         input.value = "";
@@ -1784,11 +1735,14 @@ async function start() {
         input.placeholder = "you@example.com";
         $("account-label").textContent = "Account";
       },
-      { title: "Sign-in failed", actions: [{ label: "Try again", run: retrySignIn }] },
+      { button: $("continue"), busyLabel: "Signing in…", title: "Sign-in failed" },
     );
-    if (!signedIn) return;
+    if (!signedIn) {
+      markInvalid(input, "error");
+      return;
+    }
     if (sheet.open) sheet.close();
-    $("action-status").textContent = current ? `Signed in as @${current.handle}.` : "";
+    $("lookup-status").textContent = current ? `Signed in as @${current.handle}.` : "";
   }
   if (targetInput.value && current && !current.needsReauth) await findTarget();
   restoreDraft();
