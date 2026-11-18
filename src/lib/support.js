@@ -1,29 +1,12 @@
-import { SHORTCUT_KEY } from "./constants.js";
 import { readStore } from "./store.js";
 
 export const standalone =
   matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 
-// The Shortcut and the Home Screen hint are for iPhone and iPad (iPadOS reports itself as a Mac with touch).
+// The Home Screen hint is for iPhone and iPad (iPadOS reports itself as a Mac with touch).
 export const ios =
   /iPhone|iPad|iPod/.test(navigator.userAgent) ||
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-export function readShortcut() {
-  try {
-    return localStorage.getItem(SHORTCUT_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function writeShortcut(value) {
-  try {
-    localStorage.setItem(SHORTCUT_KEY, value);
-  } catch {
-    // The card just comes back next time.
-  }
-}
 
 /** What the unsupported screen shows (a heading, a one-line cause and optionally a reset button), or null. */
 export function checkSupport() {

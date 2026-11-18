@@ -117,7 +117,7 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `FediTap.cherri` and signs `public/FediTap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
-The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, which tells the page the person has the Shortcut (so the Shortcut card stays hidden); the page removes the parameter from the address bar. Shortcuts built before this change open the bare page and keep showing the card until a link is shared once or the person taps **Dismiss**. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
+The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, so the page can tell a Shortcut launch from a typed address; the page removes the parameter from the address bar. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
 ## Account storage
 
@@ -125,7 +125,7 @@ The page stores accounts in browser local storage by ActivityPub actor ID and re
 
 The pending OAuth state, PKCE verifier, and target URL use session storage for the redirect and are cleared after the callback. The page refreshes tokens before expiry and keeps a replacement refresh token when the server rotates it. A rejected refresh marks only that account for reauthorization. Accounts from the earlier shortcut’s iCloud Drive file require a browser sign-in.
 
-The page also keeps `feditap.shortcut` (`yes` or `dismissed`) in local storage, separate from the account store, to hide the Shortcut panel. The panel ("Add Shortcut for iOS") and the Add to Home Screen hint show only on iPhone and iPad (user agent, or a touch-capable Mac platform for iPadOS) and only when an account exists. It is set when the page opens with a shared link (`?url=`) or `?via=shortcut`, or when the person taps **Dismiss** or **Add Shortcut**. The page removes `via` from the address bar after reading it.
+The "Add Shortcut for iOS" panel shows on every device, signed out or in, and has no dismiss state or stored flag. The Add to Home Screen hint shows only on iPhone and iPad (user agent, or a touch-capable Mac platform for iPadOS), only in the browser (not once installed) and only while no sign-in has expired.
 
 ## Actions, errors and the Home Screen app
 

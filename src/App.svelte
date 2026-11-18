@@ -18,7 +18,6 @@
   void start();
 
   const usable = $derived(app.view === "ready" || app.view === "loaded");
-  const showShortcut = $derived(usable && !app.shortcut && ios && !app.reauth);
   const showHomeScreenHint = $derived(app.view === "ready" && !standalone && ios && !app.reauth);
 </script>
 
@@ -27,7 +26,14 @@
   <h1 id="title">{app.title}</h1>
 
   {#if app.view === "signed-out"}
-    <p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+    <section>
+      <h2>Act on Fediverse posts from your own account</h2>
+      <ol>
+        <li>Sign in with your Fediverse account.</li>
+        <li>Open a post or profile link, or share one from your phone.</li>
+        <li>Like, repost, reply or follow.</li>
+      </ol>
+    </section>
     {#if app.targetValue}
       <section id="pending-card">
         <h2>Shared link</h2>
@@ -53,7 +59,7 @@
     <p id="action-announce" role="status">{app.announce}</p>
   </Messages>
 
-  {#if showShortcut}<ShortcutCard />{/if}
+  {#if app.view !== "unsupported"}<ShortcutCard />{/if}
 
   {#if app.view === "signed-out"}
     <details>

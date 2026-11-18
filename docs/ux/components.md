@@ -109,7 +109,7 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 ## Screen recipes
 
-- **Sign in:** `header`, `h1`, one short paragraph saying what the app does (only while no account is stored), a `form` with a labelled `input` and `.primary` Sign in in one `.row`, the error directly below that row, one compatibility sentence below the form, `details` "Supported servers". No Shortcut panel when signed out.
+- **Sign in:** `header`, `h1`, an intro (a heading and three numbered steps: sign in, open or share a link, then like, repost, reply or follow) shown only while no account is stored, a `form` with a labelled `input` and `.primary` Sign in in one `.row`, the error directly below that row, one compatibility sentence below the form, `details` "Supported servers". The "Add Shortcut for iOS" panel shows below, as on every screen except the unsupported one.
 - **Open a link:** `header` with the mark and the account dropdown, `h1`; a labelled `.field` (input with Paste inside) and `.primary` Open in one `.row`; status and error below the row. The field stays visible in the ready, loading and loaded states and keeps its value. On iOS only, the Shortcut panel and the Add to Home Screen disclosure sit below.
 - **Post:** the link row, then `.post`, then a `fieldset` holding a `.group` of action buttons (Like, Repost, Reply, Follow, and Undo buttons next to a finished one); status text below. The post is removed while the next link loads or fails.
 - **Accounts:** `dialog.sheet` opened only from the dropdown's last option: a heading, a `.list` of stored accounts (text and a `.destructive` Remove button each), then the add-account `.row` (input and Sign in), and a Done button. It cannot be dismissed while a sign-in runs.

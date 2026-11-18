@@ -4,7 +4,7 @@
 </script>
 
 <header class="row">
-  <a href="./">FediTap</a>
+  <a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>
   <select
     id="account-select"
     aria-label="Account"

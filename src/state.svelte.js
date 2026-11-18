@@ -7,7 +7,7 @@ import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
 import { authorize, completeSignIn } from "./lib/oauth.js";
 import { Problem, problemOf } from "./lib/problem.js";
 import { readStore, resetStore, STORE_KEY, saveStore, useStore, withAccount } from "./lib/store.js";
-import { checkSupport, readShortcut, writeShortcut } from "./lib/support.js";
+import { checkSupport } from "./lib/support.js";
 import { httpsUrl } from "./lib/url.js";
 
 // Each message section has a status line (always in the page, so it is announced) and a slot for
@@ -29,7 +29,6 @@ class AppState {
   // The loaded post or profile. Raw, so a slow task can tell it is still the same object.
   resolved = $state.raw(null);
   unsupported = $state.raw(null);
-  shortcut = $state.raw(readShortcut());
 
   // The link field and the sign-in field.
   targetValue = $state.raw("");
@@ -192,14 +191,6 @@ function resetPreview(keepMessages = false) {
     clearMessages("lookup");
   }
 }
-
-function saveShortcut(value) {
-  app.shortcut = value;
-  writeShortcut(value);
-}
-
-export const dismissShortcut = () => saveShortcut("dismissed");
-export const haveShortcut = () => saveShortcut("yes");
 
 // --- Running a task ----------------------------------------------------------------------------------
 
@@ -628,9 +619,6 @@ async function run() {
 
   const callback = new URL(location.href);
   const shared = httpsUrl(callback.searchParams.get("url"));
-  // A link the page wrote itself (paste, type, reload) carries history.state; a fresh one came from outside.
-  const arrived =
-    callback.searchParams.get("via") === "shortcut" || (shared && !history.state?.local);
   const oauthParams = ["code", "state", "error", "error_description", "error_uri", "iss"];
   const params = ["code", "state", "error"].some((key) => callback.searchParams.has(key))
     ? new URLSearchParams(callback.search)
@@ -639,7 +627,6 @@ async function run() {
   callback.searchParams.delete("via");
   if (params || callback.href !== location.href)
     history.replaceState(history.state, "", callback.href);
-  if (arrived && !app.shortcut) saveShortcut("yes");
   if (shared) setTarget(shared, Boolean(history.state?.local));
   if (params) {
     // With an account already connected the sign-in form lives in the accounts sheet, so a failed

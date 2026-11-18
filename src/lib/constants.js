@@ -10,7 +10,6 @@ export const WP_SETTING =
 export const MAX_RESPONSE = 1000000;
 export const MAX_HTML = 20000;
 export const DRAFT_KEY = "feditap.draft";
-export const SHORTCUT_KEY = "feditap.shortcut";
 
 export const ACTIONS = {
   like: { idle: "Like", done: "Liked", sent: "Liked", noun: "Like", verb: "like", quiet: true },

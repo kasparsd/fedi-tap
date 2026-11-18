@@ -1,6 +1,5 @@
 <script>
   import { standalone } from "../lib/support.js";
-  import { dismissShortcut, haveShortcut } from "../state.svelte.js";
 </script>
 
 <section id="shortcut-card">
@@ -9,8 +8,5 @@
   <p class="quiet">
     <a href="https://github.com/kasparsd/fedi-tap/blob/main/FediTap.cherri">Source code</a>
   </p>
-  <a class="button" id="add-shortcut" href="FediTap.shortcut" download onclick={dismissShortcut}>
-    Add Shortcut
-  </a>
-  <button type="button" id="shortcut-have" onclick={haveShortcut}>Dismiss</button>
+  <a class="button" href="FediTap.shortcut" download>Add Shortcut</a>
 </section>
