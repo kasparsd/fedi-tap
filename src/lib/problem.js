@@ -4,6 +4,9 @@ import { CORS_HELP, MAX_RESPONSE, WORDPRESS_HELP, WP_SETTING } from "./constants
  * A failure the person can act on: a title, one sentence of cause, optional steps, link and
  * technical detail (HTTP codes, raw messages) and buttons. Shown by the Problem component.
  */
+const FEDIVERSE_LINKS =
+  "FediTap opens posts and profiles from Mastodon, WordPress and other ActivityPub servers. Check the link, or open it in your browser to see what it is.";
+
 export class Problem extends Error {
   constructor(title, cause, extra = {}) {
     super(cause);
@@ -39,6 +42,36 @@ export function unsupportedServer(detail) {
       link: WORDPRESS_HELP,
       detail,
     },
+  );
+}
+
+/** The link the person typed, offered back so they can see in their own browser what it is. */
+const viewLink = (target) => ({ href: target, text: "Open the link in your browser" });
+
+/** The server can't find what the link points at, which is also what a non-Fediverse link looks like. */
+export function linkNotFound(target, detail) {
+  return new Problem(
+    "Couldn’t open this link",
+    "Your server can’t find it. It may be private, deleted or blocked, or the link may not be a Fediverse post or profile.",
+    { steps: FEDIVERSE_LINKS, link: viewLink(target), detail },
+  );
+}
+
+/** The link answered, but not with Fediverse (ActivityPub) data: most likely an ordinary web page. */
+export function notFediverse(target, detail) {
+  return new Problem(
+    "Not a Fediverse post or profile",
+    "The link answered, but not with ActivityPub data. It may be an ordinary web page.",
+    { steps: FEDIVERSE_LINKS, link: viewLink(target), detail },
+  );
+}
+
+/** It is Fediverse data, but of a kind FediTap can't act on (a collection, an activity ...). */
+export function otherKind(target, kind) {
+  return new Problem(
+    "This isn’t a post or profile",
+    `It is a Fediverse ${kind ? `“${kind}”` : "item"}, not a post or a profile.`,
+    { steps: FEDIVERSE_LINKS, link: viewLink(target), detail: kind ? `Type: ${kind}` : undefined },
   );
 }
 

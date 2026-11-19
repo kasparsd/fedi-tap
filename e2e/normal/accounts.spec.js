@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockUrl, profileLink, resetMock, signIn } from "../helpers.js";
+import { expectSignedIn, expectView, mockUrl, profileLink, resetMock, signIn } from "../helpers.js";
 
 test.beforeEach(({ page }) => resetMock(page));
 
@@ -40,7 +40,7 @@ test("adds a second account, switches between them and removes one", async ({ pa
   await openAccounts(page);
   await page.getByRole("button", { name: "Remove @shorty@localhost" }).click();
   // The question replaces the account's row; no second dialog opens.
-  await expect(page.locator("#remove-text")).toHaveText("Remove @shorty@localhost?");
+  await expect(page.locator("#remove-text")).toContainText("@shorty@localhost");
   await expect(page.locator("dialog[open]")).toHaveCount(1);
   await page.click("#remove-confirm");
   await expect(page.locator("#account-list li")).toHaveCount(1);
@@ -65,7 +65,7 @@ test("an account whose first token is rejected renews it and carries on", async 
   await page.fill("#post-url", mockUrl(page, "/notes/3"));
   await page.click("#open-link");
   await expect(page.locator("#target-card")).toBeVisible();
-  await expect(page.locator("h1")).toHaveText("Open a post or profile");
+  await expectSignedIn(page);
 });
 
 test("removing the last account closes the sheet and signs out", async ({ page }) => {
@@ -73,7 +73,7 @@ test("removing the last account closes the sheet and signs out", async ({ page }
   await openAccounts(page);
   await page.getByRole("button", { name: "Remove @alice@localhost" }).click();
   await page.click("#remove-confirm");
-  await expect(page.locator("h1")).toHaveText("Connect account");
+  await expectView(page, "signed-out");
   await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", false);
 });
 
@@ -83,11 +83,11 @@ test("another tab sees accounts that are added and removed", async ({ context, p
   await expect(other.locator("#account-input")).toBeVisible();
 
   await signIn(page, "alice");
-  await expect(other.locator("h1")).toHaveText("Open a post or profile");
+  await expectSignedIn(other);
 
   await openAccounts(other);
   await other.getByRole("button", { name: "Remove @alice@localhost" }).click();
   await other.click("#remove-confirm");
-  await expect(other.locator("h1")).toHaveText("Connect account");
-  await expect(page.locator("h1")).toHaveText("Connect account");
+  await expectView(other, "signed-out");
+  await expectView(page, "signed-out");
 });

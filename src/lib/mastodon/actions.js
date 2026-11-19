@@ -1,5 +1,5 @@
 import { readJson } from "../http.js";
-import { Problem, uncertain } from "../problem.js";
+import { linkNotFound, Problem, uncertain } from "../problem.js";
 import { plainText, shortDate } from "../text.js";
 import { randomString } from "../token.js";
 import { httpsUrl } from "../url.js";
@@ -12,14 +12,6 @@ const lives = (origin, ...urls) => urls.some((url) => httpsUrl(url)?.origin === 
 function fullAcct(account, home) {
   const acct = typeof account?.acct === "string" ? account.acct : "";
   return acct.includes("@") ? acct : `${acct}@${home.split("@").pop()}`;
-}
-
-function notFound() {
-  return new Problem(
-    "Couldn’t open this link",
-    "Your server can’t find it. It may be private, deleted or on a server yours blocks.",
-    { detail: "The search returned no post or profile." },
-  );
 }
 
 /** Opens a post or profile by searching for its address on the account's server. */
@@ -38,7 +30,7 @@ export async function resolve(account, url, renew) {
   const status = first(result?.statuses);
   const profile = status ? null : first(result?.accounts);
   const object = status ?? profile;
-  if (!object) throw notFound();
+  if (!object) throw linkNotFound(url, "The search returned no post or profile.");
 
   const author = status ? status.account : profile;
   const authorId = httpsUrl(author?.uri)?.href;

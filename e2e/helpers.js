@@ -40,8 +40,15 @@ export async function openLink(page, path) {
   await expect(page.locator("#target-card")).toBeVisible();
 }
 
-/** The text a button shows, without the hidden text that keeps its width. */
-export const shownText = (button) => button.locator(".swap > span").first().textContent();
+/**
+ * The screen the page is on, from `main[data-view]` (signed-out, ready, loaded or unsupported), so
+ * tests do not depend on headings or other copy that is free to change.
+ */
+export const expectView = (page, view) =>
+  expect(page.locator("main")).toHaveAttribute("data-view", view);
+
+/** Signed in, with or without a post loaded. */
+export const expectSignedIn = (page) => expectView(page, /^(ready|loaded)$/);
 
 /** The width of an element in pixels. */
 export async function widthOf(locator) {
@@ -54,13 +61,9 @@ export function topOf(locator) {
   return locator.evaluate((element) => Math.round(element.getBoundingClientRect().top + scrollY));
 }
 
-// A toggle's name changes when it is on (Like, Liked), so match both.
-const ACTION_NAMES = {
-  Like: /^(Like|Liked)$/,
-  Repost: /^(Repost|Reposted)$/,
-  Follow: /^(Follow|Requested)$/,
-  Reply: /^Reply$/,
-};
+/** One of the action buttons (Like, Repost, Reply, Follow), whatever it currently says. */
+export const action = (page, name) => page.locator(`button[data-action="${name.toLowerCase()}"]`);
 
-/** One of the action buttons (Like, Repost, Reply, Follow), whether or not it is on. */
-export const action = (page, name) => page.getByRole("button", { name: ACTION_NAMES[name] });
+/** The problem card in a slot ("auth", "lookup", "reply" ...), whatever it says. */
+export const problem = (page, slot) =>
+  page.locator(`#${slot === "auth" ? "error" : `${slot}-error`} [role="alert"]`);

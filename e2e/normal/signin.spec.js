@@ -1,20 +1,21 @@
 import { expect, test } from "@playwright/test";
-import { mockUrl, profileLink, resetMock, signIn } from "../helpers.js";
+import {
+  expectSignedIn,
+  expectView,
+  mockUrl,
+  problem,
+  profileLink,
+  resetMock,
+  signIn,
+} from "../helpers.js";
 
 test.beforeEach(({ page }) => resetMock(page));
 
 test.describe("signed out", () => {
-  test("shows the mark, explains the app and offers the Shortcut", async ({ page }) => {
+  test("shows the sign-in form and offers the Shortcut", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("h1")).toHaveText("Connect account");
-    const mark = page.getByRole("link", { name: "FediTap" });
-    await expect(mark).toHaveText("⁂tap");
-    await expect(page.getByText("Act on Fediverse posts from your own account:")).toBeVisible();
-    await expect(page.locator("main ol li")).toHaveText([
-      "Connect your Fediverse account.",
-      "Open a post or profile link, or share one from your phone.",
-      "Like, repost, reply or follow.",
-    ]);
+    await expectView(page, "signed-out");
+    await expect(page.locator("#account-input")).toBeVisible();
     await expect(page.locator("#shortcut-card")).toBeVisible();
     await expect(page.locator("#shortcut-have")).toHaveCount(0);
   });
@@ -23,11 +24,10 @@ test.describe("signed out", () => {
     await page.goto("/");
     await page.fill("#account-input", "@nobody@localhost");
     await page.click("#continue");
-    await expect(page.locator("#error-text")).toContainText("Can’t find nobody@localhost");
+    await expect(problem(page, "auth")).toContainText("nobody@localhost");
     await expect(page.locator("#account-input")).toHaveAttribute("aria-invalid", "true");
     await page.getByRole("button", { name: "Use profile link" }).click();
     await expect(page.locator("#account-input")).toHaveAttribute("type", "url");
-    await expect(page.locator("#account-label")).toHaveText("Profile link");
   });
 
   test("a server without the API says so and points to help", async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe("signed out", () => {
     await page.goto("/");
     await page.fill("#account-input", profileLink(page, "alice"));
     await page.click("#continue");
-    await expect(page.locator("#error-text")).toContainText("Server not supported");
+    await expect(problem(page, "auth")).toBeVisible();
     await expect(page.locator("#error details a")).toHaveCount(1);
   });
 });
@@ -44,7 +44,7 @@ test.describe("signed out", () => {
 test.describe("signing in", () => {
   test("signs in with a profile link and cleans up the address", async ({ page }) => {
     await signIn(page, "alice");
-    await expect(page.locator("h1")).toHaveText("Open a post or profile");
+    await expectSignedIn(page);
     expect(page.url()).not.toMatch(/code=|state=|iss=/);
     await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
   });
@@ -56,7 +56,7 @@ test.describe("signing in", () => {
       from: `/?url=${encodeURIComponent(mockUrl(page, "/notes/1"))}`,
       ready: "#target-card",
     });
-    await expect(page.locator("h1")).toHaveText("Open a post or profile");
+    await expectSignedIn(page);
     await expect(page.locator("#post-url")).toHaveValue(mockUrl(page, "/notes/1"));
     expect(page.url()).toContain("url=");
     expect(page.url()).not.toMatch(/code=|state=/);
@@ -64,8 +64,8 @@ test.describe("signing in", () => {
 
   test("an account that authorizes as someone else is refused", async ({ page }) => {
     await signIn(page, "mismatch", { ready: "#error-text" });
-    await expect(page.locator("#error-text")).toContainText("Wrong account");
-    await expect(page.locator("h1")).toHaveText("Connect account");
+    await expect(problem(page, "auth")).toBeVisible();
+    await expectView(page, "signed-out");
   });
 
   test("the Shortcut launch parameter is removed from the address", async ({ page }) => {
@@ -83,9 +83,9 @@ test.describe("unsupported", () => {
       localStorage.setItem(`feditap.accounts:${new URL("./", location.href).pathname}`, "{bad");
     });
     await page.reload();
-    await expect(page.locator("h1")).toHaveText("Saved data is damaged");
+    await expectView(page, "unsupported");
     await Promise.all([page.waitForEvent("load"), page.click("#reset-data")]);
-    await expect(page.locator("h1")).toHaveText("Connect account");
+    await expectView(page, "signed-out");
   });
 });
 
