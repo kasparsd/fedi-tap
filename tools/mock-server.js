@@ -188,6 +188,11 @@ function actorObject(name, { forLogin = false } = {}) {
 }
 
 function resolveTarget(id) {
+  // Answers that are not a post or profile: an ordinary page's JSON, and a Fediverse collection.
+  if (id === `${ORIGIN}/web/page`) return { title: "An ordinary web page" };
+  if (id === `${ORIGIN}/web/collection`) {
+    return { id, type: "OrderedCollection", totalItems: 0 };
+  }
   const alias = TARGET_ALIASES[id];
   if (alias?.type === "note") return noteObject(alias.key);
   if (alias?.type === "actor") return actorObject(alias.key);

@@ -117,6 +117,22 @@ test("a missing post shows the problem and leaves nothing behind", async ({ page
   await expect(page.locator("#post-url")).toBeEditable();
 });
 
+test("a link that isn't a post or profile says what it is and offers it in the browser", async ({
+  page,
+}) => {
+  for (const path of ["/web/page", "/web/collection"]) {
+    await page.fill("#post-url", mockUrl(page, path));
+    await page.click("#open-link");
+    await expect(problem(page, "lookup")).toBeVisible();
+    // The link comes back to the person, so they can see what it is.
+    await expect(page.locator("#lookup-error details a")).toHaveAttribute(
+      "href",
+      mockUrl(page, path),
+    );
+    await expect(page.locator("#target-card")).toHaveCount(0);
+  }
+});
+
 test("something that isn't a link gets the app's own message", async ({ page }) => {
   await page.fill("#post-url", "http://localhost/insecure");
   await page.click("#open-link");

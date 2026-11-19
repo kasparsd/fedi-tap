@@ -1,6 +1,14 @@
 import { ACTIVITY_TYPE, ACTOR_ACCEPT, ACTOR_TYPES, AS_PROFILE, PUBLIC } from "../constants.js";
 import { readJson } from "../http.js";
-import { corsProblem, Problem, refused, uncertain } from "../problem.js";
+import {
+  corsProblem,
+  linkNotFound,
+  notFediverse,
+  otherKind,
+  Problem,
+  refused,
+  uncertain,
+} from "../problem.js";
 import { requestSignal } from "../signal.js";
 import { plainText, shortDate } from "../text.js";
 import { httpsUrl, parseHandle } from "../url.js";
@@ -105,12 +113,8 @@ export async function resolveTarget(account, target, renew) {
   const requested = new URL(target);
   const response = await proxyRequest(account, target, renew);
   if (!response.ok) {
-    throw response.status === 404
-      ? new Problem(
-          "Couldn’t open this link",
-          "Your server can’t find it. It may be private or deleted.",
-          { detail: "HTTP 404" },
-        )
+    throw response.status === 404 || response.status === 410
+      ? linkNotFound(target, `HTTP ${response.status}`)
       : new Problem("Couldn’t open this link", "Your server couldn’t load it.", {
           steps:
             "Try again in a moment. If it keeps happening, the post may not be available to your server.",
@@ -126,11 +130,12 @@ export async function resolveTarget(account, target, renew) {
     ? object.attributedTo
     : [object?.attributedTo];
   const claimed = isActor ? id : authors.map(activityId).find(Boolean);
-  if (!id || !types.some((type) => typeof type === "string" && type) || !claimed) {
-    throw new Problem("This isn’t a post or profile", "No post or profile came back.", {
-      detail: "The response had no HTTPS id, type or author.",
-    });
+  const kind = types.find((type) => typeof type === "string" && type);
+  // Not an object with an id and a type, as a web page or a plain API answer is: not Fediverse data.
+  if (!id || !kind) {
+    throw notFediverse(target, "The response had no HTTPS id or ActivityStreams type.");
   }
+  if (!claimed) throw otherKind(target, kind);
   // The object must live at the link that was opened. A proxy may resolve an alias address, but then
   // the object has to name that address itself.
   if (idUrl.origin !== requested.origin && !linkOrigins(object.url).includes(requested.origin)) {

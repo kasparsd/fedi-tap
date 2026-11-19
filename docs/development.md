@@ -30,6 +30,10 @@ When sign-in finishes, the app asks the account's own origin for `acct:{handle}`
 
 When the server advertises any, the actions are grouped by who performs them: the heading "Using API as @me" holds the in-app buttons (the API), and the heading "Using {host} links" (`ServerLinks.svelte`) holds the same buttons as links to the server, with the post or profile address percent-encoded into the template. A post gets Like, Repost, Reply, Follow (its verified author) and Open; a profile gets Follow and Open. Without any advertised intent there are no group names and no links. Any lookup failure means no links, never a failed sign-in. Templates are read once, at sign-in: sign in again to pick up a server's later change.
 
+### Links that aren’t Fediverse posts
+
+A link that fails to open says which kind of failure it was, because the same address can be a deleted post or not a Fediverse link at all. The server answering "not found" (HTTP 404 or 410 from the proxy, an empty Mastodon search) is one problem that lists both possibilities. A 200 answer with no HTTPS `id` or ActivityStreams `type` (an ordinary page, plain JSON) is "Not a Fediverse post or profile". An answer with a type but no author (a collection, an activity) names that type. Each offers the link back as "Open the link in your browser" under its details (`problem.js`: `linkNotFound`, `notFediverse`, `otherKind`). The mock serves `/web/page` and `/web/collection` for the last two.
+
 ### ActivityPub (`src/lib/activitypub/`)
 
 FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD (`public/client.json`), OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
