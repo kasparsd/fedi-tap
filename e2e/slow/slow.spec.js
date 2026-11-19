@@ -17,7 +17,7 @@ test("opening a link can be cancelled, and the same link opens afterwards", asyn
 
   await expect(page.locator("#lookup-status")).toHaveText("Canceled.");
   await expect(page.locator("#slow")).toHaveCount(0);
-  await expect(page.locator("header progress")).toHaveCount(0);
+  await expect(page.locator("header .pulse")).toHaveCount(0);
   await expect(page.locator("#target-loading")).toHaveCount(0);
   await expect(page.locator("#lookup-error")).toHaveCount(0);
   await expect(page.locator("#post-url")).toBeEditable();

@@ -2,7 +2,7 @@
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
    cannot do the job: .row .field .actions .byline .list .post .quiet .primary .destructive .button .sheet
    plus the header (see Header)
-   Two font sizes (1rem, --small), two weights (400, 600), three spaces, one radius, one border, one focus ring. */
+   Two font sizes (1rem, --small), two weights (400, 600), four spaces, one radius, one border, one focus ring. */
 
 /* Tokens */
 :root {
@@ -18,6 +18,7 @@
   --space-1: 0.5rem; /* a pair that belongs together: label and input, field and help */
   --space-2: 1rem; /* the vertical rhythm, and horizontal padding */
   --space-3: 1.5rem;
+  --space-4: 2.5rem; /* between the page sections: header, footer card */
   --small: 0.875rem;
   --radius: 0.5rem;
   --rule: 1px solid var(--line);
@@ -350,10 +351,8 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
    the select shrinks and clips its text instead of pushing the name off at 320 px.
    <header class="row"><a href="./">FediTap</a><select aria-label="Account">...</select></header> */
 header.row {
-  position: relative;
   flex-wrap: nowrap;
-  padding-block-end: var(--space-1);
-  border-block-end: var(--rule);
+  justify-content: flex-start;
 }
 header.row > a {
   flex: none;
@@ -364,17 +363,30 @@ header.row > a {
 header.row abbr {
   text-decoration: none;
 }
-/* Progress: the one cue that a task is running, drawn over the header's rule (no space of its own). */
-header progress {
-  position: absolute;
-  inset-inline: 0;
-  inset-block-end: -1px;
-  inline-size: 100%;
-  block-size: 0.25rem;
-  accent-color: var(--accent);
+/* Progress: the one cue that a task is running, a dot beside the name that pulses (no space of its own
+   to grow the header). Still under reduced motion: it just stays lit. */
+header .pulse {
+  flex: none;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.2;
+    transform: scale(0.6);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  header .pulse {
+    animation: none;
+  }
 }
 header select {
   flex: 0 1 auto;
+  margin-inline-start: auto;
   min-inline-size: 0;
   max-inline-size: 70%;
   text-overflow: ellipsis;
@@ -413,10 +425,10 @@ header select {
 
 /* Post: the thing being acted on, a plain block with no box or rule of its own.
    <article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">...</footer></article> */
-/* The Shortcut card closes the page, set off from what is above it by one rule. */
-#shortcut-card {
-  padding-block-start: var(--space-2);
-  border-block-start: var(--rule);
+/* Sections of the page are set apart by space, not rules: the header from the content and the Shortcut
+   card from what is above it. The link field and the post it opens are one group and keep the normal gap. */
+main > :is(header + *, #shortcut-card) {
+  margin-block-start: var(--space-4);
 }
 /* Byline: who wrote it, with Follow at the trailing end. The name truncates; the button never wraps. */
 .byline {
@@ -431,9 +443,11 @@ header select {
 .byline .quiet > span {
   display: block;
 }
-/* The grid columns and the minimum width already keep these steady, so the widest-text reserve is not needed. */
+/* The grid columns and the minimum width already keep these steady, so the widest-text reserve is not needed;
+   beside an input the button is only as wide as its label and the read-only input absorbs the change. */
 .actions .reserve,
-.byline .reserve {
+.byline .reserve,
+.row:has(> :is(input, .field)) .reserve {
   display: none;
 }
 .byline > button {

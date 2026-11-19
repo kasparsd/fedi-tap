@@ -12,8 +12,8 @@ test("quick responses show nothing extra", async ({ page }) => {
       for (const record of records) {
         for (const node of record.addedNodes) {
           if (node.nodeType !== 1) continue;
-          const extra = node.matches("progress, #target-loading, #slow");
-          if (extra || node.querySelector("progress, #target-loading, #slow")) {
+          const extra = node.matches(".pulse, #target-loading, #slow");
+          if (extra || node.querySelector(".pulse, #target-loading, #slow")) {
             window.__added.push(node.nodeName);
           }
         }

@@ -5,6 +5,7 @@
 
 <header class="row">
   <a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>
+  {#if app.showProgress}<span class="pulse" role="progressbar" aria-label={app.task?.announce}></span>{/if}
   <select
     id="account-select"
     aria-label="Account"
@@ -20,6 +21,4 @@
     {/each}
     <option value="add">Manage accounts</option>
   </select>
-  <!-- One progress cue for every task, laid over the header's rule so it takes no space. -->
-  {#if app.showProgress}<progress aria-label={app.task?.announce}></progress>{/if}
 </header>
