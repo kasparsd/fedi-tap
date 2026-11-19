@@ -11,5 +11,5 @@
 <p id={ids.status} role="status">{message.status}</p>
 {@render children?.()}
 {#if message.problem}
-  <section id={ids.error}><Problem problem={message.problem} slotId={ids.error} /></section>
+  <section id={ids.error} class="problem"><Problem problem={message.problem} slotId={ids.error} /></section>
 {/if}

@@ -27,7 +27,13 @@
   </article>
 {:else}
   <article id="target-loading" class="post" aria-busy="true">
-    <h2>Opening {host}…</h2>
-    <p class="quiet">Waiting for your server.</p>
+    <h2 class="sr">Loading {host}…</h2>
+    <div class="skeleton" aria-hidden="true">
+      <div class="byline">
+        <div><span></span><span></span><span></span></div>
+        <span class="follow"></span>
+      </div>
+      <div><span></span><span></span><span></span></div>
+    </div>
   </article>
 {/if}

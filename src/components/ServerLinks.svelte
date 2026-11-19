@@ -11,7 +11,7 @@
 </script>
 
 {#if links.length}
-  <h3 id="server-label">On {host}</h3>
+  <h3 id="server-label" class="group-label">Using {host} links</h3>
   <div class="actions" id="server-links" role="group" aria-labelledby="server-label">
     {#each links as { intent, href } (intent)}
       <a id="server-{intent}" class="button" {href} target="_blank" rel="noopener noreferrer">

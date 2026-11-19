@@ -196,6 +196,11 @@ export function intentLink(account, intent, address) {
 
 const SERVER_ACTIONS = ["like", "repost", "reply", "follow", "open"];
 
+/** The actions the account's server advertises, before any post is loaded (what a placeholder reserves). */
+export function advertisedActions(account) {
+  return SERVER_ACTIONS.filter((intent) => account?.intents?.[intent]);
+}
+
 /**
  * The actions the person's own server can open for the loaded post or profile, as `{ intent, href }`
  * in button order. A post offers all five (Follow goes to its verified author); a profile only

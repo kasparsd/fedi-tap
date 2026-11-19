@@ -109,6 +109,7 @@ fieldset {
 legend,
 .sr,
 #task-announce,
+:is(#status, #lookup-status, #action-status, #reauth-status),
 :is([role="status"], [role="alert"]):empty {
   position: absolute;
   inline-size: 1px;
@@ -363,9 +364,9 @@ header.row > a {
 header.row abbr {
   text-decoration: none;
 }
-/* Progress: the one cue that a task is running, a dot beside the name that pulses (no space of its own
-   to grow the header). Still under reduced motion: it just stays lit. */
-header .pulse {
+/* Progress: the cue that a link is loading, a dot at the end of the link field that pulses
+   (no space of its own, so nothing moves). Still under reduced motion: it just stays lit. */
+.pulse {
   flex: none;
   inline-size: 0.5rem;
   block-size: 0.5rem;
@@ -380,7 +381,7 @@ header .pulse {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  header .pulse {
+  .pulse {
     animation: none;
   }
 }
@@ -462,9 +463,6 @@ main > :is(header + *, #shortcut-card) {
 #post[data-loading] {
   opacity: 0.5;
 }
-.post[aria-busy="true"] {
-  min-block-size: 8rem;
-}
 
 /* Disclosure: progressive disclosure with the native element. <details><summary>Details</summary><p>...</p></details> */
 summary {
@@ -505,4 +503,198 @@ section:empty {
 }
 #target-excerpt {
   white-space: pre-line;
+}
+
+/* Card: the opened post is one object in a single outline. The actions on it (through the API, and on
+   the person's own server) are separate groups below it, each under its own heading. */
+.card {
+  border: var(--rule);
+  border-radius: var(--radius);
+}
+.card > .post {
+  padding: var(--space-2);
+}
+.card .post footer,
+.card .post footer > a {
+  min-block-size: 0;
+}
+#lookup + :is(#post, .card) {
+  margin-block-start: var(--space-1);
+}
+.group-label {
+  margin-block-start: var(--space-3);
+}
+#lookup .row {
+  column-gap: var(--space-1);
+}
+/* The dot is a narrow cell at the end of the link field, before Paste. It appears with the progress (the
+   input is read-only then and gives up the room), so the field itself never changes size. */
+.field > .pulse {
+  align-self: center;
+  flex: none;
+  margin-inline: 0 var(--space-1);
+}
+/* Group labels: body text on a top rule that runs out from behind the label, like a fieldset's legend. */
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 400;
+}
+.group-label::before,
+.group-label::after {
+  content: "";
+  border-block-start: var(--rule);
+}
+.group-label::before {
+  inline-size: var(--space-1);
+}
+.group-label::after {
+  flex: 1;
+}
+
+/* Pill: a status or notice laid over the bottom of the screen, one look for all of them (Toast, and the
+   slow-server notice with its Cancel). Inverted colours so it stands apart from the page in light and dark.
+   It takes no room in the page and lets taps through, except on its own button. */
+.pill {
+  position: fixed;
+  z-index: 2;
+  inset-inline: var(--space-2);
+  inset-block-end: max(var(--space-2), env(safe-area-inset-bottom));
+  inline-size: max-content;
+  max-inline-size: min(30rem, calc(100% - 2 * var(--space-2)));
+  margin: 0 auto;
+  padding: var(--space-1) var(--space-2);
+  border-radius: calc(var(--target) / 2);
+  background: CanvasText;
+  color: Canvas;
+  font-size: var(--small);
+  text-align: center;
+  pointer-events: none;
+  animation: pill-in 0.2s ease-out;
+}
+#slow.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: 0;
+}
+#slow.pill > p {
+  padding-block: var(--space-1);
+}
+#slow.pill p {
+  color: inherit;
+}
+#slow.pill button {
+  flex: none;
+  inline-size: auto;
+  min-block-size: var(--target);
+  padding-block: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  pointer-events: auto;
+}
+@keyframes pill-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    animation: none;
+  }
+}
+
+/* Placeholder: grey bars the height of a post's text while it loads, and the action groups held in place
+   (ActionsPlaceholder). They pulse like the dot in the Load button, and sit still under reduced motion. */
+.skeleton {
+  display: grid;
+  gap: var(--space-2);
+}
+#target-loading .skeleton span {
+  display: block;
+  block-size: 1rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--line) 35%, Canvas);
+  animation: skeleton 1.4s ease-in-out infinite;
+}
+.skeleton > div:not(.byline),
+.skeleton .byline > div {
+  display: grid;
+  gap: var(--space-1);
+}
+.skeleton .byline > div {
+  flex: 1;
+}
+.skeleton .byline > div > span:nth-child(1) {
+  inline-size: 50%;
+}
+.skeleton .byline > div > span:nth-child(2) {
+  inline-size: 40%;
+}
+.skeleton .byline > div > span:nth-child(3) {
+  inline-size: 30%;
+}
+.skeleton .follow {
+  flex: none;
+  inline-size: 6.5rem;
+  block-size: var(--target);
+}
+.skeleton > div:not(.byline) > span:nth-child(2) {
+  inline-size: 85%;
+}
+.skeleton > div:not(.byline) > span:nth-child(3) {
+  inline-size: 55%;
+}
+@keyframes skeleton {
+  50% {
+    opacity: 0.4;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #target-loading .skeleton span {
+    animation: none;
+  }
+}
+.placeholder > * + * {
+  margin-block-start: var(--space-1);
+}
+.placeholder > .group-label {
+  margin-block-start: var(--space-3);
+}
+
+/* Problem: the one error card. A heading (the alert's strong), what happened in body text, any buttons, and
+   the rest behind a disclosure. The outline and heading carry the danger colour; the explanation stays
+   readable in the text colour. <section class="problem"><p role="alert"><strong>Title</strong> Cause.</p>
+   <details><summary>Details</summary>...</details></section> */
+.problem {
+  padding: var(--space-2);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+}
+.problem > * + * {
+  margin-block-start: var(--space-1);
+}
+.problem [role="alert"] {
+  color: CanvasText;
+  font-size: 1rem;
+}
+.problem [role="alert"] strong {
+  color: var(--danger);
+}
+.problem > details {
+  margin-block-start: var(--space-1);
+  padding-block-start: var(--space-1);
+  border-block-start: var(--rule);
+}
+.problem > details > summary {
+  min-block-size: 0;
+  padding-block: 0;
+}
+.problem > details > * + * {
+  margin-block-start: var(--space-1);
 }

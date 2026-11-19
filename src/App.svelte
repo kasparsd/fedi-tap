@@ -4,6 +4,7 @@
   import { httpsUrl } from "./lib/url.js";
   import { app, cancelTask, start } from "./state.svelte.js";
   import AccountsSheet from "./components/AccountsSheet.svelte";
+  import ActionsPlaceholder from "./components/ActionsPlaceholder.svelte";
   import ActionButtons from "./components/ActionButtons.svelte";
     import Header from "./components/Header.svelte";
   import LookupForm from "./components/LookupForm.svelte";
@@ -11,6 +12,7 @@
   import ReauthCard from "./components/ReauthCard.svelte";
   import ReplySheet from "./components/ReplySheet.svelte";
   import ServerLinks from "./components/ServerLinks.svelte";
+  import Toast from "./components/Toast.svelte";
   import ShortcutCard from "./components/ShortcutCard.svelte";
   import SignInForm from "./components/SignInForm.svelte";
   import TargetCard from "./components/TargetCard.svelte";
@@ -25,13 +27,13 @@
   const showHomeScreenHint = $derived(app.view === "ready" && !standalone && ios && !app.reauth);
 </script>
 
-<main>
+<main data-view={app.view}>
   <Header />
   <!-- Signed in or out, the form's own label is the visible title. -->
   <h1 id="title" class={usable || app.view === "signed-out" ? "sr" : undefined}>{app.title}</h1>
   <p id="task-announce" role="status">{app.task?.announce ?? ""}</p>
   {#if app.slow}
-    <section id="slow">
+    <section id="slow" class="pill">
       <p role="status">Still waiting for your server…</p>
       {#if app.task?.cancellable}<button type="button" onclick={cancelTask}>Cancel</button>{/if}
     </section>
@@ -68,13 +70,16 @@
       aria-busy={app.opening ? "true" : undefined}
       data-loading={(app.opening && app.showProgress) || app.stale ? "" : undefined}
     >
-      <TargetCard object={app.resolved} />
+      <div class="card">
+        <TargetCard object={app.resolved} />
+      </div>
       {#if !app.resolved.isActor}<ActionButtons />{/if}
       <ServerLinks />
       {#if app.accounts.length > 1 && !grouped}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
     </section>
   {:else if usable && app.opening && app.showProgress}
-    <TargetCard host={openingHost} />
+    <div class="card"><TargetCard host={openingHost} /></div>
+    <ActionsPlaceholder />
   {/if}
 
   <Messages section="actions" />
@@ -105,5 +110,6 @@
   {/if}
 </main>
 
+<Toast />
 <AccountsSheet />
 <ReplySheet />

@@ -33,6 +33,7 @@
 <button
   type="button"
   id={name === "reply" ? "write-reply" : undefined}
+  data-action={name}
   aria-haspopup={name === "reply" ? "dialog" : undefined}
   aria-pressed={toggle ? Boolean(sent) : undefined}
   aria-busy={working ? "true" : undefined}

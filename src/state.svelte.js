@@ -536,8 +536,8 @@ export async function findTarget() {
     },
     {
       key: "open",
-      busyLabel: "Opening…",
-      announce: `Opening ${target.hostname}…`,
+      busyLabel: "Loading…",
+      announce: `Loading ${target.hostname}…`,
       cancellable: true,
       title: "Couldn’t open this link",
     },

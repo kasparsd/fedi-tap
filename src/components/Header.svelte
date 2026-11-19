@@ -5,7 +5,6 @@
 
 <header class="row">
   <a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>
-  {#if app.showProgress}<span class="pulse" role="progressbar" aria-label={app.task?.announce}></span>{/if}
   <select
     id="account-select"
     aria-label="Account"

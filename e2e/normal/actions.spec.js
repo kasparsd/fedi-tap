@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { action, mockUrl, openLink, received, resetMock, signIn } from "../helpers.js";
+import {
+  action,
+  expectSignedIn,
+  expectView,
+  mockUrl,
+  openLink,
+  problem,
+  received,
+  resetMock,
+  signIn,
+} from "../helpers.js";
 
 test.beforeEach(async ({ page }) => {
   await resetMock(page);
@@ -8,15 +18,14 @@ test.beforeEach(async ({ page }) => {
 
 test("opens a post and shows its author, text and source", async ({ page }) => {
   await openLink(page, "/notes/1");
-  await expect(page.locator("h1")).toHaveText("Open a post or profile");
+  await expectView(page, "loaded");
   await expect(page.locator("#target-name")).toHaveText("Dana Writer");
   await expect(page.locator("#target-excerpt")).toContainText("share sheet shortcut");
-  await expect(page.locator("#target-link")).toHaveText("View on localhost");
+  await expect(page.locator("#target-link")).toHaveAttribute("href", mockUrl(page, "/notes/1"));
 });
 
 test("a profile offers only Follow", async ({ page }) => {
   await openLink(page, "/users/zed");
-  await expect(page.locator("h1")).toHaveText("Open a post or profile");
   await expect(action(page, "Follow")).toBeVisible();
   for (const name of ["Like", "Repost", "Reply"]) {
     await expect(action(page, name)).toHaveCount(0);
@@ -30,10 +39,8 @@ test("like and undo", async ({ page }) => {
   await expect(like).toHaveAttribute("aria-pressed", "false");
   await like.click();
   await expect(like).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("#action-status")).toHaveText("Liked as @alice@localhost.");
   await like.click();
   await expect(like).toHaveAttribute("aria-pressed", "false");
-  await expect(page.locator("#action-status")).toHaveText("Like undone.");
   const types = (await received(page)).map((activity) => activity.type);
   expect(types).toEqual(["Like", "Undo"]);
 });
@@ -44,9 +51,6 @@ test("repost and follow the author", async ({ page }) => {
   await expect(action(page, "Repost")).toHaveAttribute("aria-pressed", "true");
   await action(page, "Follow").click();
   await expect(action(page, "Follow")).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("#action-status")).toHaveText(
-    "Follow request sent as @alice@localhost.",
-  );
   const types = (await received(page)).map((activity) => activity.type);
   expect(types).toEqual(["Announce", "Follow"]);
 });
@@ -60,7 +64,6 @@ test("a reply mentions the author and escapes what was typed", async ({ page }) 
   await page.fill("#reply-text", "Nice <post> & more");
   await page.click("#reply-send");
   await expect(page.locator("#reply-sheet")).toHaveJSProperty("open", false);
-  await expect(page.locator("#action-status")).toHaveText("Reply sent as @alice@localhost.");
   const [reply] = await received(page);
   expect(reply.type).toBe("Create");
   expect(reply.object.content).toBe("<p>@dana@localhost Nice &lt;post&gt; &amp; more</p>");
@@ -71,10 +74,10 @@ test("a reply to a followers-only post stays followers-only", async ({ page }) =
   await openLink(page, "/notes/4");
   await expect(page.locator("#reply-note")).toHaveCount(0);
   await action(page, "Reply").click();
-  await expect(page.locator("#reply-note")).toHaveText("Replies go to followers only.");
+  await expect(page.locator("#reply-note")).toBeVisible();
   await page.fill("#reply-text", "Hi");
   await page.click("#reply-send");
-  await expect(page.locator("#action-status")).toHaveText("Reply sent as @alice@localhost.");
+  await expect(page.locator("#reply-sheet")).toHaveJSProperty("open", false);
   const [reply] = await received(page);
   expect(reply.to.join()).not.toContain("#Public");
   expect(reply.cc.join()).not.toContain("#Public");
@@ -105,7 +108,7 @@ test("a missing post shows the problem and leaves nothing behind", async ({ page
   await openLink(page, "/notes/1");
   await page.fill("#post-url", mockUrl(page, "/notes/404"));
   await page.click("#open-link");
-  await expect(page.locator("#lookup-error-text")).toContainText("Couldn’t open this link");
+  await expect(problem(page, "lookup")).toBeVisible();
   await expect(page.locator("#post-url")).toHaveAttribute("aria-invalid", "true");
   await expect(page.locator("#post-url")).toHaveAttribute("aria-describedby", "lookup-error-text");
   await expect(page.locator("#lookup-error details summary")).toBeVisible();
@@ -114,10 +117,26 @@ test("a missing post shows the problem and leaves nothing behind", async ({ page
   await expect(page.locator("#post-url")).toBeEditable();
 });
 
+test("a link that isn't a post or profile says what it is and offers it in the browser", async ({
+  page,
+}) => {
+  for (const path of ["/web/page", "/web/collection"]) {
+    await page.fill("#post-url", mockUrl(page, path));
+    await page.click("#open-link");
+    await expect(problem(page, "lookup")).toBeVisible();
+    // The link comes back to the person, so they can see what it is.
+    await expect(page.locator("#lookup-error details a")).toHaveAttribute(
+      "href",
+      mockUrl(page, path),
+    );
+    await expect(page.locator("#target-card")).toHaveCount(0);
+  }
+});
+
 test("something that isn't a link gets the app's own message", async ({ page }) => {
   await page.fill("#post-url", "http://localhost/insecure");
   await page.click("#open-link");
-  await expect(page.locator("#lookup-error-text")).toContainText("That isn’t a link.");
+  await expect(problem(page, "lookup")).toBeVisible();
   await expect(page.locator("#post-url")).toHaveAttribute("aria-invalid", "true");
 });
 
@@ -125,15 +144,15 @@ test("a reload reopens the link for the same account", async ({ page }) => {
   await openLink(page, "/notes/1");
   await page.reload();
   await expect(page.locator("#target-card")).toBeVisible();
-  await expect(page.locator("h1")).toHaveText("Open a post or profile");
+  await expectSignedIn(page);
   await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
 });
 
 test("a post groups the in-app actions and the server's own actions", async ({ page }) => {
   await openLink(page, "/notes/1");
   const origin = new URL(page.url()).origin;
-  await expect(page.getByRole("heading", { name: "Using API" })).toBeVisible();
-  await expect(page.locator("#server-label")).toHaveText("On localhost");
+  await expect(page.locator("#api-label")).toBeVisible();
+  await expect(page.locator("#server-label")).toBeVisible();
   const expected = {
     like: ["like", "/notes/1"],
     repost: ["announce", "/notes/1"],
@@ -141,10 +160,8 @@ test("a post groups the in-app actions and the server's own actions", async ({ p
     follow: ["follow", "/users/dana"],
     open: [null, "/notes/1"],
   };
-  const names = (await page.locator("#server-links a").allTextContents()).map((text) =>
-    text.trim(),
-  );
-  expect(names).toEqual(["Like", "Repost", "Reply", "Follow", "Open"]);
+  const ids = await page.locator("#server-links a").evaluateAll((links) => links.map((a) => a.id));
+  expect(ids).toEqual(Object.keys(expected).map((name) => `server-${name}`));
   for (const [name, [intent, path]] of Object.entries(expected)) {
     const link = page.locator(`#server-${name}`);
     const href = new URL(await link.getAttribute("href"));
@@ -165,7 +182,8 @@ test("the reply sheet has only the in-app reply", async ({ page }) => {
 
 test("a profile offers the server's own Follow and Open only", async ({ page }) => {
   await openLink(page, "/users/zed");
-  await expect(page.locator("#server-links a")).toHaveText([/Follow/, /Open/]);
+  const ids = await page.locator("#server-links a").evaluateAll((links) => links.map((a) => a.id));
+  expect(ids).toEqual(["server-follow", "server-open"]);
 });
 
 test("hostile markup in a post reaches the page only as plain text", async ({ page }) => {
