@@ -11,13 +11,13 @@ FediTap is a small static web app. Open it in a browser, connect your account, p
 
 ## How it looks
 
-Share a link from any app, choose **⁂tap**, and FediTap opens with the link already loaded, ready to like, repost, reply or follow from your own account. You don't copy the link or switch apps to find the post.
+Share a link from any app, choose **Open in Fediverse**, and FediTap opens with the link already loaded, ready to like, repost, reply or follow from your own account. You don't copy the link or switch apps to find the post.
 
 | 1. Share | 2. Connect once | 3. Choose | 4. Reply | 5. Done |
 |:---:|:---:|:---:|:---:|:---:|
-| <img src="docs/images/share-sheet.jpg" width="170" alt="Safari's share sheet on a blog post, with ⁂tap next to Copy"> | <img src="docs/images/connect.png" width="170" alt="FediTap opened with the shared link and a field to connect an account"> | <img src="docs/images/actions.png" width="170" alt="The post with its author and the Like, Repost, Reply and Follow buttons"> | <img src="docs/images/reply.png" width="170" alt="The reply sheet, naming the author and your account and saying replies are public"> | <img src="docs/images/done.png" width="170" alt="The post, Liked, and a note that the reply was sent"> |
+| <img src="docs/images/share-sheet.jpg" width="170" alt="Safari's share sheet on a blog post, with Open in Fediverse next to Copy"> | <img src="docs/images/connect.png" width="170" alt="FediTap opened with the shared link and a field to connect an account"> | <img src="docs/images/actions.png" width="170" alt="The post with its author and the Like, Repost, Reply and Follow buttons"> | <img src="docs/images/reply.png" width="170" alt="The reply sheet, naming the author and your account and saying replies are public"> | <img src="docs/images/done.png" width="170" alt="The post, Liked, and a note that the reply was sent"> |
 
-1. In the share sheet of any app (Safari here), choose **⁂tap**. To keep it in the top row, scroll the sheet to **Edit Actions** and add ⁂tap to Favorites.
+1. In the share sheet of any app (Safari here), choose **Open in Fediverse**. To keep it in the top row, scroll the sheet to **Edit Actions** and add Open in Fediverse to Favorites.
 2. The first time, connect your account. FediTap keeps the link while you approve access on your own server, then opens it.
 3. The post appears with its author and four buttons, and nothing is sent until you press one.
 4. Reply opens a sheet that says who it is to, which account it is from and that replies are public.
@@ -25,7 +25,7 @@ Share a link from any app, choose **⁂tap**, and FediTap opens with the link al
 
 iOS asks once whether the Shortcut may send the link to the page, and shows the page's address. Choose **Allow Once**, or **Always Allow** to stop being asked.
 
-<img src="docs/images/permission.jpg" width="170" alt="The iOS prompt: allow ⁂tap to send 1 Safari item to kasparsd.github.io">
+<img src="docs/images/permission.jpg" width="170" alt="The iOS prompt: allow Open in Fediverse to send 1 Safari item to kasparsd.github.io">
 
 The screenshots are an iPhone in dark mode with the published page and Shortcut. The account is a made-up one on the local mock server, and the shared post is a public blog post. [docs/development.md](docs/development.md#test-the-shortcut-in-the-ios-simulator) says how to repeat them.
 
@@ -52,8 +52,8 @@ Lemmy and Misskey use different APIs and are not supported. FediTap picks the ba
 
 1. Open FediTap and enter your handle (`@you@example.social`) or a link to your profile. Approve access on your home server.
 2. Choose **Paste** in the link field, or type a link and choose **Open**, then choose an action.
-3. On iPhone, iPad or Mac, choose **Add Apple Shortcut**, open the file in Shortcuts and add it. Share a Fediverse link to **⁂tap** to open the page with the link filled in.
-4. On Android, install the app from your browser's menu (**Install app** or **Add to Home screen**). Then share a Fediverse link to **⁂tap** from the share sheet, and long-press the home-screen icon for **Paste a link**. Sharing works in Chrome, Edge, Brave and Samsung Internet; Firefox for Android doesn't reliably support it.
+3. On iPhone, iPad or Mac, choose **Add Apple Shortcut**, open the file in Shortcuts and add it. Share a Fediverse link to **Open in Fediverse** to open the page with the link filled in.
+4. On Android, install the app from your browser's menu (**Install app** or **Add to Home screen**). Then share a Fediverse link to **Open in Fediverse** from the share sheet, and long-press the home-screen icon for **Paste a link**. Sharing works in Chrome, Edge, Brave and Samsung Internet; Firefox for Android doesn't reliably support it.
 
 ## Privacy and security
 

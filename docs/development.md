@@ -4,7 +4,7 @@
 
 The app is a Svelte 5 single-page app built with Vite into a static `dist/` folder. `.github/workflows/pages.yml` validates, builds and publishes `dist/` to GitHub Pages on every push to `main`. One-time setup: **Settings › Pages › Build and deployment › Source: GitHub Actions**. The published directory should be `https://kasparsd.github.io/fedi-tap/`. [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)
 
-Everything under `public/` (`client.json`, `manifest.webmanifest`, the icons and the signed `⁂tap.shortcut`) is copied to `dist/` unchanged. The build uses relative URLs (`base: "./"`), so the page works under any path.
+Everything under `public/` (`client.json`, `manifest.webmanifest`, the icons and the signed `Open in Fediverse.shortcut`) is copied to `dist/` unchanged. The build uses relative URLs (`base: "./"`), so the page works under any path.
 
 For a different permanent URL, update `client_id`, `client_uri`, and `redirect_uris` in `public/client.json` together, and update `page` in `fedi-tap.cherri` before signing another copy. The Shortcut's icon (`#define color lightblue`, `#define glyph asterisk`) is limited to Apple's built-in glyphs and colours; iOS shows only the glyph in the share sheet. The client ID must match the exact HTTPS URL that serves `client.json`. The redirect URI must match the setup page URL, including its trailing slash. Once people connect, keep both URLs stable. Verify that `client.json` returns HTTP 200 with `Content-Type: application/json`.
 
@@ -100,7 +100,7 @@ src/lib/                protocol code with no framework or page access (unit-tes
 src/lib/activitypub/    the ActivityPub client-to-server backend
 src/lib/mastodon/       the Mastodon API backend (api, discovery, signin, actions)
 src/test-helpers.js     fake fetch for unit tests
-public/                 copied to dist/ as is: client.json, manifest, icons, ⁂tap.shortcut
+public/                 copied to dist/ as is: client.json, manifest, icons, Open in Fediverse.shortcut
 tools/mock-server.js    the mock ActivityPub, Mastodon API and OAuth server (Vite plugin)
 tools/scripts/          check.js (static checks), try.js (command-line client)
 e2e/                    Playwright end-to-end tests, one folder per mock server (normal, fast, slow, built)
@@ -175,18 +175,18 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 
 ## Build the shortcut
 
-On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `fedi-tap.cherri` and signs `public/⁂tap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
+On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `fedi-tap.cherri` and signs `public/Open in Fediverse.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
 The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, so the page can tell a Shortcut launch from a typed address; the page removes the parameter from the address bar. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
 
 ### Test the Shortcut in the iOS Simulator
 
-The whole path (the real share sheet, the published Shortcut, the published page, and a local account server) runs in the iOS Simulator, so nobody needs a device to check the Shortcut or the shared-link handling. The simulator ships the Shortcuts app and Safari's share sheet. Nothing is rebuilt or re-signed: the committed `⁂tap` Shortcut opens `https://kasparsd.github.io/fedi-tap/`, and that page talks to the mock server on your Mac (the page needs only HTTPS, and Safari lets it call `https://localhost`).
+The whole path (the real share sheet, the published Shortcut, the published page, and a local account server) runs in the iOS Simulator, so nobody needs a device to check the Shortcut or the shared-link handling. The simulator ships the Shortcuts app and Safari's share sheet. Nothing is rebuilt or re-signed: the committed **Open in Fediverse** Shortcut opens `https://kasparsd.github.io/fedi-tap/`, and that page talks to the mock server on your Mac (the page needs only HTTPS, and Safari lets it call `https://localhost`).
 
 1. Start the mock with the published page allowed as its OAuth client: `PAGE=https://kasparsd.github.io/fedi-tap/ npm run dev` (or `npm run preview`). `PAGE` makes the mock accept that page's client ID and redirect. The mock answers CORS itself for any origin, and the Vite server's own CORS is off (`cors: false` in `vite.config.js`) because it only allows localhost origins and would reject the preflight from github.io. Port 8443 is the default; `PORT` changes it.
 2. Boot a simulator and let it trust the mkcert certificate the mock uses: `xcrun simctl boot <device>` and `xcrun simctl keychain booted add-root-cert "$(mkcert -CAROOT)/rootCA.pem"`.
-3. In the simulator's Safari open the published page and choose **Add Shortcut**: Safari offers the download, then **Downloads** (the toolbar menu) opens it in Shortcuts, where **Add Shortcut** installs it ("Appears in Share Sheet"). If an earlier download took the plain name the Shortcut arrives as "⁂tap 2"; delete the old one in Shortcuts first, or rename it.
-4. Open a post in Safari and choose **Share**, then **⁂tap** (under **View More**; **Edit Actions** at the bottom of the sheet pins it beside Copy). iOS asks once whether ⁂tap may send the Safari item to `kasparsd.github.io`; choose **Allow Once**. The page opens with the link filled in. Connect with the profile link `https://localhost:8443/users/alice` (or any user in the table above), approve on the mock's page, and the post loads.
+3. In the simulator's Safari open the published page and choose **Add Shortcut**: Safari offers the download, then **Downloads** (the toolbar menu) opens it in Shortcuts, where **Add Shortcut** installs it ("Appears in Share Sheet"). If an earlier download took the plain name the Shortcut arrives as "Open in Fediverse 2"; delete the old one in Shortcuts first, or rename it.
+4. Open a post in Safari and choose **Share**, then **Open in Fediverse** (under **View More**; **Edit Actions** at the bottom of the sheet pins it beside Copy). iOS asks once whether Open in Fediverse may send the Safari item to `kasparsd.github.io`; choose **Allow Once**. The page opens with the link filled in. Connect with the profile link `https://localhost:8443/users/alice` (or any user in the table above), approve on the mock's page, and the post loads.
 5. Check what the page sent at `https://localhost:8443/_dev/activities`.
 
 The mock resolves the fixture posts (the `/notes/N` addresses, `https://social.example/@dana/1` and `@zed/2`) and one real post address, `https://kaspars.net/blog/high-power-capacity-battery-power-tools`, which it answers the way the ActivityPub plugin federates a post (note 6, with `id` and `url` on kaspars.net). Share that address from Safari to see a real page in the share sheet with the mock behind it. Any other address your account's proxy cannot resolve shows "Couldn't open this link".
@@ -196,6 +196,8 @@ Tips for driving it with the simulator control tool: take a screenshot after eac
 ### Screenshots for the README
 
 `docs/images/` holds the screenshots the README shows. They come from the flow above, in dark mode, on an iPhone 17 Pro simulator, against the published page and the mock (fictional account `@alice@localhost`, the real kaspars.net post as the shared link). To retake them: `xcrun simctl ui booted appearance dark`, a clean status bar with `xcrun simctl status_bar booted override --time 9:41 --batteryState discharging --batteryLevel 100 --cellularBars 4 --wifiBars 3`, and `xcrun simctl io booted screenshot --type=png <file>` at each step (share sheet, the iOS prompt, sign-in, the post and actions, the reply sheet, the result). Resize to 600 px wide with `sips --resampleWidth 600`; keep the blurred share sheet and prompt as JPEG and the flat page screens as PNG. Screenshots show the published page on the day they were taken, so retake them when the page changes visibly.
+
+The published page can lag behind `main`. To retake the screenshots before a deploy, serve the current build with `PORT=8450 npm run dev` and compile a throwaway copy of `fedi-tap.cherri` whose `page` is `https://localhost:8450/`; build and sign it as in `build-shortcut.sh`, and never commit it. Use a dedicated simulator (`xcrun simctl create`) so other sessions that drive the default one don't change the screen, and add the mkcert root certificate to it. The iOS prompt then names `localhost` instead of the published host, so retake `permission.jpg` against the published page once it is deployed.
 
 ## Account storage
 
