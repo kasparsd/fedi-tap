@@ -59,16 +59,17 @@ main {
 :where(h1, h2, h3) + * {
   margin-block-start: var(--space-1);
 }
-/* Inside a disclosure the centred summary's own padding is the gap to the body; items after that are --space-1 apart. */
-:where(details) > * + * {
-  margin-block-start: var(--space-1);
-}
+/* The centred summary's own padding is the gap to the body, so the body needs no margin of its own. */
 :where(details > summary) + * {
   margin-block-start: 0;
 }
 /* Disclosures that follow each other sit together; the summary's own height is the gap. */
 :where(details) + details {
   margin-block-start: 0;
+}
+/* A button's edge reads closer than a line of text, so half a step makes up the difference. */
+details[open]:has(> .button:last-child) {
+  margin-block-end: calc(var(--space-1) / 2);
 }
 h1,
 h2,
