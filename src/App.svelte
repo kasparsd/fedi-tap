@@ -2,10 +2,11 @@
   import { serverActions } from "./lib/discovery.js";
   import { httpsUrl } from "./lib/url.js";
   import { app, cancelTask, start } from "./state.svelte.js";
+  import AboutFooter from "./components/AboutFooter.svelte";
   import AccountsSheet from "./components/AccountsSheet.svelte";
   import ActionsPlaceholder from "./components/ActionsPlaceholder.svelte";
   import ActionButtons from "./components/ActionButtons.svelte";
-    import Header from "./components/Header.svelte";
+  import Header from "./components/Header.svelte";
   import LookupForm from "./components/LookupForm.svelte";
   import Messages from "./components/Messages.svelte";
   import ReauthCard from "./components/ReauthCard.svelte";
@@ -23,6 +24,7 @@
   const usable = $derived(app.view === "ready" || app.view === "loaded");
   const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
   const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
+  let aboutFooter = $state();
 </script>
 
 <main data-view={app.view}>
@@ -53,7 +55,10 @@
       </section>
     {/if}
     <SignInForm />
-    <p class="quiet">Works with Mastodon, WordPress and other ActivityPub servers.</p>
+    <p class="quiet">
+      Works with Mastodon, WordPress with the ActivityPub plugin, and other compatible servers.
+      <a href="#how-it-works" onclick={() => aboutFooter?.showDetails()}>Learn more</a>
+    </p>
   {:else if app.view === "unsupported"}
     <Unsupported />
   {/if}
@@ -83,25 +88,9 @@
   <Messages section="actions" />
 
   {#if app.view !== "unsupported"}<ShortcutCard />{/if}
-
-  {#if app.view === "signed-out"}
-    <details>
-      <summary>Supported servers</summary>
-      <p class="quiet">
-        Mastodon, GoToSocial, Pleroma and Akkoma work as they are. Pixelfed should, but is less
-        tested.
-      </p>
-      <p class="quiet">
-        WordPress needs the ActivityPub plugin with its API turned on. Other servers need the
-        ActivityPub client API.
-        <a href="https://activitypub.blog/2026/04/22/8-1-0-by-the-numbers/">Setup instructions</a>
-      </p>
-      <p class="quiet">Lemmy and Misskey are not supported.</p>
-    </details>
-  {/if}
-
 </main>
 
+<AboutFooter bind:this={aboutFooter} />
 <Toast />
 <AccountsSheet />
 <ReplySheet />
