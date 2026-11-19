@@ -109,7 +109,7 @@ test("a reload reopens the link for the same account", async ({ page }) => {
 test("a post groups the in-app actions and the server's own actions", async ({ page }) => {
   await openLink(page, "/notes/1");
   const origin = new URL(page.url()).origin;
-  await expect(page.getByRole("heading", { name: "Using API as @alice@localhost" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Using API" })).toBeVisible();
   await expect(page.locator("#server-label")).toHaveText("On localhost");
   const expected = {
     like: ["like", "/notes/1"],

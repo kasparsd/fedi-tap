@@ -9,7 +9,7 @@
   const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
 </script>
 
-{#if grouped}<h3 id="api-label">Using API as @{app.current.handle}</h3>{/if}
+{#if grouped}<h3 id="api-label">Using API</h3>{/if}
 <fieldset id="action-controls">
   <legend>Actions</legend>
   <div class="actions">
