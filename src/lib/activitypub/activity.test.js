@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AS_PROFILE, PUBLIC } from "../constants.js";
-import { makeActivity, mentionOf, replyHtml } from "./activity.js";
+import { audienceOf, makeActivity, mentionOf, replyHtml } from "./activity.js";
 
 const author = "https://social.example/users/dana";
 const post = {
@@ -8,6 +8,7 @@ const post = {
   author,
   isActor: false,
   mention: "@dana@social.example",
+  visibility: "public",
 };
 const account = { followers: "https://home.example/users/me/followers" };
 
@@ -67,6 +68,24 @@ describe("makeActivity", () => {
     ]);
   });
 
+  it("keeps a reply no more visible than the post it answers", () => {
+    const reply = (visibility) =>
+      makeActivity("reply", { ...post, visibility }, account, "Hi").object;
+    expect(reply("public")).toMatchObject({ to: [PUBLIC], cc: [author] });
+    expect(reply("unlisted")).toMatchObject({ to: [account.followers], cc: [PUBLIC, author] });
+    expect(reply("private")).toMatchObject({ to: [account.followers], cc: [author] });
+    expect(reply("direct")).toMatchObject({ to: [author], cc: [] });
+    for (const unknown of [null, undefined]) {
+      expect(() =>
+        makeActivity("reply", { ...post, visibility: unknown }, account, "Hi"),
+      ).toThrow();
+    }
+    expect(() =>
+      makeActivity("reply", { ...post, visibility: "direct", author: null }, account, "Hi"),
+    ).toThrow();
+    expect(() => makeActivity("reply", { ...post, visibility: "private" }, {}, "Hi")).toThrow();
+  });
+
   it("refuses an empty reply, a follow without a verified author and a like on a profile", () => {
     expect(() => makeActivity("reply", post, account, "")).toThrow("Write a reply first.");
     expect(() => makeActivity("follow", { ...post, author: null }, account)).toThrow();
@@ -75,5 +94,22 @@ describe("makeActivity", () => {
 
   it("follows the verified author", () => {
     expect(makeActivity("follow", post, account)).toMatchObject({ type: "Follow", object: author });
+  });
+});
+
+describe("audienceOf", () => {
+  const followers = "https://social.example/users/dana/followers";
+  it("reads the audience from to and cc", () => {
+    expect(audienceOf({ to: [PUBLIC], cc: [followers] }, followers)).toBe("public");
+    expect(audienceOf({ to: "as:Public" }, followers)).toBe("public");
+    expect(audienceOf({ to: [followers], cc: [PUBLIC] }, followers)).toBe("unlisted");
+    expect(audienceOf({ to: [followers] }, followers)).toBe("private");
+    expect(audienceOf({ to: [author], cc: [] }, followers)).toBe("direct");
+    expect(audienceOf({ to: [followers] }, undefined)).toBe("direct");
+  });
+
+  it("is unknown when the post names no recipients", () => {
+    expect(audienceOf({}, followers)).toBeNull();
+    expect(audienceOf({ to: [], cc: [] }, followers)).toBeNull();
   });
 });

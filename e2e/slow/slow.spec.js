@@ -21,6 +21,8 @@ test("opening a link can be cancelled, and the same link opens afterwards", asyn
   await expect(page.locator("#target-loading")).toHaveCount(0);
   await expect(page.locator("#lookup-error")).toHaveCount(0);
   await expect(page.locator("#post-url")).toBeEditable();
+  await expect(page.locator("#post-url")).not.toHaveAttribute("aria-describedby", /.+/);
+  await expect(page.locator("#post-url")).not.toHaveAttribute("aria-invalid", "true");
   expect(await shownText(page.locator("#open-link"))).toBe("Open");
   await expect(page.locator("h1")).toHaveText("Open a post or profile");
 

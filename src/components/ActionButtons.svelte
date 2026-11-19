@@ -6,6 +6,7 @@
   import ActionButton from "./ActionButton.svelte";
 
   // Two groups when the person's server also offers the actions: name each, so it is clear which acts how.
+  const replyUnknown = $derived(!app.resolved.isActor && !app.resolved.visibility);
   const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
 </script>
 
@@ -17,4 +18,9 @@
     <ActionButton name="repost" />
     <ActionButton name="reply" />
   </div>
+  {#if replyUnknown}
+    <p id="reply-unavailable" class="quiet">
+      This post doesn’t say who can see it, so FediTap can’t reply to it safely.
+    </p>
+  {/if}
 </fieldset>

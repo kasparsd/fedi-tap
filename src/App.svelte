@@ -64,9 +64,9 @@
   {#if app.view === "loaded"}
     <section
       id="post"
-      inert={app.opening}
+      inert={app.opening || app.stale}
       aria-busy={app.opening ? "true" : undefined}
-      data-loading={app.opening && app.showProgress ? "" : undefined}
+      data-loading={(app.opening && app.showProgress) || app.stale ? "" : undefined}
     >
       <TargetCard object={app.resolved} />
       {#if !app.resolved.isActor}<ActionButtons />{/if}

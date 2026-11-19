@@ -295,13 +295,16 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
    svg, so state is shown by more than colour. <div class="actions"><button aria-pressed="false"><svg>…</svg>Like</button></div> */
 .actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Three across while they fit; larger text (rem grows with it) makes fewer, wider columns. */
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
   gap: var(--space-1);
 }
 .actions :is(button, .button),
 .byline button {
   gap: 0.25rem;
   padding-inline: var(--space-1);
+}
+.byline button {
   white-space: nowrap;
 }
 .actions svg,
@@ -320,8 +323,8 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   fill: currentColor;
 }
 
-/* Row: items side by side that wrap, spread to the edges. A row that holds an input never wraps: the
-   input shrinks, the button keeps its width. <div class="row"><input><button class="primary">Open</button></div> */
+/* Row: items side by side that wrap, spread to the edges. A row that holds an input keeps the button beside
+   it until enlarged text leaves the input under 10rem, then the button wraps. <div class="row"><input><button class="primary">Open</button></div> */
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -332,11 +335,8 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
 .row > * {
   margin-block: 0;
 }
-.row:has(> :is(input, .field)) {
-  flex-wrap: nowrap;
-}
 .row > :is(input, .field) {
-  flex: 1 1 0;
+  flex: 1 1 10rem; /* wraps the button below only when text is enlarged enough to squeeze the input */
   inline-size: auto;
   min-inline-size: 0;
 }

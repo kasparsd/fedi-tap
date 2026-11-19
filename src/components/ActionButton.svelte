@@ -12,8 +12,11 @@
   const toggle = $derived(name !== "reply");
   const key = $derived(app.busyKey === `undo:${name}` ? `undo:${name}` : `act:${name}`);
   const working = $derived(app.busyKey === key);
-  // A server that gave no way to undo leaves the button on and not pressable.
-  const locked = $derived(toggle && Boolean(sent) && !sent.undo);
+  // A server that gave no way to undo leaves the button on and not pressable. Reply is not pressable
+  // when the post doesn't say who may see it, since a reply could then reach more people than it did.
+  const locked = $derived(
+    (toggle && Boolean(sent) && !sent.undo) || (name === "reply" && !object.visibility),
+  );
   // A profile offers only Follow; a post whose author couldn't be verified offers no Follow.
   const hidden = $derived(
     object.isActor ? name !== "follow" : name === "follow" && !object.author,
