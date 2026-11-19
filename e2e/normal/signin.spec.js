@@ -89,23 +89,13 @@ test.describe("unsupported", () => {
   });
 });
 
-test.describe("on an iPhone", () => {
-  test.use({
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-    hasTouch: true,
-    isMobile: true,
-  });
-
-  test("shows the Home Screen hint with the Shortcut", async ({ page }) => {
-    await signIn(page, "alice");
-    await expect(page.locator("#shortcut-card")).toBeVisible();
-    await expect(page.locator("#a2hs")).toBeVisible();
-  });
-});
-
-test("desktop browsers get the Shortcut but no Home Screen hint", async ({ page }) => {
+test("both setup options show on every device, closed", async ({ page }) => {
   await signIn(page, "alice");
   await expect(page.locator("#shortcut-card")).toBeVisible();
-  await expect(page.locator("#a2hs")).toHaveCount(0);
+  for (const id of ["#shortcut-apple", "#shortcut-android"]) {
+    await expect(page.locator(id)).toBeVisible();
+    await expect(page.locator(id)).not.toHaveAttribute("open", "");
+  }
+  await page.locator("#shortcut-android summary").click();
+  await expect(page.locator("#shortcut-android")).toContainText("Add to Home screen");
 });
