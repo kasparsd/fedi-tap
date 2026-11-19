@@ -105,3 +105,42 @@ test("a reload reopens the link for the same account", async ({ page }) => {
   await expect(page.locator("h1")).toHaveText("Open a post or profile");
   await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
 });
+
+test("a post groups the in-app actions and the server's own actions", async ({ page }) => {
+  await openLink(page, "/notes/1");
+  const origin = new URL(page.url()).origin;
+  await expect(page.getByRole("heading", { name: "Using API as @alice@localhost" })).toBeVisible();
+  await expect(page.locator("#server-label")).toHaveText("On localhost");
+  const expected = {
+    like: ["like", "/notes/1"],
+    repost: ["announce", "/notes/1"],
+    reply: ["create", "/notes/1"],
+    follow: ["follow", "/users/dana"],
+    open: [null, "/notes/1"],
+  };
+  const names = (await page.locator("#server-links a").allTextContents()).map((text) =>
+    text.trim(),
+  );
+  expect(names).toEqual(["Like", "Repost", "Reply", "Follow", "Open"]);
+  for (const [name, [intent, path]] of Object.entries(expected)) {
+    const link = page.locator(`#server-${name}`);
+    const href = new URL(await link.getAttribute("href"));
+    expect(href.pathname).toBe("/interactions");
+    expect(href.searchParams.get("uri")).toBe(`${origin}${path}`);
+    expect(href.searchParams.get("intent")).toBe(intent);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+});
+
+test("the reply sheet has only the in-app reply", async ({ page }) => {
+  await openLink(page, "/notes/1");
+  await action(page, "Reply").click();
+  await expect(page.locator("#reply-text")).toBeVisible();
+  await expect(page.locator("#reply-sheet a")).toHaveCount(0);
+});
+
+test("a profile offers the server's own Follow and Open only", async ({ page }) => {
+  await openLink(page, "/users/zed");
+  await expect(page.locator("#server-links a")).toHaveText([/Follow/, /Open/]);
+});

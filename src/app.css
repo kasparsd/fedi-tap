@@ -49,17 +49,18 @@ main {
     max(var(--space-2), env(safe-area-inset-right)) max(var(--space-3), env(safe-area-inset-bottom))
     max(var(--space-2), env(safe-area-inset-left));
 }
-:where(h1, h2, p, ul, ol, fieldset) {
+:where(h1, h2, h3, p, ul, ol, fieldset) {
   margin: 0;
 }
 :where(main, section, article, form, fieldset, details, dialog) > * + * {
   margin-block-start: var(--space-2);
 }
-:where(h1, h2) + * {
+:where(h1, h2, h3) + * {
   margin-block-start: var(--space-1);
 }
 h1,
 h2,
+h3,
 strong,
 label {
   font-size: inherit;
@@ -282,7 +283,7 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-1);
 }
-.actions button,
+.actions :is(button, .button),
 .byline button {
   gap: 0.25rem;
   padding-inline: var(--space-1);
@@ -396,9 +397,10 @@ header select {
   border-radius: 0;
 }
 
-/* Post: the thing being acted on, set off by one rule, not a box.
+/* Post: the thing being acted on, a plain block with no box or rule of its own.
    <article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">...</footer></article> */
-.post {
+/* The Shortcut card closes the page, set off from what is above it by one rule. */
+#shortcut-card {
   padding-block-start: var(--space-2);
   border-block-start: var(--rule);
 }

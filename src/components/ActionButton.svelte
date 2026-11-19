@@ -2,6 +2,7 @@
   // One action: Like, Repost and Follow toggle (pressing one that is on undoes it); Reply opens its sheet.
   import { ACTIONS } from "../lib/constants.js";
   import { actionLabel, app, doneLabel, openReply, perform, sentFor, undoLast } from "../state.svelte.js";
+  import ActionIcon from "./ActionIcon.svelte";
   import BusyLabel from "./BusyLabel.svelte";
 
   let { name } = $props();
@@ -26,22 +27,6 @@
   }
 </script>
 
-{#snippet icon(name)}
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    {#if name === "like"}
-      <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z" />
-    {:else if name === "repost"}
-      <path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3" />
-    {:else if name === "reply"}
-      <path
-        d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 12 3a8.5 8.5 0 0 1 9 8.5z"
-      />
-    {:else}
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6" />
-    {/if}
-  </svg>
-{/snippet}
-
 <button
   type="button"
   id={name === "reply" ? "write-reply" : undefined}
@@ -52,7 +37,7 @@
   {hidden}
   onclick={press}
 >
-  {@render icon(name)}
+  <ActionIcon {name} />
   <BusyLabel
     {key}
     idle={sent ? doneLabel(name) : actionLabel(name)}
