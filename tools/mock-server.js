@@ -99,7 +99,7 @@ const NOTES = {
     visibility: "private",
   },
   // A real blog post, as the WordPress ActivityPub plugin federates it: used for the README screenshots.
-  5: {
+  6: {
     author: "kaspars",
     id: "https://kaspars.net/blog/high-power-capacity-battery-power-tools",
     url: "https://kaspars.net/blog/high-power-capacity-battery-power-tools",
@@ -114,7 +114,7 @@ const TARGET_ALIASES = {
   "https://social.example/@dana/1": { type: "note", key: 1 },
   "https://social.example/@zed/2": { type: "note", key: 2 },
   "https://social.example/@zed": { type: "actor", key: "zed" },
-  "https://kaspars.net/blog/high-power-capacity-battery-power-tools": { type: "note", key: 5 },
+  "https://kaspars.net/blog/high-power-capacity-battery-power-tools": { type: "note", key: 6 },
   "https://kaspars.net/author/kaspars": { type: "actor", key: "kaspars" },
 };
 
