@@ -48,7 +48,7 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 
 ## Open items for the owner
 
-- Rebuild and sign `⁂tap.shortcut` after the `fedi-tap.cherri` change (`?via=shortcut` for the no-link launch).
+- Rebuild and sign `Open in Fediverse.shortcut` after the `fedi-tap.cherri` change (`?via=shortcut` for the no-link launch).
 - Decide whether the Home Screen app is a fully supported path once the device test is done.
 - Confirm Undo support with the WordPress ActivityPub plugin (activity ID exposed through CORS).
 - Confirm the WordPress plugin sends `Access-Control-Expose-Headers: Location` on outbox responses; until then Undo never appears there.

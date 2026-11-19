@@ -8,7 +8,7 @@ if [[ $# -gt 1 || (${1:-} != "" && ${1:-} != --unsigned) ]]; then
 fi
 
 stage=$(mktemp -d)
-name="⁂tap"
+name="Open in Fediverse"
 trap 'rm -f -- "$stage/fedi-tap.cherri" "$stage/${name}_unsigned.shortcut" "$stage/$name.shortcut"; rmdir -- "$stage"' EXIT
 cp "$project_dir/fedi-tap.cherri" "$stage/fedi-tap.cherri"
 cherri "$stage/fedi-tap.cherri" --skip-sign --no-ansi

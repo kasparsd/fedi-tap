@@ -1,4 +1,4 @@
-#define name ⁂tap
+#define name Open in Fediverse
 #define inputs text, url
 #define from sharesheet
 #define color lightblue
