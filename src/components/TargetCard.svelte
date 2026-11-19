@@ -27,7 +27,7 @@
   </article>
 {:else}
   <article id="target-loading" class="post" aria-busy="true">
-    <h2>Loading {host}…</h2>
+    <h2 class="sr">Loading {host}…</h2>
     <div class="skeleton" aria-hidden="true">
       <div class="byline">
         <div><span></span><span></span><span></span></div>
