@@ -22,3 +22,11 @@ test("a rejected token asks to sign in again", async ({ page }) => {
   await expect(page.locator("#reauth")).toBeVisible();
   await expect(page.locator("#reauth-text")).toContainText("Reconnect as");
 });
+
+test("a Mastodon-style server offers only Open on its own site", async ({ page }) => {
+  await signIn(page, "mario");
+  await openLink(page, "/notes/1");
+  await expect(page.locator("#server-links a")).toHaveText([/Open/]);
+  await action(page, "Reply").click();
+  await expect(page.locator("#reply-sheet a")).toHaveCount(0);
+});

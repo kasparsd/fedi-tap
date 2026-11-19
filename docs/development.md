@@ -24,6 +24,12 @@ Sign-in starts with the profile (a handle through WebFinger, or a profile link) 
 
 The account key is the actor ID for both types. For every type the actor ID, the OAuth endpoints and the API addresses must share the profile's origin. FediTap uses authorization server metadata (`/.well-known/oauth-authorization-server`) when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
 
+### Actions on the home server
+
+When sign-in finishes, the app asks the account's own origin for `acct:{handle}` in WebFinger and saves the FEP-3b86 links it finds as `account.intents` (`findIntents` in `src/lib/discovery.js`). Each template must be HTTPS on the account's origin with its one placeholder and no other: `Create` takes `{inReplyTo}` (reply), and `Like`, `Announce` (repost), `Follow` and `Object` (open) take `{object}`. The legacy OStatus subscribe link (`{uri}`) stands in for `Object` when there is none. Mastodon's `Create` template (`/share?text={content}`) has no `{inReplyTo}`, so it is not a reply intent.
+
+When the server advertises any, the actions are grouped by who performs them: the heading "Using API as @me" holds the in-app buttons (the API), and the heading "On {host}" (`ServerLinks.svelte`) holds the same buttons as links to the server, with the post or profile address percent-encoded into the template. A post gets Like, Repost, Reply, Follow (its verified author) and Open; a profile gets Follow and Open. Without any advertised intent there are no group names and no links. Any lookup failure means no links, never a failed sign-in. Templates are read once, at sign-in: sign in again to pick up a server's later change.
+
 ### ActivityPub (`src/lib/activitypub/`)
 
 FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD (`public/client.json`), OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.

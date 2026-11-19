@@ -123,3 +123,94 @@ export async function findActor(value, { profileLinkOnly = false } = {}) {
   const { actor, id } = await fetchActor(profile, { allowRefused: Boolean(webfinger) });
   return { actor, id, profile, webfinger };
 }
+
+// What a person's own server can open for them, by FEP-3b86 link relation. Each intent names the
+// placeholder its template fills with the post or profile address. The legacy OStatus subscribe
+// link (`{uri}`) is the older form of "Object": it opens whatever address it is given.
+const FEP = "https://w3id.org/fep/3b86/";
+const OSTATUS_SUBSCRIBE = "http://ostatus.org/schema/1.0/subscribe";
+export const INTENTS = {
+  reply: { rels: [`${FEP}Create`], placeholder: "{inReplyTo}" },
+  like: { rels: [`${FEP}Like`], placeholder: "{object}" },
+  repost: { rels: [`${FEP}Announce`], placeholder: "{object}" },
+  follow: { rels: [`${FEP}Follow`], placeholder: "{object}" },
+  open: { rels: [`${FEP}Object`, OSTATUS_SUBSCRIBE], placeholder: "{object}" },
+};
+// The subscribe link names its placeholder differently.
+const SUBSCRIBE_PLACEHOLDER = "{uri}";
+
+function placeholderFor(rel, intent) {
+  return rel === OSTATUS_SUBSCRIBE ? SUBSCRIBE_PLACEHOLDER : INTENTS[intent].placeholder;
+}
+
+/**
+ * Fills a template with an address, or returns null when it isn't a sound link on `origin`: the
+ * placeholder once and no other placeholder.
+ */
+function fillTemplate(template, placeholder, origin, address) {
+  if (typeof template !== "string") return null;
+  const parts = template.split(placeholder);
+  if (parts.length !== 2 || parts.some((part) => /[{}]/.test(part))) return null;
+  return homeEndpoint(parts.join(encodeURIComponent(address)), origin)?.href ?? null;
+}
+
+/**
+ * The link templates the person's own server publishes for opening a reply, like, repost, follow or
+ * the post itself on that server, by intent. Best effort: the account works without them, so every
+ * failure means none.
+ */
+export async function findIntents(handle, origin) {
+  const url = new URL("/.well-known/webfinger", origin);
+  url.searchParams.set("resource", `acct:${handle}`);
+  const record = await getJson(url, "application/jrd+json, application/json").catch(() => null);
+  const links = Array.isArray(record?.links) ? record.links : [];
+  const found = {};
+  for (const [intent, { rels }] of Object.entries(INTENTS)) {
+    for (const rel of rels) {
+      const link = links.find(
+        (candidate) =>
+          candidate?.rel === rel &&
+          fillTemplate(
+            candidate.template,
+            placeholderFor(rel, intent),
+            origin,
+            "https://example.com/",
+          ),
+      );
+      if (link) {
+        found[intent] = { rel, template: link.template };
+        break;
+      }
+    }
+  }
+  return found;
+}
+
+/** The address that opens `intent` for `address` on the account's own server, or null. */
+export function intentLink(account, intent, address) {
+  const origin = httpsUrl(account?.actor)?.origin;
+  const saved = account?.intents?.[intent];
+  if (!origin || !httpsUrl(address) || !saved) return null;
+  return fillTemplate(saved.template, placeholderFor(saved.rel, intent), origin, address);
+}
+
+const SERVER_ACTIONS = ["like", "repost", "reply", "follow", "open"];
+
+/**
+ * The actions the person's own server can open for the loaded post or profile, as `{ intent, href }`
+ * in button order. A post offers all five (Follow goes to its verified author); a profile only
+ * Follow and Open.
+ */
+export function serverActions(account, target) {
+  if (!account || !target) return [];
+  const address = (intent) =>
+    target.isActor
+      ? { follow: target.id, open: target.id }[intent]
+      : intent === "follow"
+        ? target.author
+        : target.id;
+  return SERVER_ACTIONS.flatMap((intent) => {
+    const href = intentLink(account, intent, address(intent));
+    return href ? [{ intent, href }] : [];
+  });
+}

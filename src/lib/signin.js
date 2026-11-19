@@ -1,6 +1,6 @@
 import { backendFor, detect } from "./backend.js";
 import { SIGN_IN_KEY } from "./constants.js";
-import { findActor } from "./discovery.js";
+import { findActor, findIntents } from "./discovery.js";
 import { oauthProblem, signInProblem } from "./problem.js";
 import { saveStore, useStore } from "./store.js";
 import { base64url, randomString } from "./token.js";
@@ -96,6 +96,8 @@ export async function completeSignIn(params, onTarget) {
     code: codes[0],
     code_verifier,
   });
+  const intents = await findIntents(account.handle, origin);
+  if (Object.keys(intents).length) account.intents = intents;
   await useStore((store) => {
     store.accounts[account.actor] = account;
     store.selectedActorId = account.actor;

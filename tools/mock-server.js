@@ -439,7 +439,7 @@ async function mastodon(req, res, url) {
 
 // Resolves to true when the request was answered, false when it is not one of the mock's routes.
 const ROUTES =
-  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|api\/|proxy$|\.well-known\/oauth-authorization-server$)/;
+  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|api\/|proxy$|\.well-known\/(oauth-authorization-server|webfinger)$)/;
 
 async function route(req, res) {
   const url = new URL(req.url, ORIGIN);
@@ -488,6 +488,26 @@ async function route(req, res) {
   if (path === "/_dev/api-off" && req.method === "POST") {
     flags.apiOff = !flags.apiOff;
     return send(res, 303, "", "text/plain", { Location: "/_dev/" });
+  }
+
+  // WebFinger: an ActivityPub server offers every FEP-3b86 intent; a Mastodon server offers a
+  // compose screen (no {inReplyTo}, so it cannot open a reply) and a way to open an address.
+  if (path === "/.well-known/webfinger") {
+    const name = /^acct:([a-z]+)@/.exec(url.searchParams.get("resource") ?? "")?.[1];
+    if (!Object.hasOwn(USERS, name)) return send(res, 404, { error: "not_found" });
+    const fep = (intent, template) => ({ rel: `https://w3id.org/fep/3b86/${intent}`, template });
+    const open = `${ORIGIN}/interactions?uri={object}`;
+    const links =
+      USERS[name].kind === "mastodon"
+        ? [fep("Create", `${ORIGIN}/share?text={content}`), fep("Object", open)]
+        : [
+            fep("Create", `${ORIGIN}/interactions?uri={inReplyTo}&intent=create`),
+            fep("Like", `${ORIGIN}/interactions?uri={object}&intent=like`),
+            fep("Announce", `${ORIGIN}/interactions?uri={object}&intent=announce`),
+            fep("Follow", `${ORIGIN}/interactions?uri={object}&intent=follow`),
+            fep("Object", open),
+          ];
+    return send(res, 200, { subject: `acct:${name}@localhost`, links }, "application/jrd+json");
   }
 
   if (path === "/.well-known/oauth-authorization-server") {

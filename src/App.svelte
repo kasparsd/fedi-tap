@@ -1,14 +1,16 @@
 <script>
+  import { serverActions } from "./lib/discovery.js";
   import { standalone, ios } from "./lib/support.js";
   import { httpsUrl } from "./lib/url.js";
   import { app, cancelTask, start } from "./state.svelte.js";
   import AccountsSheet from "./components/AccountsSheet.svelte";
   import ActionButtons from "./components/ActionButtons.svelte";
-  import Header from "./components/Header.svelte";
+    import Header from "./components/Header.svelte";
   import LookupForm from "./components/LookupForm.svelte";
   import Messages from "./components/Messages.svelte";
   import ReauthCard from "./components/ReauthCard.svelte";
   import ReplySheet from "./components/ReplySheet.svelte";
+  import ServerLinks from "./components/ServerLinks.svelte";
   import ShortcutCard from "./components/ShortcutCard.svelte";
   import SignInForm from "./components/SignInForm.svelte";
   import TargetCard from "./components/TargetCard.svelte";
@@ -18,6 +20,7 @@
   void start();
 
   const usable = $derived(app.view === "ready" || app.view === "loaded");
+  const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
   const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
   const showHomeScreenHint = $derived(app.view === "ready" && !standalone && ios && !app.reauth);
 </script>
@@ -67,7 +70,8 @@
     >
       <TargetCard object={app.resolved} />
       {#if !app.resolved.isActor}<ActionButtons />{/if}
-      {#if app.accounts.length > 1}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
+      <ServerLinks />
+      {#if app.accounts.length > 1 && !grouped}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
     </section>
   {:else if usable && app.opening && app.showProgress}
     <TargetCard host={openingHost} />
