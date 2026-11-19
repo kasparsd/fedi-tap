@@ -103,7 +103,7 @@ e2e/                    Playwright end-to-end tests, one folder per mock server 
 playwright.config.js    the four mock servers and the browser setup for the tests
 ```
 
-Components read `app` from `state.svelte.js` and call its functions. Views are `{#if}` blocks on `app.view`. A running task (`runTask`) sets `app.task`, which turns off the controls, shows the progress bar and the slow notice, and labels the pressed button through the `BusyLabel` component; `app.busy` is true while it runs. See "Loading" in `docs/ux/components.md`. Only read-only requests can be cancelled: they take their signal from `src/lib/signal.js`. Message sections (`status` line plus one problem) are the `Messages` component and must stay mounted so screen readers announce them. Dialogs are the `Sheet` component, a native `<dialog>` driven by an `open` flag; its content exists only while open.
+Components read `app` from `state.svelte.js` and call its functions. Views are `{#if}` blocks on `app.view`. A running task (`runTask`) sets `app.task`, which turns off the controls, shows the pulsing dot in the header and the slow notice, and labels the pressed button through the `BusyLabel` component; `app.busy` is true while it runs. See "Loading" in `docs/ux/components.md`. Only read-only requests can be cancelled: they take their signal from `src/lib/signal.js`. Message sections (`status` line plus one problem) are the `Messages` component and must stay mounted so screen readers announce them. Dialogs are the `Sheet` component, a native `<dialog>` driven by an `open` flag; its content exists only while open.
 
 ## Lint, format, test and validate
 

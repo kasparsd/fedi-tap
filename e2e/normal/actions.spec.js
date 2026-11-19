@@ -67,6 +67,29 @@ test("a reply mentions the author and escapes what was typed", async ({ page }) 
   expect(reply.object.tag).toMatchObject([{ type: "Mention", name: "@dana@localhost" }]);
 });
 
+test("a reply to a followers-only post stays followers-only", async ({ page }) => {
+  await openLink(page, "/notes/4");
+  await expect(page.locator("#reply-note")).toHaveCount(0);
+  await action(page, "Reply").click();
+  await expect(page.locator("#reply-note")).toHaveText("Replies go to followers only.");
+  await page.fill("#reply-text", "Hi");
+  await page.click("#reply-send");
+  await expect(page.locator("#action-status")).toHaveText("Reply sent as @alice@localhost.");
+  const [reply] = await received(page);
+  expect(reply.to.join()).not.toContain("#Public");
+  expect(reply.cc.join()).not.toContain("#Public");
+  expect(reply.object.to).toEqual(reply.to);
+});
+
+test("editing the link locks the post that was opened for the old one", async ({ page }) => {
+  await openLink(page, "/notes/1");
+  await expect(page.locator("#post")).toHaveJSProperty("inert", false);
+  await page.fill("#post-url", mockUrl(page, "/notes/2"));
+  await expect(page.locator("#post")).toHaveJSProperty("inert", true);
+  await page.fill("#post-url", mockUrl(page, "/notes/1"));
+  await expect(page.locator("#post")).toHaveJSProperty("inert", false);
+});
+
 test("Escape closes the reply sheet and keeps the draft", async ({ page }) => {
   await openLink(page, "/notes/1");
   await action(page, "Reply").click();

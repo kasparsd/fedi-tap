@@ -127,10 +127,21 @@ const TARGET_ALIASES = {
   "https://kaspars.net/author/kaspars": { type: "actor", key: "kaspars" },
 };
 
+// Addressing as a server publishes it, from the fixture's visibility.
+function addressing(visibility, author, mentioned) {
+  const followers = `${author.id}/followers`;
+  const PUBLIC = "https://www.w3.org/ns/activitystreams#Public";
+  if (visibility === "private") return { to: [followers], cc: [] };
+  if (visibility === "direct") return { to: [mentioned], cc: [] };
+  if (visibility === "unlisted") return { to: [followers], cc: [PUBLIC] };
+  return { to: [PUBLIC], cc: [followers] };
+}
+
 function noteObject(key) {
   const note = NOTES[key];
   const author = AUTHORS[note.author];
   return {
+    ...addressing(note.visibility, author, `${ORIGIN}/users/alice`),
     "@context": AS2,
     id: note.id ?? `${ORIGIN}/notes/${key}`,
     type: "Note",
@@ -151,6 +162,7 @@ function actorObject(name, { forLogin = false } = {}) {
     name: author.name,
     summary: author.summary,
     url: author.id,
+    followers: `${author.id}/followers`,
   };
   if (!forLogin) return base;
   return {

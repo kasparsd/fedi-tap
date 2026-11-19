@@ -12,7 +12,7 @@ Taken as ideas from Apple's guidelines and component thinking, without copying a
 - **Plain text carries the state.** A status or an error is a line of text next to the thing it concerns (`role="status"`, `role="alert"`), told apart by weight and one colour, not by a box.
 - **No decoration.** No shadows, gradients, emoji, tinted boxes, side borders or cards inside cards. The one exception is the icon on the four actions (Like, Repost, Reply, Follow): state needs more than colour, and a label alone cannot show on or off. Related actions are buttons in one row, not tiles.
 - **Every control has its states.** Hover, active, `:focus-visible`, `:disabled`, `[aria-invalid]`, `[aria-busy]`, all from real pseudo-classes and attributes.
-- **Strict consistency.** Two font sizes, two weights, three spaces, four colours and a line colour (see Scale). The same element looks and measures the same on every screen.
+- **Strict consistency.** Two font sizes, two weights, four spaces, four colours and a line colour (see Scale). The same element looks and measures the same on every screen.
 - **44 px targets, system fonts and colours, light and dark by themselves.** Minimum target 2.75rem, sizes in `rem` so the browser's text size scales them, `color-scheme: light dark`.
 
 ## Tokens
@@ -25,7 +25,7 @@ One `:root` block: seven custom properties for colour and border, three for spac
 | `--line` | `CanvasText` 45% mixed into `Canvas` |
 | `--accent` | Brand blue `#00a6f5`: `light-dark(#006fa6, #00a6f5)` |
 | `--danger` | `red` 75% mixed into `CanvasText` |
-| `--space-1`, `--space-2`, `--space-3` | 0.5, 1, 1.5 rem |
+| `--space-1`, `--space-2`, `--space-3`, `--space-4` | 0.5, 1, 1.5, 2.5 rem |
 | `--small`, `--radius`, `--target` | 0.875rem, 0.5rem, 2.75rem |
 | `--rule`, `--focus` | `1px solid var(--line)`, `2px solid var(--accent)` |
 
@@ -37,7 +37,7 @@ The complete set. A value that is not here does not belong in the CSS.
 
 - **Font sizes (2):** 1rem for content and actions (headings, labels, fields, buttons, links, post text); `--small` 0.875rem for supportive text (hints, status, errors, metadata, captions). Headings differ by weight only. No uppercase, letter-spacing or italics.
 - **Weights (2):** 400, and 600 for headings, labels, `strong`, the primary button, and `aria-pressed` and `aria-current` rows.
-- **Space (3):** `--space-1` 0.5rem for a pair that belongs together (label and input, field and help, heading and what it introduces, items inside a post, a row's gap); `--space-2` 1rem for the vertical rhythm between all other siblings and for horizontal padding; `--space-3` 1.5rem for the bottom of the page and list indents. The same three values are the only margins, paddings and gaps in the mocks. The one derived value is `-1 * --space-2`, the margin that lets a `.link` align its text with the column edge.
+- **Space (4):** `--space-1` 0.5rem for a pair that belongs together (label and input, field and help, heading and what it introduces, items inside a post, a row's gap); `--space-2` 1rem for the vertical rhythm between all other siblings and for horizontal padding; `--space-3` 1.5rem for the bottom of the page and list indents; `--space-4` 2.5rem between the page's sections (below the header, above the Shortcut card; the link field and the post it opens stay one group), which are set apart by space, never by a rule. The same four values are the only margins, paddings and gaps in the mocks. The one derived value is `-1 * --space-2`, the margin that lets a `.link` align its text with the column edge.
 - **Control padding (1):** `--space-1` vertically and `--space-2` horizontally on inputs, text areas and buttons, with a minimum height and width of `--target` 2.75rem, so every control is the same height.
 - **Radius (1):** `--radius` 0.5rem on controls and dialogs; a bottom-docked sheet squares its lower corners.
 - **Border (1):** `--rule`, 1px in `--line`. The focus ring is `--focus`, 2px in `--accent`, offset 2px.
@@ -71,7 +71,7 @@ The complete set. A value that is not here does not belong in the CSS.
 
 ## Header and account dropdown
 
-Every screen starts with the same `header` (a `.row`, one line, a `--rule` line below): the product mark on the left and the account switcher on the right.
+Every screen starts with the same `header` (a `.row`, one line, no rule below): the product mark on the left and the account switcher on the right.
 
 - **Mark:** the text "⁂tap" as a plain link to the page start, `<a href="./" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>`. Body size, weight 600, inherited colour, no underline, no logo. The aria-label makes screen readers say "FediTap" instead of reading the symbol. It is the only place the product name shows in the visible UI besides the Shortcut and Home Screen copy.
 - **Dropdown:** a native `select` labelled "Account", hidden until an account is stored. Each account is `@handle@domain`, with " (reconnect)" appended when it needs connecting again; the last option is "Manage accounts". Choosing an account switches to it (the post reloads for it; one that needs reconnecting goes to its connect step). Choosing the last option opens the Accounts dialog and the select stays on the active account. It uses the same control tokens as inputs, shrinks and clips its text (`max-inline-size: 70%`) and never pushes the mark off at 320 px.
@@ -89,7 +89,7 @@ Every screen starts with the same `header` (a `.row`, one line, a `--rule` line 
 | `.row` | Items side by side, wrapping, spread to the edges. A row that holds an input or `.field` never wraps: the input shrinks (`min-inline-size: 0`) and the button keeps its width, down to 320 px | `<div class="row"><input><button class="primary">Open</button></div>` |
 | `.list` | A plain stack of choices. Each row is a real button, optionally followed by a second button | `<ul class="list"><li><button aria-current="true">@me</button></li><li><button>@other</button><button class="destructive">Remove</button></li></ul>` |
 | `.byline` | The author line of a post or profile: name and handle on the left (handle and date on their own lines, so they never break mid-word), the Follow toggle at the trailing end. The button never wraps and is at least 6.5rem wide | `<div class="byline"><div><h2>Name</h2><p class="quiet"><span>@handle</span><span>Date</span></p></div><button aria-pressed="false">…Follow</button></div>` |
-| `.post` | The post or profile being acted on, set off by one rule above it | `<article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">…</footer></article>` |
+| `.post` | The post or profile being acted on, kept with the link field above it | `<article class="post"><h2>Name</h2><p class="quiet">@handle</p><p>Text</p><footer class="row quiet">…</footer></article>` |
 | `.sheet` | Dialog modifier: docked to the bottom edge, full width up to 36rem | `<dialog class="sheet" aria-labelledby="t"><form method="dialog"><h2 id="t">Reply</h2>…</form></dialog>` |
 
 Attributes the CSS also reads: `aria-pressed="true"` (an action that is on: accent border, label and filled icon; keeps its look under `aria-disabled`), `aria-current="true"` (the current choice, bold), `aria-busy="true"` (progress cursor; a busy button keeps its look and says what it is doing, see Loading).
@@ -146,14 +146,14 @@ Every word on screen has to earn its place. The mocks and the app share these ru
 
 ## App states and live regions
 
-`src/app.css` holds only the components. Which parts of the page show is decided by the Svelte components (`{#if}` on `app.view`: `signed-out`, `ready`, `loaded`, `unsupported`), not by CSS, and copy for the Home Screen app or Safari is chosen the same way. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. The only motion is the browser's own indeterminate `progress` bar, so there is no reduced-motion rule to keep.
+`src/app.css` holds only the components. Which parts of the page show is decided by the Svelte components (`{#if}` on `app.view`: `signed-out`, `ready`, `loaded`, `unsupported`), not by CSS, and copy for the Home Screen app or Safari is chosen the same way. An empty `role="status"` or `role="alert"` is visually hidden, never `display: none`, so a screen reader announces text put into it later. A message slot (`section` with an id ending in `-error`) holds one alert, its buttons and an optional `details`; it takes no space when empty. The only motion is the header's pulsing dot, which stops under `prefers-reduced-motion`.
 
 ## Loading
 
 Every task that waits on a server (opening a link, sending an action, undoing, signing in, renewing a token) looks the same. `runTask` in `src/state.svelte.js` is the one place that does it.
 
-1. **The pressed control owns the message.** It says what it is doing (Opening…, Sending…, Undoing…, Looking up…, Signing in…) with `aria-busy`, keeps its fill (a primary button stays primary) and keeps its width, because `BusyLabel` reserves the widest text it can show (idle, working and done, the done one in bold). Everything else dims through the disabled fieldsets. There is no second status line for it.
-2. **One progress cue.** A native indeterminate `<progress>` is drawn over the header's rule (no space of its own), labelled with what is happening. A hidden live region (`#task-announce`) tells screen readers the same. Both start after 150 ms, so a quick response shows nothing extra.
+1. **The pressed control owns the message.** It says what it is doing (Opening…, Sending…, Undoing…, Looking up…, Signing in…) with `aria-busy`, keeps its fill (a primary button stays primary) and, except beside an input, keeps its width, because `BusyLabel` reserves the widest text it can show (idle, working and done, the done one in bold). Everything else dims through the disabled fieldsets. There is no second status line for it.
+2. **One progress cue.** A dot (`.pulse`, `role="progressbar"`, no value) pulses beside the product name in the header, labelled with what is happening. A hidden live region (`#task-announce`) tells screen readers the same. Both start after 150 ms, so a quick response shows nothing extra.
 3. **Nothing on screen is thrown away early.** While another link opens, the loaded post and its actions stay, dimmed and `inert`, and the title does not change; nothing below them moves. With no post yet, a placeholder card says "Opening {host}…". The post is replaced in one step when the new one arrives. A link that fails leaves nothing on screen for it.
 4. **A slow task says so.** After 5 s a notice under the title says "Still waiting for your server…". Opening a link and the sign-in lookup add Cancel, which aborts the request and says "Canceled." Sending, undoing and token requests are never cancellable, because they may already have gone through (or, for a token, must be saved).
 

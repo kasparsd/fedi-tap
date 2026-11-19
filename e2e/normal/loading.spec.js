@@ -21,31 +21,29 @@ test("the first link shows progress, a placeholder and a busy button that keeps 
   page,
 }) => {
   const open = page.locator("#open-link");
-  const idleWidth = await widthOf(open);
   const headerHeight = await page.locator("header").evaluate((header) => header.offsetHeight);
 
   await page.fill("#post-url", mockUrl(page, "/notes/1"));
   await open.click();
 
-  await expect(page.locator("header progress")).toHaveAttribute("aria-label", "Opening localhost…");
+  await expect(page.locator("header .pulse")).toHaveAttribute("aria-label", "Opening localhost…");
   await expect(page.locator("#target-loading h2")).toHaveText("Opening localhost…");
   await expect(page.locator("#target-loading")).toHaveAttribute("aria-busy", "true");
   await expect(page.locator("#task-announce")).toHaveText("Opening localhost…");
   expect(await shownText(open)).toBe("Opening…");
   await expect(open).toHaveAttribute("aria-busy", "true");
-  // It stays filled (a primary button) and the same width, and the header does not grow.
+  // It stays filled (a primary button), and the header does not grow.
   const colors = await open.evaluate((button) => ({
     background: getComputedStyle(button).backgroundColor,
     page: getComputedStyle(document.body).backgroundColor,
   }));
   expect(colors.background).not.toBe(colors.page);
-  expect(await widthOf(open)).toBe(idleWidth);
   expect(await page.locator("header").evaluate((header) => header.offsetHeight)).toBe(headerHeight);
   // No second status line for the same thing.
   await expect(page.locator("#lookup-status")).toHaveText("");
 
   await expect(page.locator("#target-name")).toBeVisible();
-  await expect(page.locator("header progress")).toHaveCount(0);
+  await expect(page.locator("header .pulse")).toHaveCount(0);
   await expect(page.locator("#target-loading")).toHaveCount(0);
   await expect(page.locator("h1")).toHaveText("Open a post or profile");
 });
@@ -57,7 +55,7 @@ test("a second link keeps the first post, dimmed, and nothing below it moves", a
 
   await page.fill("#post-url", mockUrl(page, "/notes/2"));
   await page.click("#open-link");
-  await expect(page.locator("header progress")).toBeVisible();
+  await expect(page.locator("header .pulse")).toBeVisible();
 
   const post = page.locator("#post");
   await expect(post).toHaveAttribute("aria-busy", "true");

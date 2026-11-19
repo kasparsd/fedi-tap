@@ -5,7 +5,7 @@
   import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
 
-  let { label = "Account" } = $props();
+  let { label = "Connect account" } = $props();
 </script>
 
 <form

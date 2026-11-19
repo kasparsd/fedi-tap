@@ -76,6 +76,25 @@ async function fetchAuthor(account, id, renew) {
   }
 }
 
+const PUBLIC_NAMES = new Set([PUBLIC, "as:Public", "Public"]);
+
+/**
+ * Who can see a post, in the words a Mastodon status uses, from its own addressing: `public`,
+ * `unlisted`, `private` (followers only) or `direct`. Null when the post names no recipients at
+ * all, because then nothing says how far a reply may reach.
+ */
+export function audienceOf(object, followers) {
+  const names = (value) => (Array.isArray(value) ? value : [value]).map(activityId).filter(Boolean);
+  const raw = (value) => (Array.isArray(value) ? value : [value]).filter(Boolean);
+  const isPublic = (value) => PUBLIC_NAMES.has(typeof value === "string" ? value : value?.id);
+  const to = raw(object?.to);
+  const cc = raw(object?.cc);
+  if (to.length + cc.length === 0) return null;
+  if (to.some(isPublic)) return "public";
+  if (cc.some(isPublic)) return "unlisted";
+  return followers && [...names(to), ...names(cc)].includes(followers) ? "private" : "direct";
+}
+
 function linkOrigins(value) {
   const links = Array.isArray(value) ? value : [value];
   return links.map((link) => httpsUrl(typeof link === "string" ? link : link?.href)?.origin);
@@ -138,6 +157,7 @@ export async function resolveTarget(account, target, renew) {
       600,
     ),
     date: shortDate(object.published),
+    visibility: isActor ? null : audienceOf(object, activityId(actor?.followers)),
   };
 }
 
@@ -159,7 +179,26 @@ export function replyHtml(text, mention = "") {
     .join("");
 }
 
-export function makeActivity(action, { id, author, isActor, mention }, account, reply) {
+/**
+ * A reply reaches the people the post reached, never more: public to the public, unlisted to the
+ * followers with the public only on cc, followers-only to the followers, direct to the author alone.
+ * Whatever can't be addressed that way is refused rather than widened.
+ */
+function replyAddressing(visibility, author, account) {
+  const mentioned = author ? [author] : [];
+  if (visibility === "public") return { to: [PUBLIC], cc: mentioned };
+  if (visibility === "unlisted" && account.followers) {
+    return { to: [account.followers], cc: [PUBLIC, ...mentioned] };
+  }
+  if (visibility === "private" && account.followers) {
+    return { to: [account.followers], cc: mentioned };
+  }
+  if (visibility === "direct" && author) return { to: [author], cc: [] };
+  throw new Error("FediTap can’t tell who may see this post, so it won’t reply to it.");
+}
+
+export function makeActivity(action, target, account, reply) {
+  const { id, author, isActor, mention } = target;
   const context = { "@context": AS_PROFILE };
   if (action === "follow") {
     if (!author) throw new Error("The author couldn’t be verified, so there is no one to follow.");
@@ -172,8 +211,7 @@ export function makeActivity(action, { id, author, isActor, mention }, account, 
     return { ...context, type: "Announce", object: id, to: [PUBLIC], cc: [account.followers] };
   }
   if (!reply) throw new Error("Write a reply first.");
-  // A reply is public and mentions the author, so the author is notified.
-  const replying = author ? { to: [PUBLIC], cc: [author] } : { to: [PUBLIC], cc: [] };
+  const replying = replyAddressing(target.visibility, author, account);
   const note = {
     type: "Note",
     inReplyTo: id,

@@ -27,8 +27,8 @@
 
 <main>
   <Header />
-  <!-- Signed in, the link field's own label is the visible title. -->
-  <h1 id="title" class={usable ? "sr" : undefined}>{app.title}</h1>
+  <!-- Signed in or out, the form's own label is the visible title. -->
+  <h1 id="title" class={usable || app.view === "signed-out" ? "sr" : undefined}>{app.title}</h1>
   <p id="task-announce" role="status">{app.task?.announce ?? ""}</p>
   {#if app.slow}
     <section id="slow">
@@ -64,9 +64,9 @@
   {#if app.view === "loaded"}
     <section
       id="post"
-      inert={app.opening}
+      inert={app.opening || app.stale}
       aria-busy={app.opening ? "true" : undefined}
-      data-loading={app.opening && app.showProgress ? "" : undefined}
+      data-loading={(app.opening && app.showProgress) || app.stale ? "" : undefined}
     >
       <TargetCard object={app.resolved} />
       {#if !app.resolved.isActor}<ActionButtons />{/if}

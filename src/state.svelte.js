@@ -29,6 +29,11 @@ class AppState {
   current = $state.raw(null);
   // The loaded post or profile. Raw, so a slow task can tell it is still the same object.
   resolved = $state.raw(null);
+  // The link that was opened to get `resolved`. The post is stale once the field no longer holds it.
+  resolvedFor = $state.raw("");
+  get stale() {
+    return Boolean(this.resolved) && !this.opening && this.targetValue.trim() !== this.resolvedFor;
+  }
   unsupported = $state.raw(null);
 
   // The link field and the sign-in field.
@@ -527,6 +532,7 @@ export async function findTarget() {
         return;
       }
       app.resolved = object;
+      app.resolvedFor = target.href;
     },
     {
       key: "open",
@@ -540,7 +546,9 @@ export async function findTarget() {
   // A link that didn't open leaves nothing on screen that belongs to the link in the field.
   app.resolved = null;
   if (app.current && !app.current.needsReauth) {
-    markTargetInvalid();
+    // Only a shown problem makes the field invalid; a cancelled lookup says "Canceled." and leaves
+    // nothing for aria-describedby to point at.
+    if (app.messages.lookup.problem) markTargetInvalid();
     byId("post-url")?.focus();
   }
 }
