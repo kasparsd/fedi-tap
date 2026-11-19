@@ -93,6 +93,15 @@ const NOTES = {
       'Progressive disclosure means the first screen shows only what matters, and the rest waits behind a tap. Details live in sheets, destructive actions ask first, and the main task never moves. </p><p>Second paragraph with <a href="https://example.com">a link</a> and some <strong>markup</strong> that must render as plain text.</p>',
   },
   3: { author: "dana", content: "<p>Reply target: a short post.</p>" },
+  // Hostile markup: only the words may reach the page, as text.
+  5: {
+    author: "zed",
+    content:
+      "<p>Safe words.</p><script>window.__pwned = 1</script><style>body{display:none}</style>" +
+      '<img src=x onerror="window.__pwned = 2"><a href="javascript:window.__pwned=3" onclick="window.__pwned=4">click</a>' +
+      '<iframe src="https://evil.example/"></iframe><svg onload="window.__pwned=5"><text>vector</text></svg>' +
+      "<p>&lt;b&gt;not bold&lt;/b&gt;\u202Eevil\u200B end</p>",
+  },
   4: {
     author: "zed",
     content: "<p>A followers-only post: a reply must stay followers-only.</p>",
