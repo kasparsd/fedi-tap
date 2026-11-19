@@ -1,5 +1,6 @@
 <script>
-  // One failure the person can act on: the alert, its buttons and an optional disclosure.
+  // One failure the person can act on, drawn as the standard error card (the .problem section around it, in
+  // Messages): a heading, what happened, its buttons and an optional disclosure for the rest.
   let { problem, slotId } = $props();
 </script>
 

@@ -36,6 +36,7 @@
           value={app.targetValue}
           oninput={(event) => onTargetInput(event.currentTarget.value)}
         >
+        {#if app.showProgress && isBusy("open")}<span class="pulse" aria-hidden="true"></span>{/if}
         <button
           type="button"
           id="paste-link"
@@ -52,7 +53,7 @@
         aria-busy={isBusy("open") ? "true" : undefined}
         aria-disabled={locked("lookup") ? "true" : undefined}
       >
-        <BusyLabel key="open" idle="Open" busy="Opening…" />
+        <BusyLabel key="open" idle="Load" busy="Loading…" />
       </button>
     </div>
     <Messages section="lookup" />

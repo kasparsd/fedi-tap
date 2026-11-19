@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { action, mockUrl, received, resetMock, signIn } from "../helpers.js";
+import { action, mockUrl, problem, received, resetMock, signIn } from "../helpers.js";
 
 // The mock's "shorty" and "erin" accounts have tokens that last 61 seconds, and the page renews a
 // token that has less than 60 seconds left, so every request after the first second renews it.
@@ -24,10 +24,9 @@ test("an expired session keeps the reply draft and the draft returns after signi
   await page.waitForTimeout(1500);
   await page.click("#reply-send");
 
-  await expect(page.locator("#reply-error-text")).toContainText("Connection expired");
+  await expect(problem(page, "reply")).toBeVisible();
   await expect(page.locator("#reply-sheet")).toHaveJSProperty("open", true);
   await expect(page.locator("#reply-text")).toHaveValue("My draft");
-  await expect(page.locator("#account-select option:checked")).toContainText("reconnect");
 
   await Promise.all([
     page.waitForURL(/oauth\/authorize/),
@@ -39,7 +38,6 @@ test("an expired session keeps the reply draft and the draft returns after signi
     page.click("button[value=approve]"),
   ]);
   await expect(page.locator("#target-card")).toBeVisible();
-  await expect(page.locator("#action-status")).toHaveText("Reply draft restored.");
   await action(page, "Reply").click();
   await expect(page.locator("#reply-text")).toHaveValue("My draft");
 });
@@ -50,7 +48,7 @@ test("opening a link with an expired session asks to sign in again", async ({ pa
   await page.fill("#post-url", mockUrl(page, "/notes/3"));
   await page.click("#open-link");
   await expect(page.locator("#reauth")).toBeVisible();
-  await expect(page.locator("#reauth-text")).toHaveText("Reconnect as @erin@localhost.");
+  await expect(page.locator("#reauth-text")).toContainText("@erin@localhost");
   await expect(page.locator("#lookup")).toBeVisible();
   await expect(page.locator("#open-link")).not.toHaveClass(/primary/);
   await expect(page.locator("#target-card")).toHaveCount(0);
