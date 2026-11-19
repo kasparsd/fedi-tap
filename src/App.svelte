@@ -1,6 +1,5 @@
 <script>
   import { serverActions } from "./lib/discovery.js";
-  import { standalone, ios } from "./lib/support.js";
   import { httpsUrl } from "./lib/url.js";
   import { app, cancelTask, start } from "./state.svelte.js";
   import AccountsSheet from "./components/AccountsSheet.svelte";
@@ -24,7 +23,6 @@
   const usable = $derived(app.view === "ready" || app.view === "loaded");
   const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
   const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
-  const showHomeScreenHint = $derived(app.view === "ready" && !standalone && ios && !app.reauth);
 </script>
 
 <main data-view={app.view}>
@@ -102,12 +100,6 @@
     </details>
   {/if}
 
-  {#if showHomeScreenHint}
-    <details id="a2hs">
-      <summary>Add to Home Screen</summary>
-      <p class="quiet">Safari: Share, then Add to Home Screen.</p>
-    </details>
-  {/if}
 </main>
 
 <Toast />

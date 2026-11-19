@@ -59,6 +59,18 @@ main {
 :where(h1, h2, h3) + * {
   margin-block-start: var(--space-1);
 }
+/* The centred summary's own padding is the gap to the body, so the body needs no margin of its own. */
+:where(details > summary) + * {
+  margin-block-start: 0;
+}
+/* Disclosures that follow each other sit together; the summary's own height is the gap. */
+:where(details) + details {
+  margin-block-start: 0;
+}
+/* A button's edge reads closer than a line of text, so half a step makes up the difference. */
+details[open]:has(> .button:last-child) {
+  margin-block-end: calc(var(--space-1) / 2);
+}
 h1,
 h2,
 h3,
@@ -197,7 +209,7 @@ button,
   text-decoration: none;
   cursor: pointer;
 }
-:is(main, section, form, fieldset, dialog) > :is(button, .button) {
+:is(main, section, form, fieldset, details, dialog) > :is(button, .button) {
   display: flex;
   inline-size: 100%;
 }
@@ -467,7 +479,7 @@ main > :is(header + *, #shortcut-card) {
 /* Disclosure: progressive disclosure with the native element. <details><summary>Details</summary><p>...</p></details> */
 summary {
   min-block-size: var(--target);
-  padding-block: var(--space-1);
+  padding-block: calc((var(--target) - 1lh) / 2); /* centres one line in the touch target */
   cursor: pointer;
 }
 
