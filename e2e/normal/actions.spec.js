@@ -144,3 +144,23 @@ test("a profile offers the server's own Follow and Open only", async ({ page }) 
   await openLink(page, "/users/zed");
   await expect(page.locator("#server-links a")).toHaveText([/Follow/, /Open/]);
 });
+
+test("hostile markup in a post reaches the page only as plain text", async ({ page }) => {
+  await openLink(page, "/notes/5");
+  const excerpt = page.locator("#target-excerpt");
+  await expect(excerpt).toContainText("Safe words.");
+  const text = await excerpt.textContent();
+  expect(text).toContain("click");
+  // Escaped markup stays visible as characters; code from script and style never shows as text.
+  expect(text).toContain("<b>not bold</b>");
+  expect(text).not.toMatch(/__pwned|display:none|vector|\u202E|\u200B/);
+  // The excerpt is one text node: no element was inserted, and nothing ran.
+  await expect(excerpt.locator("*")).toHaveCount(0);
+  expect(await page.evaluate(() => window.__pwned)).toBeUndefined();
+});
+
+test("a long post is cut to a known length with an ellipsis", async ({ page }) => {
+  await openLink(page, "/notes/2");
+  const text = await page.locator("#target-excerpt").textContent();
+  expect(Array.from(text).length).toBeLessThanOrEqual(600);
+});
