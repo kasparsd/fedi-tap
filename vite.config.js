@@ -38,6 +38,8 @@ const server = {
   strictPort: true,
   host: process.env.HOST ?? "localhost",
   https: certificate(),
+  // The mock answers its own CORS (any origin), so the published page can use it (see PAGE in tools/mock-server.js).
+  cors: false,
   watch: process.env.POLL ? { usePolling: true } : undefined,
 };
 
@@ -51,6 +53,6 @@ export default defineConfig({
     modulePreload: { polyfill: false },
   },
   server,
-  preview: { port: PORT, strictPort: true, host: server.host, https: server.https },
+  preview: { port: PORT, strictPort: true, host: server.host, https: server.https, cors: false },
   test: { include: ["src/**/*.test.js"] },
 });

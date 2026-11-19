@@ -9,6 +9,26 @@ FediTap is a small static web app. Open it in a browser, connect your account, p
 
 **Use it:** <https://kasparsd.github.io/fedi-tap/>
 
+## How it looks
+
+Share a link from any app, choose **⁂tap**, and FediTap opens with the link already loaded, ready to like, repost, reply or follow from your own account. You don't copy the link or switch apps to find the post.
+
+| 1. Share | 2. Connect once | 3. Choose | 4. Reply | 5. Done |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/images/share-sheet.jpg" width="170" alt="Safari's share sheet on a blog post, with ⁂tap next to Copy"> | <img src="docs/images/connect.png" width="170" alt="FediTap opened with the shared link and a field to connect an account"> | <img src="docs/images/actions.png" width="170" alt="The post with its author and the Like, Repost, Reply and Follow buttons"> | <img src="docs/images/reply.png" width="170" alt="The reply sheet, naming the author and your account and saying replies are public"> | <img src="docs/images/done.png" width="170" alt="The post, Liked, and a note that the reply was sent"> |
+
+1. In the share sheet of any app (Safari here), choose **⁂tap**. To keep it in the top row, scroll the sheet to **Edit Actions** and add ⁂tap to Favorites.
+2. The first time, connect your account. FediTap keeps the link while you approve access on your own server, then opens it.
+3. The post appears with its author and four buttons, and nothing is sent until you press one.
+4. Reply opens a sheet that says who it is to, which account it is from and that replies are public.
+5. Each action confirms what happened and as which account.
+
+iOS asks once whether the Shortcut may send the link to the page, and shows the page's address. Choose **Allow Once**, or **Always Allow** to stop being asked.
+
+<img src="docs/images/permission.jpg" width="170" alt="The iOS prompt: allow ⁂tap to send 1 Safari item to kasparsd.github.io">
+
+The screenshots are an iPhone in dark mode with the published page and Shortcut. The account is a made-up one on the local mock server, and the shared post is a public blog post. [docs/development.md](docs/development.md#test-the-shortcut-in-the-ios-simulator) says how to repeat them.
+
 ## What it does
 
 - **Like, Repost and Follow** are toggles. Each shows its done state (Liked, Reposted, Follow requested) and offers **Undo**.

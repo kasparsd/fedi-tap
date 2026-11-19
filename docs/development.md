@@ -92,7 +92,7 @@ src/lib/mastodon/       the Mastodon API backend (api, discovery, signin, action
 src/test-helpers.js     fake fetch for unit tests
 public/                 copied to dist/ as is: client.json, manifest, icons, ⁂tap.shortcut
 tools/mock-server.js    the mock ActivityPub, Mastodon API and OAuth server (Vite plugin)
-tools/scripts/          check.js (static checks), try.js (command-line client), shortcut-sim.sh (the Shortcut in the iOS Simulator)
+tools/scripts/          check.js (static checks), try.js (command-line client)
 e2e/                    Playwright end-to-end tests, one folder per mock server (normal, fast, slow, built)
 playwright.config.js    the four mock servers and the browser setup for the tests
 ```
@@ -171,15 +171,21 @@ The shortcut sends only the first URL from the shared input in the query string,
 
 ### Test the Shortcut in the iOS Simulator
 
-The whole path (Safari share sheet, the compiled Shortcut, the page signed in on the mock server) runs in the simulator, so nobody needs a device to check a change to `fedi-tap.cherri` or to the `?url=` and `?via=shortcut` handling. The simulator ships the Shortcuts app. The committed Shortcut opens the published page, so the test builds a copy that opens the local dev server instead; the repo's own Shortcut is never changed.
+The whole path (the real share sheet, the published Shortcut, the published page, and a local account server) runs in the iOS Simulator, so nobody needs a device to check the Shortcut or the shared-link handling. The simulator ships the Shortcuts app and Safari's share sheet. Nothing is rebuilt or re-signed: the committed `⁂tap` Shortcut opens `https://kasparsd.github.io/fedi-tap/`, and that page talks to the mock server on your Mac (the page needs only HTTPS, and Safari lets it call `https://localhost`).
 
-1. Start `npm run dev` (`https://localhost:8443`) and boot a simulator (`xcrun simctl boot <device>`; it needs Xcode, Cherri and mkcert).
-2. Run `tools/scripts/shortcut-sim.sh`. It compiles a copy of `fedi-tap.cherri` named `tapdev` with `page` set to the dev server (`--page`, `--name`, `--device` and `--port` change the defaults), signs it with `shortcuts sign`, trusts the mkcert root in the simulator, serves the file from a throwaway server on 127.0.0.1:8999 and opens it in the simulator's Safari. Output goes to `.local/shortcut-sim/`.
-3. In the simulator, confirm the download, open it from the toolbar's Downloads list (a Shortcut icon, not a file) and tap **Add Shortcut**. The sheet should say "Appears in Share Sheet". Sign in on the dev page first if the test needs a signed-in account (`alice`).
-4. Open a mock post in Safari (`https://localhost:8443/notes/1`, or any link from `/_dev/`), then **Share** > **View More** > `tapdev`. iOS asks once whether `tapdev` may send the Safari item to `localhost`; the published Shortcut shows the same question for its own host. Choose Allow Once. The page opens with the link loaded; `?via=shortcut` (no link) can be checked with `xcrun simctl openurl booted "https://localhost:8443/?via=shortcut"`.
-5. Run `tools/scripts/shortcut-sim.sh stop` to stop the file server. The `tapdev` Shortcut stays in the simulator and is harmless; delete it in the Shortcuts app, or erase the simulator, for a clean start.
+1. Start the mock with the published page allowed as its OAuth client: `PAGE=https://kasparsd.github.io/fedi-tap/ npm run dev` (or `npm run preview`). `PAGE` makes the mock accept that page's client ID and redirect. The mock answers CORS itself for any origin, and the Vite server's own CORS is off (`cors: false` in `vite.config.js`) because it only allows localhost origins and would reject the preflight from github.io. Port 8443 is the default; `PORT` changes it.
+2. Boot a simulator and let it trust the mkcert certificate the mock uses: `xcrun simctl boot <device>` and `xcrun simctl keychain booted add-root-cert "$(mkcert -CAROOT)/rootCA.pem"`.
+3. In the simulator's Safari open the published page and choose **Add Shortcut**: Safari offers the download, then **Downloads** (the toolbar menu) opens it in Shortcuts, where **Add Shortcut** installs it ("Appears in Share Sheet"). If an earlier download took the plain name the Shortcut arrives as "⁂tap 2"; delete the old one in Shortcuts first, or rename it.
+4. Open a post in Safari and choose **Share**, then **⁂tap** (under **View More**; **Edit Actions** at the bottom of the sheet pins it beside Copy). iOS asks once whether ⁂tap may send the Safari item to `kasparsd.github.io`; choose **Allow Once**. The page opens with the link filled in. Connect with the profile link `https://localhost:8443/users/alice` (or any user in the table above), approve on the mock's page, and the post loads.
+5. Check what the page sent at `https://localhost:8443/_dev/activities`.
 
-Tips for driving it with the simulator control tool: take a screenshot after each tap, because the first launch shows a keyboard tip that can swallow typed text, and the Shortcuts import sheet appears a few seconds after the app opens. `shortcuts://run-shortcut?name=tapdev&input=text&text=<encoded link>` should run the Shortcut without the share sheet (not yet tried here), and the mock server's `/_dev/activities` lists what the page sent.
+The mock resolves the fixture posts (the `/notes/N` addresses, `https://social.example/@dana/1` and `@zed/2`) and one real post address, `https://kaspars.net/blog/high-power-capacity-battery-power-tools`, which it answers the way the ActivityPub plugin federates a post (note 5, with `id` and `url` on kaspars.net). Share that address from Safari to see a real page in the share sheet with the mock behind it. Any other address your account's proxy cannot resolve shows "Couldn't open this link".
+
+Tips for driving it with the simulator control tool: take a screenshot after each tap, because the first launch shows a keyboard tip that can swallow typed text, sheets animate for a second or two, and the Shortcuts import sheet appears a few seconds after the app opens. The tool types plain ASCII only (a rename that needs ⁂ must edit the existing text), and it taps in device points, not the pixels of a screenshot.
+
+### Screenshots for the README
+
+`docs/images/` holds the screenshots the README shows. They come from the flow above, in dark mode, on an iPhone 17 Pro simulator, against the published page and the mock (fictional account `@alice@localhost`, the real kaspars.net post as the shared link). To retake them: `xcrun simctl ui booted appearance dark`, a clean status bar with `xcrun simctl status_bar booted override --time 9:41 --batteryState discharging --batteryLevel 100 --cellularBars 4 --wifiBars 3`, and `xcrun simctl io booted screenshot --type=png <file>` at each step (share sheet, the iOS prompt, sign-in, the post and actions, the reply sheet, the result). Resize to 600 px wide with `sips --resampleWidth 600`; keep the blurred share sheet and prompt as JPEG and the flat page screens as PNG. Screenshots show the published page on the day they were taken, so retake them when the page changes visibly.
 
 ## Account storage
 

@@ -18,6 +18,10 @@ const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 export const PORT = Number(process.env.PORT || 8443);
 const DELAY_MS = Number(process.env.DELAY_MS ?? 400);
 const ORIGIN = `https://localhost:${PORT}`;
+// Pages that may act as the OAuth client: this server's own, and the published one when PAGE is set
+// (PAGE=https://kasparsd.github.io/fedi-tap/), to try the real page and Shortcut against this server.
+const PAGE = process.env.PAGE ? new URL(process.env.PAGE).href : `${ORIGIN}/`;
+const PAGES = new Set([`${ORIGIN}/`, PAGE]);
 const AS2 = "https://www.w3.org/ns/activitystreams";
 
 // ---- Fixtures -------------------------------------------------------------
@@ -73,6 +77,7 @@ const AUTHORS = {
   // Remote authors the signed-in account can interact with.
   zed: { id: `${ORIGIN}/users/zed`, name: "Zed Remote", summary: "A profile you can follow." },
   dana: { id: `${ORIGIN}/users/dana`, name: "Dana Writer" },
+  kaspars: { id: "https://kaspars.net/author/kaspars", name: "Kaspars Dambis" },
 };
 
 const NOTES = {
@@ -93,6 +98,15 @@ const NOTES = {
     content: "<p>A followers-only post: a reply must stay followers-only.</p>",
     visibility: "private",
   },
+  // A real blog post, as the WordPress ActivityPub plugin federates it: used for the README screenshots.
+  5: {
+    author: "kaspars",
+    id: "https://kaspars.net/blog/high-power-capacity-battery-power-tools",
+    url: "https://kaspars.net/blog/high-power-capacity-battery-power-tools",
+    published: "2026-10-08T08:34:26Z",
+    content:
+      "<p>Building High Capacity 18V/20Ah Battery for Makita Power Tools (Electronics)</p><p>Note: work in progress (lab notes). My Makita grass trimmer lasts about 15 minutes with two 18V/6Ah batteries (each rated at 108Wh). Makita now offers 12Ah/216Wh LXT packs (released in 2025) but I wanted something even more capable so I bought two 20-cell DIY kits on AliExpress instead.</p>",
+  },
 };
 
 const TARGET_ALIASES = {
@@ -100,6 +114,8 @@ const TARGET_ALIASES = {
   "https://social.example/@dana/1": { type: "note", key: 1 },
   "https://social.example/@zed/2": { type: "note", key: 2 },
   "https://social.example/@zed": { type: "actor", key: "zed" },
+  "https://kaspars.net/blog/high-power-capacity-battery-power-tools": { type: "note", key: 5 },
+  "https://kaspars.net/author/kaspars": { type: "actor", key: "kaspars" },
 };
 
 function noteObject(key) {
@@ -107,12 +123,12 @@ function noteObject(key) {
   const author = AUTHORS[note.author];
   return {
     "@context": AS2,
-    id: `${ORIGIN}/notes/${key}`,
+    id: note.id ?? `${ORIGIN}/notes/${key}`,
     type: "Note",
     attributedTo: author.id,
     content: note.content,
-    published: "2026-11-17T09:30:00Z",
-    url: `https://social.example/@${note.author}/${key}`,
+    published: note.published ?? "2026-11-17T09:30:00Z",
+    url: note.url ?? `https://social.example/@${note.author}/${key}`,
   };
 }
 
@@ -379,7 +395,7 @@ async function mastodon(req, res, url) {
   if (path === "/api/v1/apps" && req.method === "POST") {
     const form = new URLSearchParams(await readBody(req));
     const redirect = form.get("redirect_uris");
-    if (redirect !== `${ORIGIN}/` || !form.get("scopes")) {
+    if (!PAGES.has(redirect) || !form.get("scopes")) {
       return send(res, 422, { error: "Validation failed: Redirect URI is invalid" });
     }
     const client_id = random();
@@ -524,8 +540,8 @@ async function route(req, res) {
     const app = apps.get(form.get("client_id"));
     const known = app
       ? app.redirect === redirect
-      : form.get("client_id") === `${ORIGIN}/client.json`;
-    if (redirect !== `${ORIGIN}/` || !known) {
+      : [...PAGES].some((base) => form.get("client_id") === `${base}client.json`);
+    if (!PAGES.has(redirect) || !known) {
       return send(
         res,
         400,
