@@ -92,7 +92,7 @@ src/lib/mastodon/       the Mastodon API backend (api, discovery, signin, action
 src/test-helpers.js     fake fetch for unit tests
 public/                 copied to dist/ as is: client.json, manifest, icons, ⁂tap.shortcut
 tools/mock-server.js    the mock ActivityPub, Mastodon API and OAuth server (Vite plugin)
-tools/scripts/          check.js (static checks), try.js (command-line client)
+tools/scripts/          check.js (static checks), try.js (command-line client), shortcut-sim.sh (the Shortcut in the iOS Simulator)
 e2e/                    Playwright end-to-end tests, one folder per mock server (normal, fast, slow, built)
 playwright.config.js    the four mock servers and the browser setup for the tests
 ```
@@ -168,6 +168,18 @@ After enabling the API on `kaspars.net`, a credential-free token POST returned H
 On a Mac with [Cherri](https://cherrilang.org/install) installed, run `./build-shortcut.sh` from your Terminal. It compiles `fedi-tap.cherri` and signs `public/⁂tap.shortcut` for anyone using Apple’s Shortcuts command. Use `./build-shortcut.sh --unsigned` to check compilation separately. The unsigned output is a workflow plist for inspection.
 
 The shortcut sends only the first URL from the shared input in the query string, `?url=<encoded URL>`. The hosting service receives the query as part of a page request. With no URL, the shortcut opens the page with `?via=shortcut`, so the page can tell a Shortcut launch from a typed address; the page removes the parameter from the address bar. Rebuild the shortcut when its launch URL or input contract changes. Activity and OAuth logic are deployed with the page.
+
+### Test the Shortcut in the iOS Simulator
+
+The whole path (Safari share sheet, the compiled Shortcut, the page signed in on the mock server) runs in the simulator, so nobody needs a device to check a change to `fedi-tap.cherri` or to the `?url=` and `?via=shortcut` handling. The simulator ships the Shortcuts app. The committed Shortcut opens the published page, so the test builds a copy that opens the local dev server instead; the repo's own Shortcut is never changed.
+
+1. Start `npm run dev` (`https://localhost:8443`) and boot a simulator (`xcrun simctl boot <device>`; it needs Xcode, Cherri and mkcert).
+2. Run `tools/scripts/shortcut-sim.sh`. It compiles a copy of `fedi-tap.cherri` named `tapdev` with `page` set to the dev server (`--page`, `--name`, `--device` and `--port` change the defaults), signs it with `shortcuts sign`, trusts the mkcert root in the simulator, serves the file from a throwaway server on 127.0.0.1:8999 and opens it in the simulator's Safari. Output goes to `.local/shortcut-sim/`.
+3. In the simulator, confirm the download, open it from the toolbar's Downloads list (a Shortcut icon, not a file) and tap **Add Shortcut**. The sheet should say "Appears in Share Sheet". Sign in on the dev page first if the test needs a signed-in account (`alice`).
+4. Open a mock post in Safari (`https://localhost:8443/notes/1`, or any link from `/_dev/`), then **Share** > **View More** > `tapdev`. iOS asks once whether `tapdev` may send the Safari item to `localhost`; the published Shortcut shows the same question for its own host. Choose Allow Once. The page opens with the link loaded; `?via=shortcut` (no link) can be checked with `xcrun simctl openurl booted "https://localhost:8443/?via=shortcut"`.
+5. Run `tools/scripts/shortcut-sim.sh stop` to stop the file server. The `tapdev` Shortcut stays in the simulator and is harmless; delete it in the Shortcuts app, or erase the simulator, for a clean start.
+
+Tips for driving it with the simulator control tool: take a screenshot after each tap, because the first launch shows a keyboard tip that can swallow typed text, and the Shortcuts import sheet appears a few seconds after the app opens. `shortcuts://run-shortcut?name=tapdev&input=text&text=<encoded link>` should run the Shortcut without the share sheet (not yet tried here), and the mock server's `/_dev/activities` lists what the page sent.
 
 ## Account storage
 
