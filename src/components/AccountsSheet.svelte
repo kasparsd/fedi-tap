@@ -17,7 +17,7 @@
     <legend>Accounts</legend>
     <ul id="account-list" class="list">
       {#each app.accounts as account (account.actor)}
-        <li>
+        <li class={app.removing === account.actor ? "confirm" : undefined}>
           {#if app.removing === account.actor}
             <!-- The question replaces the row, so no second dialog opens on top of this one. -->
             <span id="remove-text">Remove @{account.handle}?</span>

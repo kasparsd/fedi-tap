@@ -34,6 +34,7 @@ export async function authorize(value, { target, profileLinkOnly } = {}) {
       code_verifier,
       endpoints,
       target: httpsUrl(target)?.href,
+      account: value,
     }),
   );
   location.assign(url.href);
@@ -41,10 +42,11 @@ export async function authorize(value, { target, profileLinkOnly } = {}) {
 }
 
 /**
- * Finishes sign-in from the callback parameters and saves the account. `onTarget` is told about the
- * shared link that started the sign-in, before anything can fail.
+ * Finishes sign-in from the callback parameters and saves the account. `onStarted` is told what the
+ * sign-in started with (the shared `target` link and the `account` that was typed), before anything can
+ * fail, so a failed return can show both again.
  */
-export async function completeSignIn(params, onTarget) {
+export async function completeSignIn(params, onStarted) {
   let pending = null;
   try {
     pending = JSON.parse(sessionStorage.getItem(SIGN_IN_KEY));
@@ -57,7 +59,7 @@ export async function completeSignIn(params, onTarget) {
     throw signInProblem("This isn’t the sign-in you started in this tab.");
   }
   const target = httpsUrl(pending.target);
-  if (target) onTarget(target);
+  onStarted({ target, account: typeof pending.account === "string" ? pending.account : "" });
   if (params.has("error")) throw oauthProblem(params.get("error"), params.get("error_description"));
   const codes = params.getAll("code");
   const { endpoints, code_verifier } = pending;

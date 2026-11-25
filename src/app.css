@@ -304,14 +304,27 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   justify-content: flex-start;
   text-align: start;
 }
+/* A question about the row (Remove @me?) takes the whole line, so a handle never breaks mid-word beside its
+   buttons, and its two answers share the line below. */
+.list > li.confirm {
+  flex-wrap: wrap;
+}
+.list > li.confirm > :first-child {
+  flex-basis: 100%;
+}
+.confirm > button {
+  flex: 1;
+}
 
-/* Actions: two columns of equal buttons, so a label such as "Follow author" never crowds. Each is a toggle (Like, Repost,
+/* Actions: up to three columns of equal buttons, the same width in every group, two when a label such as
+   "Reposted" would not fit beside its icon. A label never wraps. Each is a toggle (Like, Repost,
    Follow: aria-pressed, an outline icon that fills when on) or a plain button (Reply). The icon is an inline
    svg, so state is shown by more than colour. <div class="actions"><button aria-pressed="false"><svg>…</svg>Like</button></div> */
 .actions {
   display: grid;
-  /* Three across while they fit; larger text (rem grows with it) makes fewer, wider columns. */
-  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  /* Three across while they fit, never more, so a group of one or two keeps the same button width as a
+     group of three; larger text (rem grows with it) makes fewer, wider columns. */
+  grid-template-columns: repeat(auto-fill, minmax(max(7rem, (100% - 2 * var(--space-1)) / 3), 1fr));
   gap: var(--space-1);
 }
 .actions :is(button, .button),
@@ -319,6 +332,7 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   gap: 0.25rem;
   padding-inline: var(--space-1);
 }
+.actions :is(button, .button),
 .byline button {
   white-space: nowrap;
 }
@@ -656,7 +670,8 @@ section:empty {
 .skeleton .byline > div > span:nth-child(3) {
   inline-size: 30%;
 }
-.skeleton .follow {
+/* As tall and wide as the Follow button it stands for; the id beats the bar height above. */
+#target-loading .skeleton .follow {
   flex: none;
   inline-size: 6.5rem;
   block-size: var(--target);

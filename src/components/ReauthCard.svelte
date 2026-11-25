@@ -4,11 +4,12 @@
   import Messages from "./Messages.svelte";
 </script>
 
+<!-- Drawn as the standard error card; a failed reconnect shows its own card below it, not inside. -->
 <section id="reauth">
-  <fieldset id="reauth-controls" disabled={app.busy}>
+  <fieldset id="reauth-controls" class="problem" disabled={app.busy}>
     <legend>Connection expired</legend>
     <p role="alert">
-      <strong>Connection expired.</strong> <span id="reauth-text">Reconnect as @{app.current.handle}.</span>
+      <strong>Connection expired</strong> <span id="reauth-text">Reconnect as @{app.current.handle}.</span>
     </p>
     <button
       type="button"
