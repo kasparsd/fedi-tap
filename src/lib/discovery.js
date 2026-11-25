@@ -196,6 +196,15 @@ export function intentLink(account, intent, address) {
 
 const SERVER_ACTIONS = ["like", "repost", "reply", "follow", "open"];
 
+/**
+ * Whether a post may be reposted: only one everyone can see (public or unlisted). A repost of a
+ * followers-only or direct post would show it to people it wasn't meant for, and Mastodon refuses it;
+ * a post that doesn't say who can see it is treated the same.
+ */
+export function repostable(target) {
+  return !target?.isActor && (target?.visibility === "public" || target?.visibility === "unlisted");
+}
+
 /** The actions the account's server advertises, before any post is loaded (what a placeholder reserves). */
 export function advertisedActions(account) {
   return SERVER_ACTIONS.filter((intent) => account?.intents?.[intent]);
@@ -203,8 +212,8 @@ export function advertisedActions(account) {
 
 /**
  * The actions the person's own server can open for the loaded post or profile, as `{ intent, href }`
- * in button order. A post offers all five (Follow goes to its verified author); a profile only
- * Follow and Open.
+ * in button order. A post offers all five (Follow goes to its verified author, and Repost only when
+ * the post may be reposted); a profile only Follow and Open.
  */
 export function serverActions(account, target) {
   if (!account || !target) return [];
@@ -215,6 +224,7 @@ export function serverActions(account, target) {
         ? target.author
         : target.id;
   return SERVER_ACTIONS.flatMap((intent) => {
+    if (intent === "repost" && !repostable(target)) return [];
     const href = intentLink(account, intent, address(intent));
     return href ? [{ intent, href }] : [];
   });

@@ -1,7 +1,17 @@
 <script>
   // One action: Like, Repost and Follow toggle (pressing one that is on undoes it); Reply opens its sheet.
   import { ACTIONS } from "../lib/constants.js";
-  import { actionLabel, app, doneLabel, openReply, perform, sentFor, undoLast } from "../state.svelte.js";
+  import {
+    actionLabel,
+    app,
+    doneLabel,
+    explainLocked,
+    lockedReason,
+    openReply,
+    perform,
+    sentFor,
+    undoLast,
+  } from "../state.svelte.js";
   import ActionIcon from "./ActionIcon.svelte";
   import BusyLabel from "./BusyLabel.svelte";
 
@@ -12,17 +22,17 @@
   const toggle = $derived(name !== "reply");
   const key = $derived(app.busyKey === `undo:${name}` ? `undo:${name}` : `act:${name}`);
   const working = $derived(app.busyKey === key);
-  // A server that gave no way to undo leaves the button on and not pressable. Reply is not pressable
-  // when the post doesn't say who may see it, since a reply could then reach more people than it did.
-  const locked = $derived(
-    (toggle && Boolean(sent) && !sent.undo) || (name === "reply" && !object.visibility),
-  );
+  // A server that gave no way to undo leaves the button on and not pressable. Reply and Repost are not
+  // pressable when they could reach people the post wasn't meant for (lockedReason); a tap says why.
+  const reason = $derived(object && !sent ? lockedReason(name) : "");
+  const locked = $derived((toggle && Boolean(sent) && !sent.undo) || Boolean(reason));
   // A profile offers only Follow; a post whose author couldn't be verified offers no Follow.
   const hidden = $derived(
     object.isActor ? name !== "follow" : name === "follow" && !object.author,
   );
 
   function press() {
+    if (reason) void explainLocked(name);
     if (app.busy || locked) return;
     if (name === "reply") openReply();
     else if (sent) undoLast(name);

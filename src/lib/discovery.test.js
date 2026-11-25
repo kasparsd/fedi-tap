@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { findActor, findIntents, intentLink, isActorLink } from "./discovery.js";
+import {
+  findActor,
+  findIntents,
+  intentLink,
+  isActorLink,
+  repostable,
+  serverActions,
+} from "./discovery.js";
 
 describe("isActorLink", () => {
   it("accepts the self link with an activity+json or profiled ld+json type", () => {
@@ -173,5 +180,34 @@ describe("intents on the home server", () => {
         "https://remote.example/1",
       ),
     ).toBeNull();
+  });
+});
+
+describe("reposting", () => {
+  const ORIGIN = "https://home.example";
+  const FEP = "https://w3id.org/fep/3b86/";
+  const account = {
+    actor: `${ORIGIN}/users/me`,
+    intents: {
+      like: { rel: `${FEP}Like`, template: `${ORIGIN}/like?uri={object}` },
+      repost: { rel: `${FEP}Announce`, template: `${ORIGIN}/boost?uri={object}` },
+    },
+  };
+  const post = (visibility) => ({ id: "https://remote.example/1", visibility });
+
+  it("is allowed only for a post everyone can see", () => {
+    expect(repostable(post("public"))).toBe(true);
+    expect(repostable(post("unlisted"))).toBe(true);
+    expect(repostable(post("private"))).toBe(false);
+    expect(repostable(post("direct"))).toBe(false);
+    expect(repostable(post(null))).toBe(false);
+    expect(repostable({ id: "https://remote.example/users/a", isActor: true })).toBe(false);
+  });
+
+  it("leaves the server's Repost link out for a post that can't be reposted", () => {
+    const intents = (visibility) => serverActions(account, post(visibility)).map((a) => a.intent);
+    expect(intents("public")).toEqual(["like", "repost"]);
+    expect(intents("private")).toEqual(["like"]);
+    expect(intents("direct")).toEqual(["like"]);
   });
 });
