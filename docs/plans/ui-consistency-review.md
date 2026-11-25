@@ -82,6 +82,33 @@ Method: ran the dev server with the mock backend and walked every panel in dark 
 - [x] Unify problem and reconnect messaging
 - [x] Update `docs/ux/components.md` with the dialog, button and message rules, then re-run `npm run validate`
 
+## Walkthrough 2026-11-25
+
+Drove every state against the mock (normal and 6.5 s slow servers) at 390 px in dark and light, plus 320 px and desktop: signed out, every sign-in failure (empty, bad handle, not a profile, API off, wrong account, denied), the authorize round trip, post, profile, long and followers-only posts, Like/Repost/Follow and undo, Reply, every link failure, editing the link, Accounts with one and two accounts, Remove, Mastodon account, both reconnect cases, the slow notice with Cancel and a slow send.
+
+Fixed:
+
+- [x] Slow-notice pill: Cancel sat below the text (the section's flow margin) and the end padding was doubled
+- [x] Action labels broke mid-word ("Reposte/d" at 390 px, "Repos/t" at 320 px): `.actions` is at most three equal columns, two when a label won't fit, labels never wrap; a group of one or two keeps the same button width
+- [x] "Remove @alice@localho/st?" broke mid-word: the question takes its own line, Cancel and Remove share the next
+- [x] The connection-expired message was plain red text, the only failure outside the `.problem` card
+- [x] "Canceled." beside "Connection cancelled": one spelling, "Cancelled."
+- [x] After a denied or wrong-account return the field was empty but marked invalid: what was typed is put back
+- [x] The loading placeholder's Follow was a thin bar, not button-sized (selector specificity)
+- [x] With two accounts and server links, nothing named the acting account; the "Acting as" line now always shows with two or more accounts, under the API group
+
+Open (need a decision):
+
+- [ ] Repost is offered on followers-only and direct posts. Mastodon refuses to boost those, and an Announce of one would spread it; lock or hide Repost for them, as Reply is locked when the audience is unknown
+- [ ] The Accounts sheet doesn't mark which account is active
+- [ ] Opening the Accounts sheet focuses "Add account", so on a phone the keyboard covers the list when the person only wanted to switch or remove
+- [ ] Text that isn't a link in the link field gets the browser's "Please enter a URL." bubble, while the account field answers with the app's own card ("Check the account")
+- [ ] The Reply sheet stacks two headings: "Reply" and the field label "Your reply"
+- [ ] A profile shows Follow twice: unlabelled in the byline (API) and in the labelled server-links group; a post's API buttons are labelled "Using API"
+- [ ] "Not a Fediverse post or profile" and "This isn't a post or profile" are near-identical titles for different failures, and the first says "ActivityPub data"
+- [ ] The header select clips " (reconnect)" to "(recon…" at 390 px
+- [ ] A long post's paragraphs have no space between them
+
 ## Decisions
 
 - Follow stays in the byline.
