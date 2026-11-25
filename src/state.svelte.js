@@ -4,6 +4,7 @@
 import { tick } from "svelte";
 import { activityKey, backendFor } from "./lib/backend.js";
 import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
+import { repostable } from "./lib/discovery.js";
 import { Problem, problemOf } from "./lib/problem.js";
 import { setRequestSignal } from "./lib/signal.js";
 import { authorize, completeSignIn } from "./lib/signin.js";
@@ -132,6 +133,35 @@ export function doneLabel(name) {
 export function sentFor(action) {
   const { resolved, current } = app;
   return resolved && current ? app.done[activityKey(current.actor, resolved, action)] : undefined;
+}
+
+/** Why an action can't be used on the loaded post, or "" when it can. */
+export function lockedReason(name) {
+  const object = app.resolved;
+  if (!object || object.isActor) return "";
+  if (name === "repost" && !repostable(object)) {
+    if (object.visibility === "private")
+      return "Only the author’s followers can see this post, so it can’t be reposted.";
+    if (object.visibility === "direct")
+      return "Only the people it mentions can see this post, so it can’t be reposted.";
+    return "This post doesn’t say who can see it, so FediTap can’t repost it.";
+  }
+  if (name === "reply" && !object.visibility) {
+    return "This post doesn’t say who can see it, so FediTap can’t reply to it safely.";
+  }
+  return "";
+}
+
+/**
+ * A tap on an action that can't be used says why, in the status line and the pill. The line is cleared
+ * first, so a second tap shows the pill and announces the reason again.
+ */
+export async function explainLocked(name) {
+  const reason = lockedReason(name);
+  if (!reason || app.busy) return;
+  clearMessages("actions");
+  await tick();
+  setMessage("actions", { status: reason });
 }
 
 // --- Messages --------------------------------------------------------------------------------------

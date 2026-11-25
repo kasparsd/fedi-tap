@@ -84,6 +84,19 @@ test("a reply to a followers-only post stays followers-only", async ({ page }) =
   expect(reply.object.to).toEqual(reply.to);
 });
 
+test("a followers-only post can't be reposted, and a tap says why", async ({ page }) => {
+  await openLink(page, "/notes/4");
+  const repost = action(page, "Repost");
+  await expect(repost).toHaveAttribute("aria-disabled", "true");
+  await expect(page.locator("#server-repost")).toHaveCount(0);
+  // Playwright won't click an aria-disabled button; a person can, and that's the tap being tested.
+  await repost.click({ force: true });
+  await expect(page.locator("#action-status")).not.toBeEmpty();
+  await expect(page.locator(".pill")).toBeVisible();
+  await expect(repost).toHaveAttribute("aria-pressed", "false");
+  expect(await received(page)).toEqual([]);
+});
+
 test("editing the link locks the post that was opened for the old one", async ({ page }) => {
   await openLink(page, "/notes/1");
   await expect(page.locator("#post")).toHaveJSProperty("inert", false);
