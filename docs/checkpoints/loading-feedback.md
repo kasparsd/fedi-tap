@@ -17,7 +17,7 @@ Measured against the dev server (400 ms mock delay, 390 px wide, 150 ms after th
   - The progress bar, the placeholder and the "Opening…" label appear after 150 ms; with instant responses none of them is ever added to the page.
   - The busy button keeps its fill and its width; Like keeps the same width idle, sending and done.
   - Opening a second link keeps the old post, dimmed and inert, with the same title, and the Shortcut panel below does not move.
-  - After 5 s the slow notice appears, with Cancel for opening a link (Cancel leaves a clean form, no error, "Canceled.", and the same link opens afterwards) and without it for a send.
+  - After 5 s the slow notice appears, with Cancel for opening a link (Cancel leaves a clean form, no error, "Cancelled.", and the same link opens afterwards) and without it for a send.
   - A link that fails to open clears the post and shows the error.
 - `npm run validate` passes after rebasing on the Mastodon merge (76 unit tests, svelte-check with no warnings, build and static checks).
 

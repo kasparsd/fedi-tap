@@ -271,7 +271,7 @@ async function runTask(
   liveMessage = message;
   // Cancelled by the person: no problem to show, and a request that still finished is dropped.
   const cancelled = () => {
-    setMessage(section, { status: "Canceled." });
+    setMessage(section, { status: "Cancelled." });
     return false;
   };
   try {
@@ -546,7 +546,7 @@ export async function findTarget() {
   // A link that didn't open leaves nothing on screen that belongs to the link in the field.
   app.resolved = null;
   if (app.current && !app.current.needsReauth) {
-    // Only a shown problem makes the field invalid; a cancelled lookup says "Canceled." and leaves
+    // Only a shown problem makes the field invalid; a cancelled lookup says "Cancelled." and leaves
     // nothing for aria-describedby to point at.
     if (app.messages.lookup.problem) markTargetInvalid();
     byId("post-url")?.focus();
@@ -739,7 +739,11 @@ async function run() {
       "auth",
       "",
       async () => {
-        await completeSignIn(params, (target) => setTarget(target));
+        await completeSignIn(params, ({ target, account }) => {
+          if (target) setTarget(target);
+          // A failed return shows what was typed again, so the marked field isn't empty.
+          app.accountValue = account;
+        });
         refresh();
         app.accountValue = "";
         app.profileLinkMode = false;

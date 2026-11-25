@@ -1,5 +1,4 @@
 <script>
-  import { serverActions } from "./lib/discovery.js";
   import { httpsUrl } from "./lib/url.js";
   import { app, cancelTask, start } from "./state.svelte.js";
   import AboutFooter from "./components/AboutFooter.svelte";
@@ -22,7 +21,6 @@
   void start();
 
   const usable = $derived(app.view === "ready" || app.view === "loaded");
-  const grouped = $derived(serverActions(app.current, app.resolved).length > 0);
   const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
   let aboutFooter = $state();
 </script>
@@ -77,8 +75,9 @@
         <TargetCard object={app.resolved} />
       </div>
       {#if !app.resolved.isActor}<ActionButtons />{/if}
+      <!-- Names who the API buttons act as; the server links act as whoever is signed in there. -->
+      {#if app.accounts.length > 1}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
       <ServerLinks />
-      {#if app.accounts.length > 1 && !grouped}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
     </section>
   {:else if usable && app.opening && app.showProgress}
     <div class="card"><TargetCard host={openingHost} /></div>

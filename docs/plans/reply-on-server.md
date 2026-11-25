@@ -7,7 +7,7 @@ Goal: besides the in-app actions, offer "Reply / Like / Repost / Follow / Open o
 - Reply uses only a `Create` template that contains `{inReplyTo}` counts. Mastodon's `Create` template takes `{content}` only (`/share?text={content}`), so it cannot open a reply and gets no button. `Object` (and the legacy subscribe link, `{uri}`) become an "Open on {server}" link instead.
 - The template is read once, when sign-in finishes (best effort: any failure means no button, never a failed sign-in), and saved per intent on the account as `intents`.
 - The lookup is `acct:{handle}` on the account's own origin. The template must be HTTPS on that same origin, have no fragment, and contain `{inReplyTo}` as its only placeholder; it is checked again when the link is built.
-- The links are real links (`target="_blank"`, `rel="noopener noreferrer"`), grouped under the heading "On {host}" and shown with the same icons as the in-app buttons, which sit under the heading "Using API as @me". Reply is a link in that group, not in the Reply sheet. The group names appear only when the server offers something.
+- The links are real links (`target="_blank"`, `rel="noopener noreferrer"`), grouped under the heading "On {host}" and shown with the same icons as the in-app buttons, which sit under the heading "Using API". Reply is a link in that group, not in the Reply sheet. The group names appear only when the server offers something.
 - The post address that fills `{inReplyTo}` is the resolved target's `id`, percent-encoded.
 
 ## Todos
