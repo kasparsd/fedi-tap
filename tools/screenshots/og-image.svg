@@ -32,7 +32,7 @@
       <tspan x="72" y="466">you find a Fediverse post.</tspan>
     </text>
   </g>
-  <!-- The app with a post loaded from the mock server (tools/og/capture.js). -->
+  <!-- The app with a post loaded from the mock server (tools/screenshots/capture.js). -->
   <rect x="700" y="40" width="440" height="550" rx="22" fill="#fff" filter="url(#shadow)"/>
-  <image href="app.png" x="700" y="40" width="440" height="544" clip-path="url(#card)"/>
+  <image href="og-app.png" x="700" y="40" width="440" height="544" clip-path="url(#card)"/>
 </svg>

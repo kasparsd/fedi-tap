@@ -15,7 +15,7 @@ Share a link from any app, choose **Open in Fediverse**, and FediTap opens with 
 
 | 1. Share | 2. Connect once | 3. Choose | 4. Reply | 5. Done |
 |:---:|:---:|:---:|:---:|:---:|
-| <img src="docs/images/share-sheet.jpg" width="170" alt="Safari's share sheet on a blog post, with Open in Fediverse next to Copy"> | <img src="docs/images/connect.png" width="170" alt="FediTap opened with the shared link and a field to connect an account"> | <img src="docs/images/actions.png" width="170" alt="The post with its author and the Like, Repost, Reply and Follow buttons"> | <img src="docs/images/reply.png" width="170" alt="The reply sheet, naming the author and your account and saying replies are public"> | <img src="docs/images/done.png" width="170" alt="The post, Liked, and a note that the reply was sent"> |
+| <img src="docs/images/share-sheet.jpg" width="170" alt="Safari's share sheet on a blog post, with Open in Fediverse next to Copy"> | <img src="docs/images/connect.png" width="170" alt="FediTap opened with the shared link and a field to connect an account"> | <img src="docs/images/actions.png" width="170" alt="The post with its author and the Like, Repost, Reply and Follow buttons"> | <img src="docs/images/reply.png" width="170" alt="The reply sheet, naming the author and your account and saying replies are public"> | <img src="docs/images/done.png" width="170" alt="The post with Like turned to Liked, and a note saying it was liked as your account"> |
 
 1. In the share sheet of any app (Safari here), choose **Open in Fediverse**. To keep it in the top row, scroll the sheet to **Edit Actions** and add Open in Fediverse to Favorites.
 2. The first time, connect your account. FediTap keeps the link while you approve access on your own server, then opens it.
@@ -27,7 +27,7 @@ iOS asks once whether the Shortcut may send the link to the page, and shows the 
 
 <img src="docs/images/permission.jpg" width="170" alt="The iOS prompt: allow Open in Fediverse to send 1 Safari item to kasparsd.github.io">
 
-The screenshots are an iPhone in dark mode with the published page and Shortcut. The account is a made-up one on the local mock server, and the shared post is a public blog post. [docs/development.md](docs/development.md#test-the-shortcut-in-the-ios-simulator) says how to repeat them.
+The screenshots are an iPhone in dark mode. The share sheet and the prompt come from the iOS Simulator with the published Shortcut, and the FediTap screens from the current page in Chromium. The account is a made-up one on the local mock server, and the shared post is a public blog post. [docs/development.md](docs/development.md#screenshots-for-the-readme) says how to repeat them.
 
 ## What it does
 
