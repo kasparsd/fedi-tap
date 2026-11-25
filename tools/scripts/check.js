@@ -54,6 +54,18 @@ if (!client.redirect_uris?.includes(client.client_uri)) {
   errors.push("client.json: redirect_uris must include client_uri");
 }
 
+// Link previews: absolute URLs under client_uri, and the image they name is built.
+for (const [, property, url] of html.matchAll(
+  /(?:property|rel)="(og:url|og:image|canonical)"\s+(?:content|href)="([^"]*)"/g,
+)) {
+  if (!url.startsWith(client.client_uri))
+    errors.push(`${property} must be under ${client.client_uri}`);
+  else if (!existsSync(join(dist, url.slice(client.client_uri.length) || "index.html"))) {
+    errors.push(`${property} names a file missing from dist: ${url}`);
+  }
+}
+if (!/property="og:image"/.test(html)) errors.push("dist/index.html has no og:image");
+
 // Sources: remote text may only reach the page as text, and styles may only come from stylesheets.
 function walk(dir) {
   return readdirSync(dir).flatMap((name) => {
