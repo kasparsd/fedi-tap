@@ -45,5 +45,7 @@ export async function getJson(url, accept = "application/json") {
   if (httpsUrl(response.url)?.origin !== url.origin) {
     throw new Error("Discovery redirected to a different server.");
   }
-  return response.json();
+  const body = await readJson(response);
+  if (body === null) throw new Error("The answer is not JSON.");
+  return body;
 }

@@ -13,7 +13,9 @@
     sans-serif;
   --quiet: color-mix(in srgb, CanvasText 65%, Canvas); /* supportive text */
   --line: color-mix(in srgb, CanvasText 45%, Canvas); /* borders, separators, pressed fill */
-  --accent: light-dark(#006fa6, #00a6f5); /* brand blue: links and the one primary button */
+  --accent: #006fa6; /* brand blue: links and the one primary button. A plain value with a dark override
+    below, not light-dark(): a browser that doesn't know it would leave the variable unusable and the
+    primary button without a background (Safari before 17.5 passes the support check). */
   --danger: color-mix(in srgb, red 75%, CanvasText); /* errors and destructive actions */
   --space-1: 0.5rem; /* a pair that belongs together: label and input, field and help */
   --space-2: 1rem; /* the vertical rhythm, and horizontal padding */
@@ -26,6 +28,12 @@
   --target: 2.75rem; /* minimum touch target */
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #00a6f5;
+  }
+}
+
 /* Page: one centred column. Children of these containers are spaced by one rule (--space-2);
    a heading sits --space-1 above what it introduces. No wrapper elements just for spacing. */
 *,
@@ -36,6 +44,9 @@
 [hidden] {
   /* biome-ignore lint/complexity/noImportantStyles: author display rules such as .row must not override [hidden] */
   display: none !important;
+}
+html {
+  scrollbar-gutter: stable; /* a post that makes the page scroll doesn't shift the column sideways */
 }
 body {
   margin: 0;
@@ -91,6 +102,10 @@ a {
 :focus-visible {
   outline: var(--focus);
   outline-offset: 2px;
+}
+
+:where(p, li) {
+  text-wrap: pretty; /* no lone last word; ignored where unknown */
 }
 
 /* Supportive text. <p class="quiet">Your handle or profile link.</p>  Status and alerts are plain text:
@@ -163,9 +178,12 @@ select {
 }
 textarea {
   resize: vertical;
+  field-sizing: content; /* grows with what is typed where supported; rows is the least it has */
+  max-block-size: 50dvh;
 }
 /* The account switcher: the browser's own arrow is drawn tight to the edge, so draw a caret from gradients
-   (the CSP allows no images). The text keeps the inputs' side padding; the end has room for the caret. */
+   (kept to a pair of lines so no image file is needed). The text keeps the inputs' side padding; the end has
+   room for the caret. Forced colours drop background images, so there the native arrow comes back (below). */
 select {
   appearance: none;
   padding-inline: var(--space-2) 2.25rem;
@@ -446,6 +464,10 @@ header select {
   border-radius: 0;
   outline: 0;
 }
+/* The wrapper clips its children, so the button's outward ring would be cut: draw it inside instead. */
+.field > button:focus-visible {
+  outline-offset: -2px;
+}
 .field > button {
   border: 0;
   border-inline-start: var(--rule);
@@ -516,6 +538,15 @@ dialog {
 dialog::backdrop {
   background: color-mix(in srgb, var(--line) 50%, transparent);
 }
+/* A scroll over the backdrop or past the end of the sheet must not move the page behind it. The page is
+   not locked with overflow: hidden on the body, which shifts the layout and breaks on iOS. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
 dialog.sheet {
   inline-size: min(100%, 36rem);
   margin-block: auto 0;
@@ -541,10 +572,6 @@ section:empty {
 }
 .card > .post {
   padding: var(--space-2);
-}
-.card .post footer,
-.card .post footer > a {
-  min-block-size: 0;
 }
 #lookup + :is(#post, .card) {
   margin-block-start: var(--space-1);
@@ -600,6 +627,7 @@ section:empty {
   text-align: center;
   pointer-events: none;
   animation: pill-in 0.2s ease-out;
+  border: 1px solid transparent; /* forced colours repaint the fill, so the edge keeps it apart from the page */
 }
 /* The button's own side padding is the gap to the text and to the pill's end, so neither is added twice. */
 #slow.pill {
@@ -729,4 +757,13 @@ section:empty {
 }
 .problem > details > * + * {
   margin-block-start: var(--space-1);
+}
+
+/* Forced colours (Windows high contrast): background images are dropped, so the account switcher's drawn
+   caret would vanish. Give the select its native arrow back. */
+@media (forced-colors: active) {
+  select {
+    appearance: auto;
+    padding-inline-end: var(--space-2);
+  }
 }

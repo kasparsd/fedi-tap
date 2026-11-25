@@ -30,24 +30,37 @@
 >
   <h2 id="reply-title">Reply</h2>
   <p id="reply-context" class="quiet">{context}</p>
-  <fieldset id="reply-controls" disabled={app.busy}>
-    <legend>Write a reply</legend>
-    <label for="reply-text">Your reply</label>
-    <textarea id="reply-text" rows="5" aria-describedby="reply-note" bind:value={app.replyText}></textarea>
-    <p id="reply-note" class="quiet">{reach}</p>
-    <Messages section="reply" />
-    <div class="row">
-      <button type="button" id="reply-cancel" onclick={() => (app.replyOpen = false)}>Cancel</button>
-      <button
-        type="button"
-        id="reply-send"
-        class="primary"
-        disabled={!app.replyText.trim()}
-        aria-busy={isBusy("reply-send") ? "true" : undefined}
-        onclick={sendReply}
-      >
-        <BusyLabel key="reply-send" idle="Send" busy="Sending…" />
-      </button>
-    </div>
-  </fieldset>
+  <form
+    id="reply-form"
+    onsubmit={(event) => {
+      event.preventDefault();
+      sendReply();
+    }}
+  >
+    <fieldset id="reply-controls" disabled={app.busy}>
+      <legend>Write a reply</legend>
+      <label for="reply-text">Your reply</label>
+      <textarea
+        id="reply-text"
+        name="reply"
+        rows="5"
+        aria-describedby="reply-note"
+        bind:value={app.replyText}
+      ></textarea>
+      <p id="reply-note" class="quiet">{reach}</p>
+      <Messages section="reply" />
+      <div class="row">
+        <button type="button" id="reply-cancel" onclick={() => (app.replyOpen = false)}>Cancel</button>
+        <button
+          type="submit"
+          id="reply-send"
+          class="primary"
+          disabled={!app.replyText.trim()}
+          aria-busy={isBusy("reply-send") ? "true" : undefined}
+        >
+          <BusyLabel key="reply-send" idle="Send" busy="Sending…" />
+        </button>
+      </div>
+    </fieldset>
+  </form>
 </Sheet>

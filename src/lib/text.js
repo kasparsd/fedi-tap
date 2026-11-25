@@ -30,6 +30,20 @@ export function cleanText(text, limit) {
   return `${kept.join("").trimEnd()}…`;
 }
 
+// Parses markup into an inert document. Document.parseHTML() needs no Trusted Types policy; where it is
+// missing, DOMParser takes the markup through one policy that this module alone holds (the page's
+// CSP lets that name be created once and lists no other), and whose result only ever goes into the
+// inert document below, never into the page.
+let policy;
+function parseInert(markup) {
+  if (typeof Document.parseHTML === "function") return Document.parseHTML(markup);
+  if (globalThis.trustedTypes) {
+    policy ??= trustedTypes.createPolicy("feditap-plain-text", { createHTML: (value) => value });
+    return new DOMParser().parseFromString(policy.createHTML(markup), "text/html");
+  }
+  return new DOMParser().parseFromString(markup, "text/html");
+}
+
 /**
  * Server HTML as plain text, capped at `limit` characters. Remote markup only ever reaches the page
  * as text: it is parsed in an inert document (nothing runs or loads), every tag is dropped along
@@ -39,7 +53,7 @@ export function cleanText(text, limit) {
 export function plainText(html, limit) {
   if (typeof html !== "string") return "";
   const markup = html.slice(0, MAX_HTML).replace(/<\/p>|<br\s*\/?>/gi, "\n");
-  const doc = new DOMParser().parseFromString(markup, "text/html");
+  const doc = parseInert(markup);
   for (const element of doc.querySelectorAll(NON_PROSE)) element.remove();
   return cleanText(doc.body.textContent, limit);
 }

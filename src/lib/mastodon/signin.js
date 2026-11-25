@@ -1,4 +1,5 @@
 import { oauthEndpoints } from "../discovery.js";
+import { readJson } from "../http.js";
 import { Problem, signInProblem } from "../problem.js";
 import { readStore, saveStore, useStore } from "../store.js";
 import { accessCredentials, exchange, pageAddress, requestToken } from "../token.js";
@@ -136,7 +137,7 @@ export async function complete({ endpoints, origin, tokenEndpoint, code, code_ve
     { api: origin, token: credentials.token },
     "/api/v1/accounts/verify_credentials",
   );
-  const profile = response.ok ? await response.json().catch(() => null) : null;
+  const profile = response.ok ? await readJson(response, 20000) : null;
   const uri = httpsUrl(profile?.uri ?? profile?.url)?.href;
   if (!uri) throw signInProblem("Your server didn’t say who signed in.");
   if (uri !== endpoints.actor) {

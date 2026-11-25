@@ -2,8 +2,9 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
 import { certificate, mockServer, PORT } from "./tools/mock-server.js";
 
-// The published page may only load its own script and stylesheet and talk to HTTPS servers. Added
-// to the built page only: the dev server injects inline styles for hot reload.
+// The published page may only load its own script and stylesheet and talk to HTTPS servers. It submits
+// no form (sign-in leaves through a script redirect). Added to the built page only: the dev server
+// injects inline styles for hot reload.
 const CSP = [
   "default-src 'none'",
   "img-src 'self'",
@@ -11,9 +12,13 @@ const CSP = [
   "script-src 'self'",
   "style-src 'self'",
   "connect-src https:",
-  "form-action https:",
+  "form-action 'none'",
   "base-uri 'none'",
   "object-src 'none'",
+  // Nothing may reach an HTML sink as a plain string. Svelte makes its templates through its own
+  // policy; text.js has one for the fallback that parses server HTML into an inert document.
+  "require-trusted-types-for 'script'",
+  "trusted-types svelte-trusted-html feditap-plain-text",
 ].join("; ");
 
 function contentSecurityPolicy() {

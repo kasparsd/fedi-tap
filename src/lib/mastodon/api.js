@@ -1,5 +1,5 @@
 import { readJson } from "../http.js";
-import { corsProblem, Problem, refused } from "../problem.js";
+import { networkProblem, Problem, refused } from "../problem.js";
 import { requestSignal } from "../signal.js";
 
 async function send(account, path, { method = "GET", form, headers } = {}) {
@@ -15,7 +15,7 @@ async function send(account, path, { method = "GET", form, headers } = {}) {
       signal: method === "GET" ? requestSignal() : AbortSignal.timeout(20000),
     });
   } catch (error) {
-    throw corsProblem("Couldn’t reach your server.", error.message);
+    throw networkProblem(error, { sent: method !== "GET" });
   }
 }
 

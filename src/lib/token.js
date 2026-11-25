@@ -1,6 +1,6 @@
 import { WP_SETTING } from "./constants.js";
-import { getJson } from "./http.js";
-import { apiOff, corsProblem, oauthProblem, Problem } from "./problem.js";
+import { getJson, readJson } from "./http.js";
+import { apiOff, networkProblem, oauthProblem, Problem } from "./problem.js";
 import { httpsUrl } from "./url.js";
 
 /** This page's address (where sign-in returns to), which must be HTTPS. */
@@ -54,7 +54,7 @@ export async function requestToken(endpoint, params) {
       signal: AbortSignal.timeout(20000),
     });
   } catch (error) {
-    throw corsProblem("Couldn’t reach your server.", error.message);
+    throw networkProblem(error);
   }
   if (response.type === "opaqueredirect") {
     throw new Problem(
@@ -66,7 +66,7 @@ export async function requestToken(endpoint, params) {
       },
     );
   }
-  return { response, result: await response.json().catch(() => null) };
+  return { response, result: await readJson(response) };
 }
 
 export async function exchange(endpoint, params) {

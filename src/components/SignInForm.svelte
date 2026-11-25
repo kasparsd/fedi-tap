@@ -8,8 +8,10 @@
   let { label = "Connect account" } = $props();
 </script>
 
+<!-- novalidate: an empty or malformed entry is answered by the page's own error card, not the browser's bubble. -->
 <form
   id="sign-in"
+  novalidate
   onsubmit={(event) => {
     event.preventDefault();
     void submitSignIn();
@@ -28,10 +30,13 @@
         placeholder={app.profileLinkMode ? "https://" : "@you@example.com"}
         autocomplete="off"
         autocapitalize="none"
+        autocorrect="off"
+        enterkeyhint="go"
+        inputmode={app.profileLinkMode ? "url" : "email"}
         spellcheck="false"
         required
         readonly={locked("auth")}
-        aria-invalid={app.accountInvalid ? "true" : undefined}
+        aria-invalid={app.accountInvalid ? "true" : "false"}
         aria-describedby={app.accountInvalid ? "error-text" : undefined}
         value={app.accountValue}
         oninput={(event) => onAccountInput(event.currentTarget.value)}
