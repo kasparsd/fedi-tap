@@ -1,8 +1,8 @@
 import { ACTIVITY_TYPE, ACTOR_ACCEPT, ACTOR_TYPES, AS_PROFILE, PUBLIC } from "../constants.js";
 import { readJson } from "../http.js";
 import {
-  corsProblem,
   linkNotFound,
+  networkProblem,
   notFediverse,
   otherKind,
   Problem,
@@ -33,7 +33,7 @@ async function activityRequest(
       signal,
     });
   } catch (error) {
-    throw corsProblem("Couldn’t reach your server.", error.message);
+    throw networkProblem(error, { sent: endpoint === account.outbox });
   }
 }
 

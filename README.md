@@ -59,7 +59,7 @@ Lemmy and Misskey use different APIs and are not supported. FediTap picks the ba
 
 - Accounts and tokens live in your browser's local storage and are sent only to your own server. There is no FediTap backend.
 - The shortcut sends only the shared link, in the page address, and never receives credentials.
-- Remote text is shown as plain text; HTML from servers is never rendered. A strict Content Security Policy forbids inline code.
+- Remote text is shown as plain text; HTML from servers is never rendered. A strict Content Security Policy forbids inline code and requires Trusted Types. The page draws nothing when another page frames it.
 - Sign-in uses OAuth with PKCE and checks that the account that signs in is the one you asked for. To end access completely, also revoke FediTap in your server's settings.
 
 ## Develop

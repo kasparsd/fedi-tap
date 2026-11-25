@@ -11,8 +11,10 @@
   import Messages from "./Messages.svelte";
 </script>
 
+<!-- novalidate: an empty or malformed entry is answered by the page's own error card, not the browser's bubble. -->
 <form
   id="lookup"
+  novalidate
   onsubmit={(event) => {
     event.preventDefault();
     void findTarget();
@@ -25,13 +27,15 @@
       <div class="field">
         <input
           id="post-url"
+          name="url"
           type="url"
+          enterkeyhint="go"
           placeholder="Paste a link"
           autocomplete="off"
           spellcheck="false"
           required
           readonly={locked("lookup")}
-          aria-invalid={app.targetInvalid ? "true" : undefined}
+          aria-invalid={app.targetInvalid ? "true" : "false"}
           aria-describedby={app.targetDescribedBy ?? undefined}
           value={app.targetValue}
           oninput={(event) => onTargetInput(event.currentTarget.value)}

@@ -1,6 +1,6 @@
 # Modern Web Guidance review
 
-Planning input, 2026-11-25. FediTap was checked against Google Chrome's [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) (v1.0.2, released 2026-11-23). The review read about 75 of the 197 guides in full: every guide that touches what the app does. The rest cover features FediTap doesn't have (carousels, tables, drag and drop, passkeys, WebGL, built-in AI, web components, Wasm). Baseline statuses are as the guides state them.
+Planning input, 2026-11-25. Most of it is applied; see [the checkpoint](../checkpoints/2026-11-25-modern-web-guidance.md) and [the roadmap](../roadmap.md) for what is left. FediTap was checked against Google Chrome's [Modern Web Guidance](https://github.com/GoogleChrome/modern-web-guidance) (v1.0.2, released 2026-11-23). The review read about 75 of the 197 guides in full: every guide that touches what the app does. The rest cover features FediTap doesn't have (carousels, tables, drag and drop, passkeys, WebGL, built-in AI, web components, Wasm). Baseline statuses are as the guides state them.
 
 ## The resource
 

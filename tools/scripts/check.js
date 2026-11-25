@@ -22,6 +22,13 @@ if (!policy) errors.push("dist/index.html has no Content Security Policy");
 if (!/(^|;\s*)script-src 'self'(;|$)/.test(policy)) errors.push("CSP script-src is not 'self'");
 if (!/(^|;\s*)style-src 'self'(;|$)/.test(policy)) errors.push("CSP style-src is not 'self'");
 if (/unsafe-|data:|blob:/.test(policy)) errors.push("CSP allows inline code, data: or blob:");
+if (!/(^|;\s*)form-action 'none'(;|$)/.test(policy)) errors.push("CSP form-action is not 'none'");
+if (!/(^|;\s*)require-trusted-types-for 'script'(;|$)/.test(policy)) {
+  errors.push("CSP does not require Trusted Types for scripts");
+}
+if (/trusted-types[^;]*(\*|'allow-duplicates')/.test(policy)) {
+  errors.push("CSP trusted-types allows any policy name or duplicates");
+}
 
 // Nothing inline in the built page.
 if (/<script(?![^>]*\ssrc=)[^>]*>/i.test(html)) errors.push("dist/index.html has an inline script");

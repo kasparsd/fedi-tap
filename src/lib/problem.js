@@ -75,6 +75,24 @@ export function otherKind(target, kind) {
   );
 }
 
+/**
+ * A request that never got an answer. A timeout is the server being slow, not a CORS block or being
+ * offline, and for a request that changes something (`sent`) it may still have gone through, so the
+ * person is told to check before sending it again.
+ */
+export function networkProblem(error, { sent = false } = {}) {
+  if (error?.name === "TimeoutError") {
+    return new Problem(
+      "Your server took too long.",
+      sent
+        ? "It may still have gone through. Check before you try again."
+        : "It didn’t answer in time. Try again in a moment.",
+      { detail: "The request timed out." },
+    );
+  }
+  return corsProblem("Couldn’t reach your server.", error?.message);
+}
+
 export function corsProblem(title, detail) {
   const cause =
     navigator.onLine === false

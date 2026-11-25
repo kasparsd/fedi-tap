@@ -1,6 +1,6 @@
 <script>
   import { httpsUrl } from "./lib/url.js";
-  import { app, cancelTask, start } from "./state.svelte.js";
+  import { app, start } from "./state.svelte.js";
   import AboutFooter from "./components/AboutFooter.svelte";
   import AccountsSheet from "./components/AccountsSheet.svelte";
   import ActionsPlaceholder from "./components/ActionsPlaceholder.svelte";
@@ -8,10 +8,10 @@
   import Header from "./components/Header.svelte";
   import LookupForm from "./components/LookupForm.svelte";
   import Messages from "./components/Messages.svelte";
+  import Notices from "./components/Notices.svelte";
   import ReauthCard from "./components/ReauthCard.svelte";
   import ReplySheet from "./components/ReplySheet.svelte";
   import ServerLinks from "./components/ServerLinks.svelte";
-  import Toast from "./components/Toast.svelte";
   import ShortcutCard from "./components/ShortcutCard.svelte";
   import SignInForm from "./components/SignInForm.svelte";
   import TargetCard from "./components/TargetCard.svelte";
@@ -23,19 +23,18 @@
   const usable = $derived(app.view === "ready" || app.view === "loaded");
   const openingHost = $derived(httpsUrl(app.targetValue.trim())?.hostname ?? "");
   let aboutFooter = $state();
+
+  // The tab title names the screen, so history and assistive technology can tell them apart.
+  $effect(() => {
+    document.title = `${app.title} – ⁂tap`;
+  });
 </script>
 
 <main data-view={app.view}>
   <Header />
   <!-- Signed in or out, the form's own label is the visible title. -->
   <h1 id="title" class={usable || app.view === "signed-out" ? "sr" : undefined}>{app.title}</h1>
-  <p id="task-announce" role="status">{app.task?.announce ?? ""}</p>
-  {#if app.slow}
-    <section id="slow" class="pill">
-      <p role="status">Still waiting for your server…</p>
-      {#if app.task?.cancellable}<button type="button" onclick={cancelTask}>Cancel</button>{/if}
-    </section>
-  {/if}
+  {#if !app.accountsOpen && !app.replyOpen}<Notices />{/if}
 
   {#if app.view === "signed-out"}
     <section>
@@ -90,6 +89,5 @@
 </main>
 
 <AboutFooter bind:this={aboutFooter} />
-<Toast />
 <AccountsSheet />
 <ReplySheet />
