@@ -99,7 +99,7 @@ Fixed:
 
 Open (need a decision):
 
-- [ ] Repost is offered on followers-only and direct posts. Mastodon refuses to boost those, and an Announce of one would spread it; lock or hide Repost for them, as Reply is locked when the audience is unknown
+- [x] Repost was offered on followers-only and direct posts: it is now greyed for any post that isn't public or unlisted, a tap says why, and the server's Repost link is left out
 - [ ] The Accounts sheet doesn't mark which account is active
 - [ ] Opening the Accounts sheet focuses "Add account", so on a phone the keyboard covers the list when the person only wanted to switch or remove
 - [ ] Text that isn't a link in the link field gets the browser's "Please enter a URL." bubble, while the account field answers with the app's own card ("Check the account")
