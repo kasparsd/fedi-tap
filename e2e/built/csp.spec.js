@@ -42,14 +42,13 @@ test("the built page works under its Content Security Policy", async ({ page }) 
 
   await signIn(page, "alice");
   // Hostile server markup is parsed into an inert document without a Trusted Types violation. The browser
-  // still reports the markup's own inline handlers (onload, onerror) as blocked while parsing it, though
-  // nothing runs there; those reports are expected here and nothing else is.
+  // may report the markup's own inline handlers (onload, onerror) as blocked while parsing it (some
+  // versions do, some don't), though nothing runs there; those reports are allowed here and nothing else is.
   const logged = violations.length;
   await openLink(page, "/notes/5");
   await expect(page.locator("#target-excerpt")).toContainText("Safe words.");
   await expect(page.locator("#target-excerpt *")).toHaveCount(0);
   const hostile = await page.evaluate(() => window.__violations.splice(0));
-  expect(hostile.length).toBeGreaterThan(0);
   expect(hostile.filter((violation) => !violation.startsWith("script-src-attr"))).toEqual([]);
   violations.splice(logged);
   await openLink(page, "/notes/1");
