@@ -587,11 +587,13 @@ section:empty {
   pointer-events: none;
   animation: pill-in 0.2s ease-out;
 }
+/* The button's own side padding is the gap to the text and to the pill's end, so neither is added twice. */
 #slow.pill {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0;
   padding-block: 0;
+  padding-inline-end: 0;
 }
 #slow.pill > p {
   padding-block: var(--space-1);
@@ -602,6 +604,7 @@ section:empty {
 #slow.pill button {
   flex: none;
   inline-size: auto;
+  margin: 0;
   min-block-size: var(--target);
   padding-block: 0;
   border: 0;
