@@ -80,8 +80,7 @@ function appFor(origin, registration, page, scope) {
 export async function prepare({ id, profile, webfinger }) {
   const origin = id.origin;
   const { endpoints, metadata } = await oauthEndpoints(origin, {
-    authorize: `${origin}/oauth/authorize`,
-    token: `${origin}/oauth/token`,
+    fallback: { authorize: `${origin}/oauth/authorize`, token: `${origin}/oauth/token` },
   });
   const registration =
     homeEndpoint(metadata?.registration_endpoint, origin)?.href ?? `${origin}/api/v1/apps`;

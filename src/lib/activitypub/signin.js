@@ -10,8 +10,10 @@ import { actorSettings } from "./discovery.js";
 export async function prepare({ actor, id, profile, webfinger }) {
   actorSettings(actor, id.origin);
   const { endpoints } = await oauthEndpoints(id.origin, {
-    authorize: actor.endpoints?.oauthAuthorizationEndpoint,
-    token: actor.endpoints?.oauthTokenEndpoint,
+    named: {
+      authorize: actor.endpoints?.oauthAuthorizationEndpoint,
+      token: actor.endpoints?.oauthTokenEndpoint,
+    },
   });
   const client = await clientIdentity();
   return {

@@ -272,7 +272,6 @@ function send(res, status, body, type = "application/json", extra = {}) {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Idempotency-Key",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Expose-Headers": "Location",
     ...extra,
   });
   res.end(payload);
@@ -690,10 +689,13 @@ async function route(req, res) {
     const token = bearer(req);
     if (!token) return send(res, 401, { error: "invalid_token" });
     const activity = JSON.parse((await readBody(req)) || "null");
+    // As strict as a server that doesn't fill the actor in from the token.
+    if (activity?.actor !== actorId(token.user)) return send(res, 400, { error: "bad_actor" });
     const id = `${ORIGIN}/activities/${activities.length + 1}`;
     activities.push({ id, by: token.user, ...activity });
-    log("  activity", activity?.type, "by", token.user);
-    return send(res, 201, "", "text/plain", { Location: id });
+    log("  activity", activity.type, "by", token.user);
+    // No Location: a page on another origin can't read it from WordPress, only the stored activity.
+    return send(res, 201, { ...activity, id }, "application/activity+json");
   }
 
   return false;

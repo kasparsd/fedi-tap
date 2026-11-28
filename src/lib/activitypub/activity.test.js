@@ -1,6 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { AS_PROFILE, PUBLIC } from "../constants.js";
-import { audienceOf, makeActivity, mentionOf, replyHtml } from "./activity.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { AS_PROFILE, MAX_RESPONSE, PUBLIC } from "../constants.js";
+import {
+  audienceOf,
+  makeActivity,
+  mentionOf,
+  replyHtml,
+  sendActivity,
+  undoActivity,
+} from "./activity.js";
 
 const author = "https://social.example/users/dana";
 const post = {
@@ -111,5 +118,56 @@ describe("audienceOf", () => {
   it("is unknown when the post names no recipients", () => {
     expect(audienceOf({}, followers)).toBeNull();
     expect(audienceOf({ to: [], cc: [] }, followers)).toBeNull();
+  });
+});
+
+describe("sendActivity", () => {
+  const sender = {
+    actor: "https://home.example/users/me",
+    outbox: "https://home.example/users/me/outbox",
+    token: "test-token",
+  };
+  const id = "https://home.example/activities/1";
+
+  function serve(body, headers) {
+    const fetch = vi.fn(async () => new Response(body, { status: 201, headers }));
+    vi.stubGlobal("fetch", fetch);
+    return fetch;
+  }
+  const like = () => sendActivity(sender, "like", post);
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("names the account as the actor, of the activity and of its undo", async () => {
+    const fetch = serve("", { Location: id });
+    const sent = await like();
+    await undoActivity(sender, sent);
+    const bodies = fetch.mock.calls.map(([, options]) => JSON.parse(options.body));
+    expect(bodies.map(({ type, actor }) => [type, actor])).toEqual([
+      ["Like", sender.actor],
+      ["Undo", sender.actor],
+    ]);
+    expect(bodies[1].object).toBe(id);
+  });
+
+  it("takes the ID from Location", async () => {
+    serve("", { Location: id });
+    expect(await like()).toMatchObject({ id, undo: true });
+  });
+
+  it("takes the ID from the stored activity when Location can't be read", async () => {
+    serve(JSON.stringify({ id, type: "Like" }));
+    expect(await like()).toMatchObject({ id, undo: true });
+  });
+
+  it.each([
+    ["nothing", ""],
+    ["a page", "<p>Created</p>"],
+    ["another type", JSON.stringify({ id, type: "Note" })],
+    ["an ID on another site", JSON.stringify({ id: "https://other.example/1", type: "Like" })],
+    ["too much", JSON.stringify({ id, type: "Like", content: "x".repeat(MAX_RESPONSE) })],
+  ])("still succeeds, without undo, when the answer is %s", async (_, body) => {
+    serve(body);
+    expect(await like()).toMatchObject({ id: null, undo: false });
   });
 });
