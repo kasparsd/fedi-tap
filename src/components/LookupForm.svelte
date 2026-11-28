@@ -5,10 +5,12 @@
     isBusy,
     locked,
     onTargetInput,
+    onTargetPaste,
     pasteLink,
   } from "../state.svelte.js";
   import BusyLabel from "./BusyLabel.svelte";
   import Messages from "./Messages.svelte";
+  import PasteButton from "./PasteButton.svelte";
 </script>
 
 <!-- novalidate: an empty or malformed entry is answered by the page's own error card, not the browser's bubble. -->
@@ -39,16 +41,10 @@
           aria-describedby={app.targetDescribedBy ?? undefined}
           value={app.targetValue}
           oninput={(event) => onTargetInput(event.currentTarget.value)}
+          onpaste={onTargetPaste}
         >
         {#if app.showProgress && isBusy("open")}<span class="pulse" aria-hidden="true"></span>{/if}
-        <button
-          type="button"
-          id="paste-link"
-          aria-disabled={locked("lookup") ? "true" : undefined}
-          onclick={pasteLink}
-        >
-          Paste
-        </button>
+        <PasteButton id="paste-link" locked={locked("lookup")} onclick={pasteLink} />
       </div>
       <button
         type="submit"

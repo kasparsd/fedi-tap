@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { action, openLink, problem, resetMock, signIn } from "../helpers.js";
+import { action, openAccounts, openLink, problem, resetMock, signIn } from "../helpers.js";
 
 // Behaviour taken from the Modern Web Guidance review (docs/research/modern-web-guidance.md).
 test.beforeEach(({ page }) => resetMock(page));
@@ -66,6 +66,33 @@ test("the Paste button's focus ring is drawn inside the clipped field", async ({
   expect(ring).toBe("-2px");
 });
 
+test("buttons sit the same distance from their fields and rows", async ({ page }) => {
+  const gap = async (left, right) => {
+    const [a, b] = [await left.boundingBox(), await right.boundingBox()];
+    return Math.round(b.x - (a.x + a.width));
+  };
+  await signIn(page, "alice");
+  const link = await gap(page.locator("#lookup .field"), page.locator("#open-link"));
+  await openAccounts(page);
+  const sheet = page.locator("#accounts-sheet");
+  expect(await gap(sheet.locator(".field"), sheet.locator("#continue"))).toBe(link);
+  expect(await gap(sheet.locator(".pick"), sheet.locator("[data-remove]"))).toBe(link);
+});
+
+test("the Paste button is drawn small and still taps over the field's full height", async ({
+  page,
+}) => {
+  await signIn(page, "alice");
+  const button = await page.locator("#paste-link").boundingBox();
+  const field = await page.locator("#lookup .field").boundingBox();
+  expect(button.height).toBeLessThan(field.height);
+  const hit = await page.evaluate(
+    ([x, y]) => document.elementFromPoint(x, y)?.id,
+    [button.x + button.width / 2, field.y + 2],
+  );
+  expect(hit).toBe("paste-link");
+});
+
 test("the reply sheet is a form: Send submits it, and a drag out of the box doesn't close it", async ({
   page,
 }) => {
@@ -96,14 +123,13 @@ test("a tap on the backdrop closes an idle sheet, and the page behind doesn't sc
   page,
 }) => {
   await signIn(page, "alice");
-  await page.selectOption("#account-select", "add");
+  await openAccounts(page);
   const sheet = page.locator("#accounts-sheet");
-  await expect(sheet).toHaveJSProperty("open", true);
   await expect(sheet).toHaveAttribute("closedby", "any");
   await expect(sheet).toHaveCSS("overscroll-behavior-y", "contain");
   await page.mouse.click(195, 20);
   await expect(sheet).toHaveJSProperty("open", false);
-  await expect(page.locator("#account-select")).toBeFocused();
+  await expect(page.locator("#account-active")).toBeFocused();
 });
 
 test("a page framed by another page draws nothing to tap", async ({ page, baseURL }) => {

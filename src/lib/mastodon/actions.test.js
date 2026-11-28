@@ -204,7 +204,7 @@ describe("act and undo", () => {
       server({ [`POST ${API}/api/v1/statuses/100/favourite`]: () => reply(401, {}) }),
     );
     await expect(act(account, "like", target, "", async () => {})).rejects.toThrow(
-      "Reconnect from the account menu.",
+      "Connect the account again.",
     );
     const ended = Object.assign(new Error("Reconnect as @me."), { sessionEnded: true });
     await expect(

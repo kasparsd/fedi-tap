@@ -1,3 +1,4 @@
+import { photoUrl } from "../accounts.js";
 import { SCOPE } from "../constants.js";
 import { fetchActor, oauthEndpoints } from "../discovery.js";
 import { Problem, signInProblem } from "../problem.js";
@@ -51,6 +52,7 @@ export async function complete({ endpoints, origin, profile, tokenEndpoint, code
     type: "activitypub",
     handle,
     actor: id.href,
+    avatar: photoUrl(actor.icon),
     ...fields,
     ...credentials,
     token_endpoint: tokenEndpoint.href,

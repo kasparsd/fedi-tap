@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { action, mockUrl, profileLink, resetMock, signIn } from "../helpers.js";
+import { action, mockUrl, openAccounts, profileLink, resetMock, signIn } from "../helpers.js";
 
 // The page behind an open sheet is inert, so the slow notice and its Cancel have to be inside the sheet.
 test.beforeEach(async ({ page }) => {
@@ -15,9 +15,8 @@ test("signing in from the Accounts sheet can be cancelled from inside the sheet"
     await new Promise((resolve) => setTimeout(resolve, 6500));
     await route.continue().catch(() => {});
   });
-  await page.selectOption("#account-select", "add");
+  await openAccounts(page);
   const sheet = page.locator("#accounts-sheet");
-  await expect(sheet).toHaveJSProperty("open", true);
   await page.fill("#account-input", profileLink(page, "shorty"));
   await page.click("#accounts-sheet #continue");
   // While it works the sheet can't be closed by Escape or a tap outside it.

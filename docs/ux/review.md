@@ -2,7 +2,7 @@
 
 Scope: `index.html`, `app.js`, `style.css` at commit `f571c53`. Visual mocks of every flow below are in [`mocks.html`](mocks.html) (open it in a browser; each screen is the real page at phone width in a plain frame, follows the device's light/dark setting and has no toggle), built only from the shared components in [`components.css`](components.css) and described in [`components.md`](components.md). Mock IDs such as **B3** refer to screens there.
 
-Design direction (updated): neutral and task-first. No logo, brand colour, gradient, shadow, emoji or avatar decoration; system fonts and system colours only; dark mode follows the device automatically with no toggle; screens are titled by what the person is doing ("Sign in", "Open a link", "Post", "Accounts"), not by a product name. The name appears only where the system requires it (page `<title>`, Home Screen name). The app must also work well when added to the Home Screen (section 3a).
+Design direction (updated): neutral and task-first. No logo, brand colour, gradient, shadow, emoji or avatar decoration (the connected accounts' avatars are controls, see [components.md](components.md)); system fonts and system colours only; dark mode follows the device automatically with no toggle; screens are titled by what the person is doing ("Sign in", "Open a link", "Post", "Accounts"), not by a product name. The name appears only where the system requires it (page `<title>`, Home Screen name). The app must also work well when added to the Home Screen (section 3a).
 
 Design lens: the ideas of Apple's Human Interface Guidelines applied to a native-looking web page (clarity and deference; one prominent action; dialogs for secondary tasks and destructive confirmation; 44 px targets; system fonts and colours; light/dark), not iOS look-alike controls, and progressive disclosure (show the one thing the person came to do, reveal the rest on demand).
 
@@ -78,11 +78,11 @@ S1 download Shortcut, S2 view source, S3 WordPress help link, S4 CORS help link.
 Three states instead of one long page. Each reveals only what the person needs next.
 
 1. **Signed out** (A1–A4): app name, one sentence, one field, one button. Help and the shortcut are collapsed disclosures. If a shared link is pending, show it as its own section at the top.
-2. **Ready** (D1): the account dropdown in the header; the link field with Paste inside it and a primary Open button beside it; the Shortcut card directly under it until added or dismissed.
-3. **Link loaded** (B3): a post/profile block with author, excerpt and host; ordinary action buttons (Like, Repost, Reply, Follow) in a wrapping group with the status as text under them; the link field stays above the post with its value, so there is no "Change link". The account button stays beside the title.
+2. **Ready** (D1): the accounts in the header; the link field with Paste inside it and a primary Open button beside it; the Shortcut card directly under it until added or dismissed.
+3. **Link loaded** (B3): a post/profile block with author, excerpt and host; ordinary action buttons (Like, Repost, Reply, Follow) in a wrapping group with the status as text under them; the link field stays above the post with its value, so there is no "Change link". The accounts stay in the header.
 
 Secondary tasks move into dialogs:
-- **Accounts dialog** (G1): opened from the last option ("Add account") of the header's account dropdown; a list of stored accounts with Remove buttons and the add-account row.
+- **Accounts sheet** (G1): opened from the current account in the header; a list of stored accounts to switch to or remove, and the add-account row.
 - **Reply composer** (E1): bottom-docked dialog with the account named, a character count and "Replies are public" in words.
 - **Remove account** (G4): centred confirmation dialog with a destructive button and an explanation.
 
@@ -136,17 +136,12 @@ No framework. Keep the strict CSP: no inline scripts or styles, so every style g
 - **Done when:** behaviour is unchanged and the three states switch from one place.
 
 ### Phase 1 — Account management (finding 2, 3, 9 partially)
-- The header's native account dropdown switches accounts; its last option opens a native `<dialog>` styled as a bottom sheet (superseded: there is no account chip any more).
-- The dialog lists the stored accounts, each with a Remove button, and below them the add-account field with its button.
-- Remove uses a second, centred confirmation dialog; copy states that tokens are deleted from this browser and that access can be revoked in the server's settings.
-- Re-auth state shows plain alert text plus a "Sign in again" button; no more `(sign in again)` text in a `<select>`.
-- Remove the `<select>`, "Manage accounts" toggle and `#forget` from the sign-in form.
-- **Done when:** adding, switching, removing and re-authing an account are possible without leaving the sheet; focus returns to the dropdown on close; Escape closes; VoiceOver reads selection state.
+Done, and since replaced by the one-tap account switcher: [components.md, Header and accounts](components.md#header-and-accounts).
 
 ### Phase 2 — Loaded-URL experience (finding 1, 4, 6, 7)
 - Pending-link card shown in the signed-out state (C1).
 - Target card: extend `resolveTarget` to keep `name`, `summary`/`content` (render with `textContent` after stripping tags; never `innerHTML`), `published`, and fetch the author actor through the existing proxy for display name. Fall back to host plus handle if any request fails.
-- Avatars: none. The card is text only (name, handle, excerpt, host), which also fits the no-decoration direction and the strict CSP (`default-src 'none'` blocks remote images). Loading remote images would need `img-src https:` and exposes the person's IP to third-party servers; treat as an explicit opt-in decision (see open questions).
+- Avatars: none on posts. The card is text only (name, handle, excerpt, host): loading an author's image would expose the person's IP to third-party servers. The one exception is the connected accounts' own photos in the account switcher (see [components.md](components.md)), for which the CSP allows `img-src https:`.
 - The link field stays visible (ready, loading and loaded), with its value; a new link replaces the post below it. (This replaces the earlier idea of hiding the field behind "Change link".)
 - Shortcut card directly under the primary control (under the sign-in form when signed out, under the paste field when signed in), with one sentence, an "Add Shortcut" button and an "I already have it" dismissal. Show it only when the person did not arrive from the Shortcut (rules in section 3b). It replaces the always-visible bottom section.
 - **Done when:** a shared link goes from tap to a content card with no extra taps, and the field that holds the link is always there to edit.
@@ -184,7 +179,7 @@ Phase 0 → 1 → 2 → 3 → 4 → 5. Phases 1 and 2 deliver the two flows you 
 
 ## 6. Open questions
 0. Is Home Screen a first-class way to use this (needs the real-device OAuth test and a decision on separate sign-ins), or a convenience on top of Safari?
-1. Remote avatars and images: allow `img-src https:` (richer previews, leaks IP to third-party hosts) or stay text-only (current recommendation)?
+1. Remote images: decided. Only the connected accounts' own photos load; posts stay text-only.
 2. Undo support depends on the server exposing the activity ID; confirm with the WordPress plugin before design commits to it.
 3. Should Repost ask for confirmation because it is public and broadcast to followers, or stay one tap?
 4. Multi-account: remember the last-used account per shortcut launch, or always ask when a link arrives?

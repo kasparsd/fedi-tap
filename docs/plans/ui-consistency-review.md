@@ -100,8 +100,8 @@ Fixed:
 Open (need a decision):
 
 - [x] Repost was offered on followers-only and direct posts: it is now greyed for any post that isn't public or unlisted, a tap says why, and the server's Repost link is left out
-- [ ] The Accounts sheet doesn't mark which account is active
-- [ ] Opening the Accounts sheet focuses "Add account", so on a phone the keyboard covers the list when the person only wanted to switch or remove
+- [x] The Accounts sheet doesn't mark which account is active (2026-11-28, account switcher)
+- [x] Opening the Accounts sheet focuses "Add account", so on a phone the keyboard covers the list when the person only wanted to switch or remove (2026-11-28: it focuses the current account)
 - [ ] Text that isn't a link in the link field gets the browser's "Please enter a URL." bubble, while the account field answers with the app's own card ("Check the account")
 - [ ] The Reply sheet stacks two headings: "Reply" and the field label "Your reply"
 - [ ] A profile shows Follow twice: unlabelled in the byline (API) and in the labelled server-links group; a post's API buttons are labelled "Using API"

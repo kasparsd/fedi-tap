@@ -152,6 +152,16 @@ function noteObject(key) {
   };
 }
 
+/** A drawn profile photo, so tests and the dev server need no outside images. */
+const avatarSvg = (name) => {
+  const hue = [...name].reduce((sum, char) => sum + char.charCodeAt(0) * 47, 0) % 360;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="hsl(${hue} 60% 75%)"/><path d="M5 40c0-10 7-15 15-15s15 5 15 15z" fill="hsl(${hue} 40% 30%)"/><circle cx="20" cy="17" r="8" fill="#e8b996"/></svg>`;
+};
+// Which mock accounts have a photo. "erin" names one that isn't there; the rest have none.
+const PHOTOS = new Set(["alice", "mario"]);
+const photoOf = (name) =>
+  PHOTOS.has(name) || name === "erin" ? `${ORIGIN}/avatars/${name}.svg` : undefined;
+
 function actorObject(name, { forLogin = false } = {}) {
   const author = AUTHORS[name];
   const base = {
@@ -167,6 +177,7 @@ function actorObject(name, { forLogin = false } = {}) {
   if (!forLogin) return base;
   return {
     ...base,
+    ...(photoOf(name) && { icon: { type: "Image", url: photoOf(name) } }),
     webfinger: `${name}@localhost`,
     inbox: `${author.id}/inbox`,
     outbox: `${author.id}/outbox`,
@@ -382,6 +393,7 @@ function mastoAccount(name) {
     uri: author.id,
     url: isLocal(name) ? author.id : `https://social.example/@${name}`,
     display_name: author.name,
+    avatar_static: photoOf(name) ?? `${ORIGIN}/avatars/original/missing.png`,
     note: author.summary ? `<p>${author.summary}</p>` : "",
   };
 }
@@ -481,7 +493,7 @@ async function mastodon(req, res, url) {
 
 // Resolves to true when the request was answered, false when it is not one of the mock's routes.
 const ROUTES =
-  /^\/(_dev(\/|$)|client\.json$|users\/|notes\/|oauth\/|api\/|proxy$|\.well-known\/(oauth-authorization-server|webfinger)$)/;
+  /^\/(_dev(\/|$)|client\.json$|users\/|avatars\/|notes\/|oauth\/|api\/|proxy$|\.well-known\/(oauth-authorization-server|webfinger)$)/;
 
 async function route(req, res) {
   const url = new URL(req.url, ORIGIN);
@@ -514,6 +526,13 @@ async function route(req, res) {
       token_endpoint_auth_method: "none",
       scope: "read write",
     });
+  }
+
+  const avatar = /^\/avatars\/([a-z]+)\.svg$/.exec(path)?.[1];
+  if (avatar) {
+    return PHOTOS.has(avatar)
+      ? send(res, 200, avatarSvg(avatar), "image/svg+xml")
+      : send(res, 404, { error: "not_found" });
   }
 
   // ActivityPub actors

@@ -1,3 +1,4 @@
+import { photoUrl } from "../accounts.js";
 import { oauthEndpoints } from "../discovery.js";
 import { readJson } from "../http.js";
 import { Problem, signInProblem } from "../problem.js";
@@ -154,6 +155,7 @@ export async function complete({ endpoints, origin, tokenEndpoint, code, code_ve
     type: "mastodon",
     handle,
     actor: id.href,
+    avatar: photoUrl(profile.avatar_static),
     api: origin,
     ...credentials,
     token_endpoint: tokenEndpoint.href,
