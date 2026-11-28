@@ -51,7 +51,7 @@ Lemmy and Misskey use different APIs and are not supported. FediTap picks the ba
 ## Connect and use
 
 1. Open FediTap and enter your handle (`@you@example.social`) or a link to your profile. Approve access on your home server.
-2. Choose **Paste** in the link field, or type a link and choose **Open**, then choose an action.
+2. Paste a link into the link field (or choose **Paste** there) and it opens at once; a typed link opens with **Load**. Then choose an action.
 3. On iPhone, iPad or Mac, choose **Add Apple Shortcut**, open the file in Shortcuts and add it. Share a Fediverse link to **Open in Fediverse** to open the page with the link filled in.
 4. On Android, install the app from your browser's menu (**Install app** or **Add to Home screen**). Then share a Fediverse link to **⁂tap** from the share sheet, and long-press the home-screen icon for **Paste a link**. Sharing works in Chrome, Edge, Brave and Samsung Internet; Firefox for Android doesn't reliably support it.
 

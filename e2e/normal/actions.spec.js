@@ -219,3 +219,30 @@ test("a long post is cut to a known length with an ellipsis", async ({ page }) =
   const text = await page.locator("#target-excerpt").textContent();
   expect(Array.from(text).length).toBeLessThanOrEqual(600);
 });
+
+test("pasting a whole link into the field opens it, replacing what was there", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openLink(page, "/notes/1");
+  const next = mockUrl(page, "/users/zed");
+  await page.evaluate((text) => navigator.clipboard.writeText(`  ${text}\n`), next);
+  // The caret is wherever the click put it: the old link is replaced all the same.
+  await page.click("#post-url");
+  await page.keyboard.press("ControlOrMeta+v");
+  await expect(page.locator("#post-url")).toHaveValue(next);
+  await expect(action(page, "Like")).toHaveCount(0);
+  await expect(action(page, "Follow")).toBeVisible();
+});
+
+test("pasting part of a link only edits the field", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const start = mockUrl(page, "/notes/");
+  await page.evaluate(() => navigator.clipboard.writeText("1"));
+  await page.fill("#post-url", start);
+  await page.press("#post-url", "End");
+  await page.keyboard.press("ControlOrMeta+v");
+  await expect(page.locator("#post-url")).toHaveValue(`${start}1`);
+  await expectView(page, "ready");
+});

@@ -5,6 +5,7 @@
     isBusy,
     locked,
     onTargetInput,
+    onTargetPaste,
     pasteLink,
   } from "../state.svelte.js";
   import BusyLabel from "./BusyLabel.svelte";
@@ -40,6 +41,7 @@
           aria-describedby={app.targetDescribedBy ?? undefined}
           value={app.targetValue}
           oninput={(event) => onTargetInput(event.currentTarget.value)}
+          onpaste={onTargetPaste}
         >
         {#if app.showProgress && isBusy("open")}<span class="pulse" aria-hidden="true"></span>{/if}
         <PasteButton id="paste-link" locked={locked("lookup")} onclick={pasteLink} />

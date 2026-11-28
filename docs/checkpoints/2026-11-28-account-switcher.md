@@ -35,3 +35,11 @@ Headless Chromium against the mock server: `svelte-check`, the build and `tools/
 - Rows use one 0.5rem gap, so Connect and Load sit as close to their fields as Remove does to its account.
 - The signed-out intro is one sentence (owner's wording, with "Fediverse" capitalised) with the device's share symbol.
 - Evidence: Biome on the same paths, `svelte-check`, the build and static checks, 121 unit tests and 64 browser tests pass; the 20 guidance, sign-in and CSP tests passed again after the last style reorder. New tests cover pasting an account, the equal gaps and the Paste tap target. Screenshots at 390 px and 320 px; README screenshots and the link preview retaken. Pasting is not tried on a real iPhone.
+
+## Follow-up the same day: storage statement and tinted buttons
+
+- The help text under the signed-out connect form says account details are saved only in this browser, then names any ActivityPub API server (including the WordPress plugin) before Mastodon.
+- Pasting a whole HTTPS link into the link field by keyboard or menu opens it, like the Paste button; other text only edits the field. Tested with the keyboard in headless Chromium, not with a phone's paste menu.
+- Buttons are tinted and keep their border, so they no longer look like fields. Disabled is fainter, pressed darker (a destructive button inverts), an action that is on has a faint accent tint, and the header's accounts and the sheet's "×" stay bare.
+- The status pill's text was invisible under forced colours, before this change too; it is now plain text with an outline there.
+- Evidence: contrast computed from the token mixes is at least 15:1 for button text, 4.6:1 for red and accent labels in every state, and 3.3:1 for a field's border against the page. Screenshots at 390 px in light, dark and forced colours (post, Accounts sheet, remove question, reply sheet, loading). README screenshots and the link preview retaken. Not looked at on a real phone.

@@ -50,7 +50,8 @@
     {/if}
     <SignInForm />
     <p class="quiet">
-      Works with Mastodon, WordPress with the ActivityPub plugin, and other compatible servers.
+      Your account details are saved only in this browser. Works with any ActivityPub API server
+      (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers.
       <a href="#how-it-works" onclick={() => aboutFooter?.showDetails()}>Learn more</a>
     </p>
   {:else if app.view === "unsupported"}

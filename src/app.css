@@ -12,11 +12,15 @@
     1rem / 1.45 system-ui,
     sans-serif;
   --quiet: color-mix(in srgb, CanvasText 65%, Canvas); /* supportive text */
-  --line: color-mix(in srgb, CanvasText 45%, Canvas); /* borders, separators, pressed fill */
+  --line: color-mix(in srgb, CanvasText 45%, Canvas); /* borders and separators */
+  /* A button is tinted and a field is not, so the two never look alike. */
+  --fill: color-mix(in srgb, CanvasText 8%, Canvas);
+  --fill-off: color-mix(in srgb, CanvasText 4%, Canvas); /* a button that can't be used now */
+  --fill-pressed: color-mix(in srgb, CanvasText 16%, Canvas);
   --accent: #006fa6; /* brand blue: links and the one primary button. A plain value with a dark override
     below, not light-dark(): a browser that doesn't know it would leave the variable unusable and the
     primary button without a background (Safari before 17.5 passes the support check). */
-  --danger: color-mix(in srgb, red 75%, CanvasText); /* errors and destructive actions */
+  --danger: color-mix(in srgb, red 70%, CanvasText); /* errors and destructive actions */
   --space-1: 0.5rem; /* a pair that belongs together: label and input, field and help */
   --space-2: 1rem; /* the vertical rhythm, and horizontal padding */
   --space-3: 1.5rem;
@@ -194,8 +198,8 @@ label + :is(input, textarea, .row),
 }
 
 /* Buttons: one base rule, two modifiers. <button>Cancel</button>  <button class="primary">Continue</button>
-   <button class="destructive">Remove</button>  Every control that acts is a bordered button; only real
-   navigation (a) looks like a link. Direct children of main, section, form, fieldset and dialog fill the width.
+   <button class="destructive">Remove</button>  Every control that acts is a bordered, tinted button; fields
+   are bordered and untinted, and only real navigation (a) looks like a link. Direct children of main, section, form, fieldset and dialog fill the width.
    Loading: aria-busy (and aria-disabled while a field stays editable), and the label says what is happening. */
 button,
 .button {
@@ -207,7 +211,7 @@ button,
   padding: var(--space-1) var(--space-2);
   border: var(--rule);
   border-radius: var(--radius);
-  background: Canvas;
+  background: var(--fill);
   color: CanvasText;
   text-decoration: none;
   cursor: pointer;
@@ -220,7 +224,7 @@ button,
   border-color: CanvasText;
 }
 :is(button, .button):active:not([aria-disabled="true"]) {
-  background: var(--line);
+  background: var(--fill-pressed);
 }
 .primary {
   border-color: transparent;
@@ -228,11 +232,15 @@ button,
   color: Canvas;
   font-weight: 600;
 }
-.primary:active {
+.primary:active:not([aria-disabled="true"]) {
   background: CanvasText;
 }
 .destructive {
   color: var(--danger);
+}
+.destructive:active:not([aria-disabled="true"]) {
+  background: var(--danger);
+  color: Canvas;
 }
 [aria-pressed="true"],
 [aria-current="true"] {
@@ -243,14 +251,15 @@ button,
 } /* the current choice */
 button[aria-pressed="true"] {
   border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, Canvas);
   color: var(--accent);
-} /* an action that is on: outlined in the accent colour, never a solid fill */
+} /* an action that is on: accent outline and label on a faint accent tint, never a solid fill */
 button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--accent) 15%, Canvas);
+  background: color-mix(in srgb, var(--accent) 12%, Canvas);
 }
 :is(button, .button):is(:disabled, [aria-disabled="true"]):not([aria-pressed="true"]) {
   border-color: var(--line);
-  background: Canvas;
+  background: var(--fill-off);
   color: var(--quiet);
   cursor: default;
 }
@@ -263,6 +272,7 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
    aria-disabled) is not greyed. A toggle that is on keeps its own look. */
 :is(button, .button)[aria-busy="true"]:not([aria-pressed="true"]) {
   cursor: progress;
+  background: var(--fill);
   color: CanvasText;
   border-color: CanvasText;
 }
@@ -545,6 +555,8 @@ header.row abbr {
   }
 }
 .title button {
+  --fill: transparent;
+  --fill-off: transparent;
   flex: none;
   margin-inline-start: auto;
   border-color: transparent;
@@ -573,9 +585,6 @@ header.row abbr {
 .pick + .destructive {
   margin-inline-start: auto;
 }
-.pick:active:not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--line) 15%, Canvas);
-}
 .pick .avatar {
   margin: 0;
 }
@@ -597,10 +606,12 @@ header.row abbr {
   container-type: inline-size;
 }
 .accounts button {
+  --fill: transparent;
+  --fill-off: transparent;
+  --fill-pressed: transparent;
   flex: none;
   padding: 0;
   border: 0;
-  background: none;
 }
 .accounts > .active {
   flex: 1 1 min(9.5rem, 100%);
@@ -634,9 +645,6 @@ header.row abbr {
   }
 }
 /* No fill behind the text: hover and pressed are a ring on the circle, and the current name underlines. */
-.accounts button:is(:hover, :active):not([aria-disabled="true"]) {
-  background: none;
-}
 .others button:hover:not([aria-disabled="true"]) .avatar {
   box-shadow: 0 0 0 2px var(--line);
 }
@@ -879,6 +887,13 @@ section:empty {
   text-decoration: underline;
   pointer-events: auto;
 }
+/* Inverted text would vanish into the backing that forced colours paint behind text. */
+@media (forced-colors: active) {
+  .pill {
+    background: Canvas;
+    color: CanvasText;
+  }
+}
 @keyframes pill-in {
   from {
     opacity: 0;
@@ -980,13 +995,4 @@ section:empty {
 }
 .problem > details > * + * {
   margin-block-start: var(--space-1);
-}
-
-/* Forced colours (Windows high contrast): background images are dropped, so the account switcher's drawn
-   caret would vanish. Give the select its native arrow back. */
-@media (forced-colors: active) {
-  select {
-    appearance: auto;
-    padding-inline-end: var(--space-2);
-  }
 }

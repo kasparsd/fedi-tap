@@ -653,6 +653,18 @@ export async function pasteLink() {
   await findTarget();
 }
 
+// A whole link pasted into the field replaces what is there and opens at once, as the Paste button
+// does. Anything else pastes as usual, so part of an address can still be edited.
+export function onTargetPaste(event) {
+  if (app.busy || !app.current) return;
+  const text = event.clipboardData?.getData("text").trim() ?? "";
+  const target = /\s/u.test(text) ? null : httpsUrl(text);
+  if (!target) return;
+  event.preventDefault();
+  onTargetInput(target.href);
+  void findTarget();
+}
+
 // --- Actions -----------------------------------------------------------------------------------------
 
 // Like, repost, follow and reply all end here. The target and account are captured up front, so a

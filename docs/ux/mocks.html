@@ -28,7 +28,8 @@ figcaption b { color: CanvasText; }
 .swatches { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .swatches span { display: flex; align-items: flex-end; inline-size: 7rem; block-size: 3rem; padding: var(--space-1); border: var(--rule); font-size: var(--small); }
 [data-force~="hover"] { border-color: CanvasText; }
-[data-force~="pressed"] { background: var(--line); }
+[data-force~="pressed"] { background: var(--fill-pressed); }
+.destructive[data-force~="pressed"] { background: var(--danger); color: Canvas; }
 .primary[data-force~="pressed"] { background: CanvasText; }
 [data-force~="focus"] { outline: var(--focus); outline-offset: 2px; }
 </style>
@@ -36,7 +37,7 @@ figcaption b { color: CanvasText; }
 <body>
 <div class="wrap">
 <h1>Fediverse actions: UX mocks</h1>
-<p>Every flow of the proposed design, drawn as the real page at phone width in a plain frame. The page is a web page using the browser's own elements and system colours, styled by style.css only (see components.md). There is no theme toggle: light and dark follow the device. Screens are titled by what the person is doing, not by a product name. The label above a frame says where the page runs: Safari, or the Home Screen app. Every screen starts with the same header: the ⁂tap mark as a plain link and, once an account exists, the account dropdown. Screen IDs (A1, B3…) match docs/ux/review.md.</p>
+<p>Every flow of the proposed design, drawn as the real page at phone width in a plain frame. The page is a web page using the browser's own elements and system colours, styled by style.css only (see components.md). There is no theme toggle: light and dark follow the device. Screens are titled by what the person is doing, not by a product name. The label above a frame says where the page runs: Safari, or the Home Screen app. Every screen starts with the same header: the ⁂tap mark as a plain link and, once an account exists, the accounts. Screen IDs (A1, B3…) match docs/ux/review.md.</p>
 <ul class="toc" aria-label="Flows"><li><a href="#components">Components</a></li><li><a href="#A">A First run</a></li><li><a href="#B">B Shared link, signed in</a></li><li><a href="#C">C Shared link, signed out</a></li><li><a href="#D">D Open directly</a></li><li><a href="#E">E Reply</a></li><li><a href="#F">F Profile</a></li><li><a href="#G">G Accounts</a></li><li><a href="#H">H Edge cases</a></li><li><a href="#I">I Home Screen web app</a></li></ul>
 
 <h2 id="components">Components</h2>
@@ -49,6 +50,9 @@ figcaption b { color: CanvasText; }
 <span style="background:CanvasText;color:Canvas">CanvasText</span>
 <span style="background:Canvas;color:var(--quiet)">--quiet</span>
 <span style="background:var(--line)">--line</span>
+<span style="background:var(--fill)">--fill</span>
+<span style="background:var(--fill-off)">--fill-off</span>
+<span style="background:var(--fill-pressed)">--fill-pressed</span>
 <span style="background:var(--accent);color:Canvas">--accent</span>
 <span style="background:Canvas;color:var(--danger)">--danger</span>
 </div>
@@ -124,9 +128,8 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Connect account</legend>
 <label for="a1-in">Account</label>
 <div class="row"><div class="field"><input id="a1-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
-</main></div><figcaption><b>A1 Welcome.</b> Signed out, the header is the ⁂tap mark as a plain link; the accounts in the mark’s place once one exists. The title states the task, and one sentence says what the app does, with the device’s share symbol beside “Share”; it shows only while no account is stored. One labelled field with the placeholder showing the shape and Paste inside it, and Connect to its right. The compatibility sentence sits below the form, with the longer text behind “Supported servers”. The Shortcut panel never shows when signed out.</figcaption></figure>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
+</main></div><figcaption><b>A1 Welcome.</b> Signed out, the header is the ⁂tap mark as a plain link; the accounts in the mark’s place once one exists. The title states the task, and one sentence says what the app does, with the device’s share symbol beside “Share”; it shows only while no account is stored. One labelled field with the placeholder showing the shape and Paste inside it, and Connect to its right. Below the form, two sentences say where account details are kept and which servers work, ending with Learn more. The Shortcut panel never shows when signed out.</figcaption></figure>
 <figure id="A2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
@@ -134,8 +137,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Connect account</legend>
 <label for="a2-in">Account</label>
 <div class="row"><div class="field"><input id="a2-in" value="anna@social.example" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
 </main></div><figcaption><b>A2 Looking up.</b> The field stays in place with its value (read-only while the request runs, never disabled, so focus and text are kept). Progress is on the button that was pressed.</figcaption></figure>
 <figure id="A3"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
@@ -146,8 +148,7 @@ figcaption b { color: CanvasText; }
 <div class="row"><div class="field"><input id="a3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="a3-in-e"><button type="button">Paste</button></div><button class="primary">Connect</button></div>
 <p id="a3-in-e" role="alert"><strong>Can’t find anna@exmple.social.</strong> Check the spelling, or use a profile link.</p>
 <button>Use profile link</button></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
 </main></div><figcaption><b>A3 Handle not found.</b> The typed value stays and the field is marked invalid. The problem is text directly below the field it belongs to, not a box. The person can edit the value and press Connect at once; the one extra button is the fallback.</figcaption></figure>
 <figure id="A4"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
@@ -158,8 +159,7 @@ figcaption b { color: CanvasText; }
 <div class="row"><div class="field"><input id="a4-in" value="anna@social.example" aria-invalid="true" aria-describedby="a4-in-e"><button type="button">Paste</button></div><button class="primary">Connect</button></div>
 <p id="a4-in-e" role="alert"><strong>Couldn’t read your profile.</strong> Your server returned no matching profile, or blocked this page.</p>
 <details><summary>Details</summary><p class="quiet">Request blocked by the server’s CORS policy: no Access-Control-Allow-Origin header.</p></details></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
 </main></div><figcaption><b>A4 Server problem.</b> Cause in plain words below the field, technical detail last behind a disclosure. The field is still there to edit and submit again. Same layout for CORS, issuer or origin mismatch and redirects.</figcaption></figure>
 <figure id="A5"><p class="quiet">Your server’s page</p><div class="frame"><main>
 <h1>Allow access?</h1>
@@ -261,8 +261,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Connect account</legend>
 <label for="c1-in">Account</label>
 <div class="row"><div class="field"><input id="c1-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
 </main></div><figcaption><b>C1 Pending link.</b> The link is shown above the form so the person knows it arrived. It survives connecting (through sessionStorage). The field is the same one A1 uses.</figcaption></figure>
 <figure id="C2"><p class="quiet">Safari</p><div class="frame"><main>
 <header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
@@ -281,7 +280,7 @@ figcaption b { color: CanvasText; }
 <label for="d1-in">Link</label>
 <div class="row"><div class="field"><input id="d1-in" type="url" placeholder="Paste a link"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <section><h2>Add Shortcut for iOS</h2><p class="quiet">The Shortcut opens Safari, not this app.</p><p class="quiet"><a href="#">Source code</a></p><a class="button" href="#">Add Shortcut</a><button>Dismiss</button></section>
-</main></div><figcaption><b>D1 Ready.</b> The link field with Paste inside it and Open beside it. Paste (iOS shows its own “Allow Paste” prompt) reads the clipboard, fills the field and opens the link at once. On iOS the Shortcut panel sits below as the way to skip this screen next time.</figcaption></figure>
+</main></div><figcaption><b>D1 Ready.</b> The link field with Paste inside it and Open beside it. Paste (iOS shows its own “Allow Paste” prompt) reads the clipboard, fills the field and opens the link at once. So does pasting a whole link into the field. On iOS the Shortcut panel sits below as the way to skip this screen next time.</figcaption></figure>
 <figure id="D2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
@@ -499,8 +498,7 @@ figcaption b { color: CanvasText; }
 <form><fieldset><legend>Connect account</legend>
 <label for="i2-in">Account</label>
 <div class="row"><div class="field"><input id="i2-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
-<p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
-<details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
+<p class="quiet">Your account details are saved only in this browser. Works with any ActivityPub API server (including the ActivityPub plugin for WordPress), Mastodon, and other compatible servers. <a href="#">Learn more</a></p>
 </main></div><figcaption><b>I2 First launch.</b> Standalone: the content respects the safe areas. The extra hint explains separate storage, and only in this context.</figcaption></figure>
 <figure id="I3"><p class="quiet">System sheet over the Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
