@@ -22,6 +22,13 @@ export async function prepare({ actor, id, profile, webfinger }) {
   };
 }
 
+/** The address of the account's photo now, from its public profile. */
+export async function photo(account, signal) {
+  const { actor, id } = await fetchActor(new URL(account.actor), { signal });
+  if (id.href !== account.actor) throw new Error("The profile is another account’s.");
+  return photoUrl(actor.icon);
+}
+
 /** Exchanges the code and returns the account to save. */
 export async function complete({ endpoints, origin, profile, tokenEndpoint, code, code_verifier }) {
   const client = await clientIdentity();

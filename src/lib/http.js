@@ -34,12 +34,12 @@ export async function readJson(response, limit = MAX_RESPONSE) {
 }
 
 /** GET JSON from a server that must answer on the same origin, even after redirects. */
-export async function getJson(url, accept = "application/json") {
+export async function getJson(url, accept = "application/json", signal = requestSignal()) {
   const response = await fetch(url, {
     headers: { Accept: accept },
     credentials: "omit",
     cache: "no-store",
-    signal: requestSignal(),
+    signal,
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   if (httpsUrl(response.url)?.origin !== url.origin) {

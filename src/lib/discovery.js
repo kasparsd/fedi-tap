@@ -27,10 +27,10 @@ async function webfingerActor(url) {
  * `allowRefused` is set that is not fatal: the address is still the actor's ID, but its document
  * stays unread (`actor` is null) and only a backend that doesn't need it can go on.
  */
-export async function fetchActor(url, { allowRefused = false } = {}) {
+export async function fetchActor(url, { allowRefused = false, signal } = {}) {
   let detail = "The profile ID is on a different server than the address.";
   try {
-    const actor = await getJson(url, ACTOR_ACCEPT);
+    const actor = await getJson(url, ACTOR_ACCEPT, signal);
     const id = httpsUrl(actor?.id);
     if (id?.origin === url.origin) return { actor, id };
   } catch (error) {
@@ -170,14 +170,16 @@ function fillTemplate(template, placeholder, origin, address) {
 
 /**
  * The link templates the person's own server publishes for opening a reply, like, repost, follow or
- * the post itself on that server, by intent. Best effort: the account works without them, so every
- * failure means none.
+ * the post itself on that server, by intent: `{}` when it publishes none, null when it couldn't be
+ * asked. Best effort: the account works without them.
  */
-export async function findIntents(handle, origin) {
+export async function findIntents(handle, origin, signal) {
   const url = new URL("/.well-known/webfinger", origin);
   url.searchParams.set("resource", `acct:${handle}`);
-  const record = await getJson(url, "application/jrd+json, application/json").catch(() => null);
-  const links = Array.isArray(record?.links) ? record.links : [];
+  const accept = "application/jrd+json, application/json";
+  const record = await getJson(url, accept, signal).catch(() => null);
+  if (!record) return null;
+  const links = Array.isArray(record.links) ? record.links : [];
   const found = {};
   for (const [intent, { rels }] of Object.entries(INTENTS)) {
     for (const rel of rels) {

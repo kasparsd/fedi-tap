@@ -1,6 +1,6 @@
 import { homeEndpoint } from "../url.js";
 import { resolveTarget, sendActivity, undoActivity } from "./activity.js";
-import { complete, prepare } from "./signin.js";
+import { complete, photo, prepare } from "./signin.js";
 
 /** The ActivityPub client-to-server backend (WordPress and servers with the ActivityPub API). */
 export const activitypub = {
@@ -15,4 +15,5 @@ export const activitypub = {
     ),
   prepare,
   complete,
+  photo,
 };

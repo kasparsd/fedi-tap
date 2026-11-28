@@ -1,6 +1,6 @@
 import { homeEndpoint } from "../url.js";
 import { act, resolve, undo } from "./actions.js";
-import { complete, prepare } from "./signin.js";
+import { complete, photo, prepare } from "./signin.js";
 
 /** The Mastodon API backend (Mastodon, GoToSocial, Pleroma, Akkoma and similar). */
 export const mastodon = {
@@ -13,4 +13,5 @@ export const mastodon = {
     account.api === origin && Boolean(homeEndpoint(account.token_endpoint, origin)),
   prepare,
   complete,
+  photo,
 };

@@ -7,6 +7,7 @@ import { activityKey, backendFor } from "./lib/backend.js";
 import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
 import { repostable } from "./lib/discovery.js";
 import { Problem, problemOf } from "./lib/problem.js";
+import { isStale, refreshProfile } from "./lib/refresh.js";
 import { setRequestSignal } from "./lib/signal.js";
 import { authorize, completeSignIn } from "./lib/signin.js";
 import { readStore, resetStore, STORE_KEY, saveStore, useStore, withAccount } from "./lib/store.js";
@@ -232,6 +233,38 @@ function refresh() {
   app.current = app.accounts.find((account) => account.actor === selected) ?? null;
   app.others = otherIds(store);
   return app.current;
+}
+
+// Accounts already refreshed, or being refreshed, since the page loaded.
+const refreshed = new Set();
+
+// Shows what a refresh saved. Under a loaded post only the photo changes: new links to the server
+// would move the buttons, so they wait for the next time the accounts are read.
+function showRefreshed(actorId) {
+  if (!app.resolved && !app.busy) {
+    refresh();
+    return;
+  }
+  const saved = readStore().accounts[actorId];
+  if (!saved) return;
+  app.accounts = app.accounts.map((account) =>
+    account.actor === actorId ? { ...account, avatar: saved.avatar } : account,
+  );
+  app.current = app.accounts.find((account) => account.actor === app.current?.actor) ?? null;
+}
+
+/**
+ * Reads an account's details again in the background, once per page load: no busy state and no
+ * message, whatever happens.
+ */
+export async function refreshDetails(actorId) {
+  if (refreshed.has(actorId)) return;
+  refreshed.add(actorId);
+  try {
+    if (await refreshProfile(actorId, backendFor)) showRefreshed(actorId);
+  } catch {
+    // The saved details stay, and the next page load tries again.
+  }
 }
 
 function setTarget(target, local = true) {
@@ -854,9 +887,18 @@ async function run() {
   }
 }
 
-/** Reads the saved accounts and the address, finishes a sign-in that is returning, opens a shared link. */
+/**
+ * Reads the saved accounts and the address, finishes a sign-in that is returning, opens a shared
+ * link, and then brings accounts that are due up to date.
+ */
 export function start() {
-  return run().catch((error) => {
-    showProblem("auth", error, "Something went wrong");
-  });
+  return run()
+    .then(() => {
+      for (const account of app.accounts.filter((item) => isStale(item))) {
+        void refreshDetails(account.actor);
+      }
+    })
+    .catch((error) => {
+      showProblem("auth", error, "Something went wrong");
+    });
 }
