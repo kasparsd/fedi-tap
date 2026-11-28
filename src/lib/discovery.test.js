@@ -4,6 +4,7 @@ import {
   findIntents,
   intentLink,
   isActorLink,
+  oauthEndpoints,
   repostable,
   serverActions,
 } from "./discovery.js";
@@ -209,5 +210,69 @@ describe("reposting", () => {
     expect(intents("public")).toEqual(["like", "repost"]);
     expect(intents("private")).toEqual(["like"]);
     expect(intents("direct")).toEqual(["like"]);
+  });
+});
+
+describe("oauthEndpoints", () => {
+  const ORIGIN = "https://home.example";
+  const named = { authorize: `${ORIGIN}/ap/authorize`, token: `${ORIGIN}/ap/token` };
+  const matching = {
+    issuer: `${ORIGIN}/ap`,
+    authorization_endpoint: named.authorize,
+    token_endpoint: named.token,
+    authorization_response_iss_parameter_supported: true,
+  };
+  const foreign = {
+    issuer: "https://other.example",
+    authorization_endpoint: `${ORIGIN}/mcp/authorize`,
+    token_endpoint: `${ORIGIN}/mcp/token`,
+    authorization_response_iss_parameter_supported: true,
+  };
+
+  function serve(metadata) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url) => {
+        const response = new Response(JSON.stringify(metadata ?? {}), {
+          status: metadata ? 200 : 404,
+        });
+        Object.defineProperty(response, "url", { value: String(url) });
+        return response;
+      }),
+    );
+  }
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("takes the issuer from metadata that describes the actor's endpoints", async () => {
+    serve(matching);
+    const { endpoints } = await oauthEndpoints(ORIGIN, { named });
+    expect(endpoints).toEqual({ ...named, issuer: matching.issuer, requireIssuer: true });
+  });
+
+  it("ignores metadata of another authorization server, issuer and all", async () => {
+    for (const metadata of [foreign, { ...matching, token_endpoint: foreign.token_endpoint }]) {
+      serve(metadata);
+      expect(await oauthEndpoints(ORIGIN, { named })).toEqual({
+        endpoints: { ...named, issuer: ORIGIN, requireIssuer: false },
+        metadata: null,
+      });
+    }
+  });
+
+  it("uses the actor's endpoints without metadata", async () => {
+    serve(null);
+    const { endpoints } = await oauthEndpoints(ORIGIN, { named });
+    expect(endpoints).toMatchObject(named);
+  });
+
+  it("uses metadata when the actor doesn't name both, else the fallback", async () => {
+    serve(foreign);
+    await expect(oauthEndpoints(ORIGIN, { named: {} })).rejects.toThrow();
+    serve({ ...foreign, issuer: ORIGIN });
+    const { endpoints } = await oauthEndpoints(ORIGIN, { fallback: named });
+    expect(endpoints.token).toBe(foreign.token_endpoint);
+    serve(null);
+    expect((await oauthEndpoints(ORIGIN, { fallback: named })).endpoints).toMatchObject(named);
   });
 });

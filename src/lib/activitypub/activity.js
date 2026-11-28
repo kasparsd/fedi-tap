@@ -228,11 +228,29 @@ export function makeActivity(action, target, account, reply) {
 }
 
 /**
+ * The new activity's ID, on the outbox's origin, or null. `Location` names it, but a page on another
+ * origin only sees that header when the server exposes it (CORS), and WordPress doesn't. The answer
+ * may carry the stored activity instead, which counts only when it has the type that was sent.
+ */
+async function createdId(response, outbox, type) {
+  const own = (value) => {
+    const url = httpsUrl(value);
+    return url && url.origin === new URL(outbox).origin && !url.hash ? url.href : null;
+  };
+  const located = own(response.headers.get("Location"));
+  if (located) return located;
+  // The activity was accepted: an answer that can't be read only costs the ID.
+  const stored = await readJson(response).catch(() => null);
+  return stored?.type === type ? own(stored.id) : null;
+}
+
+/**
  * Sends an activity through the outbox, refreshing the token once on a 401. Resolves with the new
- * activity's ID only when the server exposes its Location header to this page (CORS), else null.
+ * activity's ID, or null when the server didn't say it.
  */
 async function postActivity(account, activity, renew) {
-  const body = JSON.stringify(activity);
+  // Some servers don't fill the actor in from the token.
+  const body = JSON.stringify({ ...activity, actor: account.actor });
   const send = async () => {
     try {
       return await activityRequest(account, account.outbox, body, ACTIVITY_TYPE);
@@ -256,8 +274,7 @@ async function postActivity(account, activity, renew) {
       detail: `HTTP ${response.status}`,
     });
   }
-  const id = httpsUrl(response.headers.get("Location"));
-  return id && id.origin === new URL(account.outbox).origin && !id.hash ? id.href : null;
+  return createdId(response, account.outbox, activity.type);
 }
 
 export async function sendActivity(account, action, target, reply, renew) {

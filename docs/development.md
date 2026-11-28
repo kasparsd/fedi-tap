@@ -22,7 +22,7 @@ Sign-in starts with the profile (a handle through WebFinger, or a profile link) 
 2. Otherwise `GET <origin>/api/v1/instance` answers with JSON that has a `version` (HTTPS, same origin, size-capped, 20 s): `mastodon`.
 3. Otherwise "Server not supported", which names both options.
 
-The account key is the actor ID for both types. For every type the actor ID, the OAuth endpoints and the API addresses must share the profile's origin. FediTap uses authorization server metadata (`/.well-known/oauth-authorization-server`) when available and verifies the callback issuer when the server advertises issuer support or returns an issuer.
+The account key is the actor ID for both types. For every type the actor ID, the OAuth endpoints and the API addresses must share the profile's origin. FediTap uses authorization server metadata (`/.well-known/oauth-authorization-server`) when available and verifies the callback issuer when the server advertises issuer support or returns an issuer. When the actor names both its authorization and token endpoint, those are used, and metadata counts (issuer settings included) only if it names the same two: a second OAuth plugin on the same site may own the `.well-known` address.
 
 ### Actions on the home server
 
@@ -37,6 +37,9 @@ A link that fails to open says which kind of failure it was, because the same ad
 ### ActivityPub (`src/lib/activitypub/`)
 
 FediTap uses the client-to-server ActivityPub API described in the [Social API Basic Profile draft](https://swicg.github.io/activitypub-api/basicprofile). The setup flow requires CIMD (`public/client.json`), OAuth authorization code with PKCE S256, the `read write` scopes, and renewable tokens. The actor must expose its outbox, followers collection, and object proxy. ActivityPub for WordPress is the tested implementation.
+
+- **Actor.** Every activity sent to the outbox, `Undo` included, names the account as `actor`, because some servers don't fill it in from the token.
+- **Activity ID.** Undo needs the new activity's ID. It comes from `Location` when the page can read that header, else from the `id` of the activity in the response body, which counts only when its `type` is the one sent. Either must be on the outbox's origin. WordPress doesn't expose `Location` to other origins (CORS), but returns the stored activity. Without an ID the action still succeeds, with no Undo.
 
 ### Mastodon API (`src/lib/mastodon/`)
 
@@ -213,7 +216,7 @@ The "Add Apple Shortcut" panel (the Shortcut works on iPhone, iPad and Mac) show
 
 A send that ends without a clear answer (timeout, dropped connection, HTTP 5xx or 408) says it may already have gone through; the person checks their account before pressing the action again. No Try again button is offered, because the action button, Send in the reply sheet and Open or Continue beside an input are themselves the retry and re-read the current value.
 
-**Undo** appears as a plain button next to the finished action when the backend says it can (`sent.undo`), and is offered for Like, Repost and Follow, not Reply. With ActivityPub that needs a readable `Location` header on the page's origin in the outbox response (the mock server sends `Access-Control-Expose-Headers: Location`; the WordPress plugin must do the same, which is still to be confirmed), and Undo sends an `Undo` activity whose `object` is that ID. With the Mastodon API Undo always exists and calls `unfavourite`, `unreblog` or `unfollow`. Each action has its own Undo.
+**Undo** appears as a plain button next to the finished action when the backend says it can (`sent.undo`), and is offered for Like, Repost and Follow, not Reply. With ActivityPub that needs the new activity's ID (see [ActivityPub](#activitypub-srclibactivitypub)), and Undo sends an `Undo` activity whose `object` is that ID. With the Mastodon API Undo always exists and calls `unfavourite`, `unreblog` or `unfollow`. Each action has its own Undo.
 
 Proxy responses are read with a 1 MB cap and the HTML in them is cut to 20,000 characters before parsing. A returned post must live on the origin of the opened link (a proxy may resolve an alias address only when the object names that address in `url`). The author counts as verified only when its actor document carries the same id the post names; otherwise the card shows only the host and Follow is hidden, so Follow always targets a verified id.
 

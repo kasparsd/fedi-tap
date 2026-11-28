@@ -10,3 +10,4 @@ Open work that needs the owner's decision. Plans for work in progress are in `do
 - **The header is not a banner landmark.** `header` sits inside `main`.
 - **Account switcher on real devices.** Not yet tried on a phone with VoiceOver or TalkBack, nor with the system's enlarged text; see [the checkpoint](checkpoints/2026-11-28-account-switcher.md).
 - **Smaller review items not done:** a `beforeinstallprompt` install button, `preconnect` to the account's server, carrying `{ cause }` on `Problem`, `focus({ preventScroll })` in `focusFirst`, `scroll-padding` while a pill shows, the declarative WebMCP experiment, and gating `Notices` text for VoiceOver's repeated-message skipping.
+- **Check Undo on a real WordPress site (owner).** With a signed-in account, Like or Follow, then Undo. The [fix](checkpoints/2026-11-28-activitypub-undo.md) rests on the plugin's source and the mock server.

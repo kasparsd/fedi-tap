@@ -50,15 +50,29 @@ export async function fetchActor(url, { allowRefused = false } = {}) {
   );
 }
 
+const sameUrl = (a, b) => httpsUrl(a) !== null && httpsUrl(a)?.href === httpsUrl(b)?.href;
+
 /**
  * Reads the server's OAuth metadata and returns the authorization and token addresses, all on the
- * account's own origin. `fallback` names addresses to use when the metadata has none. The raw
- * metadata comes back too, for the backend that wants more from it.
+ * account's own origin. `named` are the addresses the actor itself names: when it names both, they
+ * are used, and metadata that names others belongs to another authorization server on the same site
+ * (a second OAuth plugin, say) and is ignored. `fallback` names addresses to use when neither says.
+ * The metadata that was used comes back too, for the backend that wants more from it.
  */
-export async function oauthEndpoints(origin, fallback = {}) {
-  const metadata = await getJson(new URL("/.well-known/oauth-authorization-server", origin)).catch(
+export async function oauthEndpoints(origin, { named = {}, fallback = {} } = {}) {
+  let metadata = await getJson(new URL("/.well-known/oauth-authorization-server", origin)).catch(
     () => null,
   );
+  if (
+    named.authorize &&
+    named.token &&
+    !(
+      sameUrl(metadata?.authorization_endpoint, named.authorize) &&
+      sameUrl(metadata?.token_endpoint, named.token)
+    )
+  ) {
+    metadata = null;
+  }
   const advertisedIssuer = metadata?.issuer;
   const issuerUrl = homeEndpoint(advertisedIssuer, origin);
   if (advertisedIssuer !== undefined && (!issuerUrl || issuerUrl.search)) {
@@ -67,8 +81,8 @@ export async function oauthEndpoints(origin, fallback = {}) {
       `Issuer: ${String(advertisedIssuer).slice(0, 200)}`,
     );
   }
-  const authorizeUrl = metadata?.authorization_endpoint ?? fallback.authorize;
-  const tokenUrl = metadata?.token_endpoint ?? fallback.token;
+  const authorizeUrl = metadata?.authorization_endpoint ?? named.authorize ?? fallback.authorize;
+  const tokenUrl = metadata?.token_endpoint ?? named.token ?? fallback.token;
   if (!authorizeUrl || !tokenUrl) throw apiOff("No authorization or token endpoint is advertised.");
 
   const authorizeEndpoint = homeEndpoint(authorizeUrl, origin);
