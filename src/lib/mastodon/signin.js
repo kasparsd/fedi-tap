@@ -99,6 +99,21 @@ export async function prepare({ id, profile, webfinger }) {
   };
 }
 
+const accountUri = (profile) => httpsUrl(profile?.uri ?? profile?.url)?.href;
+
+/** The signed-in account as its server describes it, or null. */
+async function ownProfile(account, options) {
+  const response = await call(account, "/api/v1/accounts/verify_credentials", options);
+  return response.ok ? readJson(response, 20000) : null;
+}
+
+/** The address of the account's photo now. It uses the saved token and never renews it. */
+export async function photo(account, signal) {
+  const profile = await ownProfile(account, { signal });
+  if (accountUri(profile) !== account.actor) throw new Error("No profile for this account.");
+  return photoUrl(profile.avatar_static);
+}
+
 /** Exchanges the code, checks who signed in and returns the account to save. */
 export async function complete({ endpoints, origin, tokenEndpoint, code, code_verifier }) {
   // The secret stays in the saved data, never in the tab's sign-in record.
@@ -133,12 +148,8 @@ export async function complete({ endpoints, origin, tokenEndpoint, code, code_ve
   const credentials = accessCredentials(result);
   if (!credentials) throw signInProblem("Your server sent no access token.");
 
-  const response = await call(
-    { api: origin, token: credentials.token },
-    "/api/v1/accounts/verify_credentials",
-  );
-  const profile = response.ok ? await readJson(response, 20000) : null;
-  const uri = httpsUrl(profile?.uri ?? profile?.url)?.href;
+  const profile = await ownProfile({ api: origin, token: credentials.token });
+  const uri = accountUri(profile);
   if (!uri) throw signInProblem("Your server didn’t say who signed in.");
   if (uri !== endpoints.actor) {
     throw new Problem("Wrong account", "Your server signed you in as a different account.", {

@@ -12,6 +12,7 @@ import { unsupportedServer } from "./problem.js";
 //   valid(account, origin)                          -> true when the saved addresses are sound
 //   prepare(found)                                  -> { endpoints, client } for the authorization request
 //   complete({ endpoints, origin, profile, tokenEndpoint, code, code_verifier }) -> account to save
+//   photo(account, signal)                          -> the photo's address now, or undefined
 //
 // A target has `id`, `author`, `mention`, `isActor`, `handle`, `name`, `excerpt` and `date`, plus
 // fields only its own backend reads.

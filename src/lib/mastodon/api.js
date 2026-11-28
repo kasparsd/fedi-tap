@@ -2,7 +2,7 @@ import { readJson } from "../http.js";
 import { networkProblem, Problem, refused } from "../problem.js";
 import { requestSignal } from "../signal.js";
 
-async function send(account, path, { method = "GET", form, headers } = {}) {
+async function send(account, path, { method = "GET", form, headers, signal } = {}) {
   try {
     return await fetch(new URL(path, account.api), {
       method,
@@ -12,7 +12,7 @@ async function send(account, path, { method = "GET", form, headers } = {}) {
       headers: { Authorization: `Bearer ${account.token}`, Accept: "application/json", ...headers },
       body: form ? new URLSearchParams(form) : undefined,
       // Reads (opening a link) can be cancelled; writes never are, as they may already have gone through.
-      signal: method === "GET" ? requestSignal() : AbortSignal.timeout(20000),
+      signal: signal ?? (method === "GET" ? requestSignal() : AbortSignal.timeout(20000)),
     });
   } catch (error) {
     throw networkProblem(error, { sent: method !== "GET" });

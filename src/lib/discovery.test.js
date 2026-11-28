@@ -133,8 +133,11 @@ describe("intents on the home server", () => {
     expect(await findIntents("me@home.example", ORIGIN)).toEqual({});
     serve([{ rel: `${FEP}Follow`, template: REPLY }]);
     expect(await findIntents("me@home.example", ORIGIN)).toEqual({});
+  });
+
+  it("says when the server couldn't be asked", async () => {
     serve([], 404);
-    expect(await findIntents("me@home.example", ORIGIN)).toEqual({});
+    expect(await findIntents("me@home.example", ORIGIN)).toBeNull();
   });
 
   it("refuses templates on another site or with extra placeholders", async () => {

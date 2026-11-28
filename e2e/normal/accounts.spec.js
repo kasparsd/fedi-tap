@@ -207,3 +207,70 @@ test("another tab sees accounts that are added and removed", async ({ context, p
   await expectView(other, "signed-out");
   await expectView(page, "signed-out");
 });
+
+/** Changes the one saved account, as an older release or a changed server would leave it. */
+const editSaved = (page, edit) =>
+  page.evaluate(`(() => {
+    const key = Object.keys(localStorage).find((name) => localStorage[name].includes('"accounts"'));
+    const store = JSON.parse(localStorage[key]);
+    for (const account of Object.values(store.accounts)) (${edit})(account);
+    localStorage[key] = JSON.stringify(store);
+  })()`);
+
+const savedAccount = (page) =>
+  page.evaluate(() => {
+    const key = Object.keys(localStorage).find((name) => localStorage[name].includes('"accounts"'));
+    return Object.values(JSON.parse(localStorage[key]).accounts)[0];
+  });
+
+test("an account saved without a photo or links gets them on the next open", async ({ page }) => {
+  await signIn(page, "alice");
+  await editSaved(page, (account) => {
+    delete account.avatar;
+    delete account.intents;
+    delete account.refreshed;
+  });
+  await page.reload();
+  await expect(page.locator("#account-active img")).toBeVisible();
+  await expect.poll(async () => (await savedAccount(page)).refreshed?.version).toBe(1);
+  expect((await savedAccount(page)).intents).toHaveProperty("like");
+});
+
+test("a photo that fails to load is looked up again", async ({ page }) => {
+  await signIn(page, "alice");
+  await editSaved(page, (account) => {
+    account.avatar = new URL("/avatars/moved.svg", account.actor).href;
+  });
+  await page.reload();
+  await expect(page.locator("#account-active img")).toBeVisible();
+  expect((await savedAccount(page)).avatar).toContain("/avatars/alice.svg");
+});
+
+test("a refresh under a shared post shows the photo and leaves the buttons where they are", async ({
+  page,
+}) => {
+  await signIn(page, "alice");
+  await editSaved(page, (account) => {
+    delete account.avatar;
+    delete account.intents;
+    delete account.refreshed;
+  });
+  // Hold the profile back until the post is on screen.
+  let release;
+  const held = new Promise((done) => {
+    release = done;
+  });
+  await page.route("**/users/alice", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(`/?url=${encodeURIComponent(mockUrl(page, "/notes/1"))}`);
+  await expect(page.locator("#target-card")).toBeVisible();
+  const serverLinks = page.getByRole("link", { name: /Like/ });
+  await expect(serverLinks).toHaveCount(0);
+  release();
+  await expect(page.locator("#account-active img")).toBeVisible();
+  await expect(serverLinks).toHaveCount(0);
+  await page.reload();
+  await expect(serverLinks).toHaveCount(1);
+});

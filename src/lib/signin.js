@@ -3,6 +3,7 @@ import { backendFor, detect } from "./backend.js";
 import { SIGN_IN_KEY } from "./constants.js";
 import { findActor, findIntents } from "./discovery.js";
 import { oauthProblem, signInProblem } from "./problem.js";
+import { stamp } from "./refresh.js";
 import { saveStore, useStore } from "./store.js";
 import { base64url, randomString } from "./token.js";
 import { homeEndpoint, httpsUrl } from "./url.js";
@@ -100,7 +101,10 @@ export async function completeSignIn(params, onStarted) {
     code_verifier,
   });
   const intents = await findIntents(account.handle, origin);
-  if (Object.keys(intents).length) account.intents = intents;
+  if (intents) {
+    if (Object.keys(intents).length) account.intents = intents;
+    account.refreshed = stamp();
+  }
   await useStore((store) => {
     // Connecting an account again keeps its colour; its photo is whatever the server says now.
     const colour = store.accounts[account.actor]?.colour ?? freeColour(store.accounts);
