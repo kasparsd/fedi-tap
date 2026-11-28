@@ -1,7 +1,7 @@
 /* FediTap components (see components.md, section Scale). System fonts and colours only; light and dark
    come from color-scheme. Elements are styled first. Classes exist only where an element alone
    cannot do the job: .row .field .actions .byline .list .post .quiet .primary .destructive .button .sheet
-   plus the header (see Header)
+   plus the header and its accounts (see Header)
    Two font sizes (1rem, --small), two weights (400, 600), four spaces, one radius, one border, one focus ring. */
 
 /* Tokens */
@@ -155,7 +155,6 @@ label {
 }
 input,
 textarea,
-select,
 button,
 .button,
 summary {
@@ -167,8 +166,7 @@ textarea {
   inline-size: 100%;
 }
 input,
-textarea,
-select {
+textarea {
   min-block-size: var(--target);
   padding: var(--space-1) var(--space-2);
   border: var(--rule);
@@ -181,21 +179,6 @@ textarea {
   field-sizing: content; /* grows with what is typed where supported; rows is the least it has */
   max-block-size: 50dvh;
 }
-/* The account switcher: the browser's own arrow is drawn tight to the edge, so draw a caret from gradients
-   (kept to a pair of lines so no image file is needed). The text keeps the inputs' side padding; the end has
-   room for the caret. Forced colours drop background images, so there the native arrow comes back (below). */
-select {
-  appearance: none;
-  padding-inline: var(--space-2) 2.25rem;
-  background-image:
-    linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position:
-    calc(100% - 1.25rem) calc(50% + 1px),
-    calc(100% - 0.95rem) calc(50% + 1px);
-  background-size: 0.3rem 0.3rem;
-  background-repeat: no-repeat;
-}
 label + :is(input, textarea, .row),
 :is(input, textarea) + .quiet {
   margin-block-start: var(--space-1);
@@ -203,7 +186,7 @@ label + :is(input, textarea, .row),
 ::placeholder {
   color: var(--quiet);
 }
-:is(input, textarea, select):disabled {
+:is(input, textarea):disabled {
   color: var(--quiet);
 }
 [aria-invalid="true"] {
@@ -334,6 +317,22 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   flex: 1;
 }
 
+/* A symbol beside the word it stands for, kept on one line.
+   <span class="symbol"><svg>…</svg> Share</span> */
+.symbol {
+  white-space: nowrap;
+}
+.symbol > svg {
+  inline-size: 1em;
+  block-size: 1em;
+  vertical-align: -0.125em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* Actions: up to three columns of equal buttons, the same width in every group, two when a label such as
    "Reposted" would not fit beside its icon. A label never wraps. Each is a toggle (Like, Repost,
    Follow: aria-pressed, an outline icon that fills when on) or a plain button (Reply). The icon is an inline
@@ -377,7 +376,7 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-1);
 }
 .row > * {
   margin-block: 0;
@@ -393,10 +392,9 @@ button[aria-pressed="true"]:active:not([aria-disabled="true"]) {
   min-block-size: var(--target);
 }
 
-/* Header: the same on every screen. The product name as a plain link to the page start, and the account
-   switcher (a native select, hidden until an account exists) at the trailing end. One line, never wraps;
-   the select shrinks and clips its text instead of pushing the name off at 320 px.
-   <header class="row"><a href="./">FediTap</a><select aria-label="Account">...</select></header> */
+/* Header: the same on every screen. Signed out, the product name as a plain link to the page start.
+   With an account, the accounts (see Accounts), in place of the name.
+   <header class="row"><a href="./">FediTap</a></header> */
 header.row {
   flex-wrap: nowrap;
   justify-content: flex-start;
@@ -431,16 +429,229 @@ header.row abbr {
     animation: none;
   }
 }
-header select {
-  flex: 0 1 auto;
-  margin-inline-start: auto;
+/* Avatar: a photo, or initials on one of eight fills, each at least 5.5:1 against the white letters.
+   The transparent borders show in forced colours, where fills are dropped. "!" marks an account to
+   reconnect. <span class="avatar c0">A<img src alt=""></span> */
+.avatar {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  margin: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: white;
+  font-size: var(--small);
+  font-weight: 600;
+  line-height: 1;
+}
+.c0 {
+  background: oklch(0.5 0.12 240);
+}
+.c1 {
+  background: oklch(0.5 0.11 60);
+}
+.c2 {
+  background: oklch(0.5 0.16 355);
+}
+.c3 {
+  background: oklch(0.5 0.09 190);
+}
+.c4 {
+  background: oklch(0.5 0.17 280);
+}
+.c5 {
+  background: oklch(0.5 0.15 25);
+}
+.c6 {
+  background: oklch(0.5 0.12 135);
+}
+.c7 {
+  background: oklch(0.5 0.17 320);
+}
+.avatar.more {
+  background: color-mix(in srgb, var(--line) 35%, Canvas);
+  color: CanvasText;
+}
+.avatar img {
+  position: absolute;
+  inset: -1px;
+  inline-size: calc(100% + 2px);
+  block-size: calc(100% + 2px);
+  border-radius: 50%;
+  background: Canvas;
+  object-fit: cover;
+}
+.avatar.reconnect::after {
+  content: "!";
+  position: absolute;
+  z-index: 1;
+  inset-block-start: -0.25rem;
+  inset-inline-end: -0.25rem;
+  display: grid;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 2px solid Canvas;
+  outline: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--danger);
+  color: Canvas;
+}
+/* A handle as two lines. It clips in the header; with enlarged text (the header is then only a few
+   rem wide) and in a sheet it wraps instead. <span class="who"><span>anna</span><span class="quiet">host</span></span> */
+.who {
+  display: grid;
   min-inline-size: 0;
-  max-inline-size: 70%;
+  font-size: var(--small);
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: start;
+}
+.who > * {
+  overflow: hidden;
+  overflow-wrap: var(--who-wrap, normal);
   text-overflow: ellipsis;
+  white-space: var(--who-space, nowrap);
+}
+.who > .quiet {
+  font-weight: 400;
+}
+@container (max-inline-size: 12rem) {
+  .who {
+    --who-space: normal;
+    --who-wrap: anywhere;
+  }
 }
 
-/* Field: an input with a button inside its trailing end. The wrapper draws the border (an inset outline, so
-   it adds no height), the input has none.
+/* The Accounts sheet. The title row stays in view with its close button; each row is the account to
+   switch to, in full, and Remove, which moves under it when text is large. The current row has a check
+   mark as well as the accent border. */
+.row.title {
+  position: sticky;
+  z-index: 1;
+  inset-block-start: calc(-1 * var(--space-2));
+  background: Canvas;
+}
+#accounts-sheet {
+  container-type: inline-size;
+}
+/* With text so large that the title and the button take two lines, they scroll away with the list. */
+@container (max-inline-size: 12rem) {
+  .row.title {
+    position: static;
+  }
+}
+.title button {
+  flex: none;
+  margin-inline-start: auto;
+  border-color: transparent;
+}
+.row.title svg,
+.list > li > .pick > svg {
+  flex: none;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.list > li:has(> .pick) {
+  flex-wrap: wrap;
+}
+.list > li > .pick {
+  flex-wrap: wrap;
+  flex-basis: 9rem;
+  gap: var(--space-1);
+  padding: 0.25rem;
+  scroll-margin-block-start: 4rem; /* clear of the title row, which stays in view */
+}
+.pick + .destructive {
+  margin-inline-start: auto;
+}
+.pick:active:not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--line) 15%, Canvas);
+}
+.pick .avatar {
+  margin: 0;
+}
+.pick .who {
+  flex: 1 1 3rem;
+  --who-space: normal;
+  --who-wrap: anywhere;
+}
+
+/* Accounts. The current one leads: circle, username over host, and a caret. The others sit at the end
+   and drop to further lines when text is large.
+   <div class="accounts"><button class="active">…</button><span class="others"><button>…</button></span></div> */
+.accounts {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+.accounts button {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.accounts > .active {
+  flex: 1 1 min(9.5rem, 100%);
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-inline-size: min(9.5rem, 100%);
+  max-inline-size: max-content; /* as wide as its name, so the rest of the line isn't a button */
+  padding-inline-end: var(--space-1);
+}
+.others {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-inline-start: auto;
+}
+.caret {
+  flex: none;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-2px) rotate(45deg);
+}
+.accounts [aria-busy="true"] .avatar {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .accounts [aria-busy="true"] .avatar {
+    animation: none;
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+}
+/* No fill behind the text: hover and pressed are a ring on the circle, and the current name underlines. */
+.accounts button:is(:hover, :active):not([aria-disabled="true"]) {
+  background: none;
+}
+.others button:hover:not([aria-disabled="true"]) .avatar {
+  box-shadow: 0 0 0 2px var(--line);
+}
+.others button:active:not([aria-disabled="true"]) .avatar {
+  box-shadow: 0 0 0 2px CanvasText;
+}
+.active:is(:hover, :active):not([aria-disabled="true"]) .who > :first-child {
+  text-decoration: underline;
+}
+.others button[aria-disabled="true"]:not([aria-busy="true"]) {
+  opacity: 0.5;
+}
+
+/* Field: an input with a small button inside its trailing end. The wrapper draws the border (an inset
+   outline, so it adds no height), the input has none.
    <div class="field"><input type="url"><button type="button">Paste</button></div> */
 .field {
   display: flex;
@@ -468,10 +679,22 @@ header select {
 .field > button:focus-visible {
   outline-offset: -2px;
 }
+/* Drawn smaller than a full control; the ::after keeps the tap target the field's full height. */
 .field > button {
-  border: 0;
-  border-inline-start: var(--rule);
-  border-radius: 0;
+  position: relative;
+  flex: none;
+  align-self: center;
+  min-block-size: 2.25rem;
+  margin-inline-end: 0.25rem;
+  padding: 0 var(--space-1);
+  /* The field's corner less the inset, so the two run parallel. */
+  border-radius: calc(var(--radius) - 0.25rem);
+  font-size: var(--small);
+}
+.field > button::after {
+  content: "";
+  position: absolute;
+  inset: calc(-0.25rem - 1px) -1px;
 }
 
 /* Post: the thing being acted on, a plain block with no box or rule of its own.

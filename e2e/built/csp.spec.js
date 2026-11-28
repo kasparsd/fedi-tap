@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { action, openLink, resetMock, signIn } from "../helpers.js";
+import { action, openAccounts, openLink, resetMock, signIn } from "../helpers.js";
 
 // The production build runs under its Content Security Policy. Walk through the screens and make
 // sure the browser never blocks anything and nothing logs an error.
@@ -41,6 +41,8 @@ test("the built page works under its Content Security Policy", async ({ page }) 
   ).toBe("TypeError");
 
   await signIn(page, "alice");
+  // The account's own photo is the one remote image the policy has to let through.
+  await expect(page.locator("#account-active img")).toBeVisible();
   // Hostile server markup is parsed into an inert document without a Trusted Types violation. The browser
   // may report the markup's own inline handlers (onload, onerror) as blocked while parsing it (some
   // versions do, some don't), though nothing runs there; those reports are allowed here and nothing else is.
@@ -57,8 +59,7 @@ test("the built page works under its Content Security Policy", async ({ page }) 
   await action(page, "Reply").click();
   await expect(page.locator("#reply-sheet")).toHaveJSProperty("open", true);
   await page.keyboard.press("Escape");
-  await page.selectOption("#account-select", "add");
-  await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", true);
+  await openAccounts(page);
 
   violations.push(...(await page.evaluate(() => window.__violations)));
   expect(violations).toEqual([]);

@@ -150,8 +150,8 @@ export function sessionEnded(account) {
 }
 
 export function refused() {
-  return new Problem("Connection refused", "Reconnect from the account menu.", {
-    steps: "Choose Connect account in the account menu and connect again.",
+  return new Problem("Connection refused", "Connect the account again.", {
+    steps: "Choose your account at the top of the page, then connect it again under Add account.",
     detail: "HTTP 401",
   });
 }

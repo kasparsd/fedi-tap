@@ -67,3 +67,33 @@ export const action = (page, name) => page.locator(`button[data-action="${name.t
 /** The problem card in a slot ("auth", "lookup", "reply" ...), whatever it says. */
 export const problem = (page, slot) =>
   page.locator(`#${slot === "auth" ? "error" : `${slot}-error`} [role="alert"]`);
+
+/** The header's button for the account in use, named "user@host, accounts". */
+export const expectCurrent = (page, user) =>
+  expect(page.locator("#account-active")).toHaveAccessibleName(
+    new RegExp(`^${user}@[^,]+(, needs reconnecting)?, accounts$`),
+  );
+
+/** A header circle for another account. */
+export const circle = (page, user) =>
+  page.locator("header").getByRole("button", { name: new RegExp(`^Switch to ${user}@`) });
+
+/** Opens the Accounts sheet from the header's current account. */
+export async function openAccounts(page) {
+  await page.click("#account-active");
+  await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", true);
+}
+
+/** Adds another mock account from inside the Accounts sheet, which makes it the current one. */
+export async function addAccount(page, user) {
+  await openAccounts(page);
+  await page.fill("#account-input", profileLink(page, user));
+  await Promise.all([page.waitForURL(/oauth\/authorize/), page.click("#accounts-sheet #continue")]);
+  await page.selectOption("select[name=user]", user);
+  const origin = new URL(page.url()).origin;
+  await Promise.all([
+    page.waitForURL((url) => url.origin === origin && url.pathname === "/"),
+    page.click("button[value=approve]"),
+  ]);
+  await expectCurrent(page, user);
+}

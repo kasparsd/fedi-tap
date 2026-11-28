@@ -120,30 +120,30 @@ figcaption b { color: CanvasText; }
 <div class="flow"><figure id="A1"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <form><fieldset><legend>Connect account</legend>
 <label for="a1-in">Account</label>
-<div class="row"><input id="a1-in" placeholder="@you@example.com"><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
+<div class="row"><div class="field"><input id="a1-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
 <details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
-</main></div><figcaption><b>A1 Welcome.</b> The header is the same on every screen: the ⁂tap mark as a plain link, and the account dropdown once an account exists (none yet, so it is absent). The title states the task, and one short paragraph says what the app does; it shows only while no account is stored. One labelled field with the placeholder showing the shape, and Sign in to its right. The compatibility sentence sits below the form, with the longer text behind “Supported servers”. The Shortcut panel never shows when signed out.</figcaption></figure>
+</main></div><figcaption><b>A1 Welcome.</b> Signed out, the header is the ⁂tap mark as a plain link; the accounts in the mark’s place once one exists. The title states the task, and one sentence says what the app does, with the device’s share symbol beside “Share”; it shows only while no account is stored. One labelled field with the placeholder showing the shape and Paste inside it, and Connect to its right. The compatibility sentence sits below the form, with the longer text behind “Supported servers”. The Shortcut panel never shows when signed out.</figcaption></figure>
 <figure id="A2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <form><fieldset><legend>Connect account</legend>
 <label for="a2-in">Account</label>
-<div class="row"><input id="a2-in" value="anna@social.example" readonly><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
+<div class="row"><div class="field"><input id="a2-in" value="anna@social.example" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
 <details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
 </main></div><figcaption><b>A2 Looking up.</b> The field stays in place with its value (read-only while the request runs, never disabled, so focus and text are kept). Progress is on the button that was pressed.</figcaption></figure>
 <figure id="A3"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <form><fieldset><legend>Connect account</legend>
 <label for="a3-in">Account</label>
-<div class="row"><input id="a3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="a3-in-e"><button class="primary">Connect</button></div>
+<div class="row"><div class="field"><input id="a3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="a3-in-e"><button type="button">Paste</button></div><button class="primary">Connect</button></div>
 <p id="a3-in-e" role="alert"><strong>Can’t find anna@exmple.social.</strong> Check the spelling, or use a profile link.</p>
 <button>Use profile link</button></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
@@ -152,10 +152,10 @@ figcaption b { color: CanvasText; }
 <figure id="A4"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <form><fieldset><legend>Connect account</legend>
 <label for="a4-in">Account</label>
-<div class="row"><input id="a4-in" value="anna@social.example" aria-invalid="true" aria-describedby="a4-in-e"><button class="primary">Connect</button></div>
+<div class="row"><div class="field"><input id="a4-in" value="anna@social.example" aria-invalid="true" aria-describedby="a4-in-e"><button type="button">Paste</button></div><button class="primary">Connect</button></div>
 <p id="a4-in-e" role="alert"><strong>Couldn’t read your profile.</strong> Your server returned no matching profile, or blocked this page.</p>
 <details><summary>Details</summary><p class="quiet">Request blocked by the server’s CORS policy: no Access-Control-Allow-Origin header.</p></details></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
@@ -167,13 +167,13 @@ figcaption b { color: CanvasText; }
 <form><button class="primary">Allow</button><button>Deny</button></form>
 </main></div><figcaption><b>A5 Server consent.</b> Not our page. It is drawn with the same components so the flow reads as one system. In a Home Screen app iOS shows it inside a system sheet with a Done button (see I3).</figcaption></figure>
 <figure id="A6"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="a6-in">Link</label>
 <div class="row"><div class="field"><input id="a6-in" type="url" placeholder="Paste a link"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <section><h2>Add Shortcut for iOS</h2><p class="quiet">The Shortcut opens Safari, not this app.</p><p class="quiet"><a href="#">Source code</a></p><a class="button" href="#">Add Shortcut</a><button>Dismiss</button></section>
-</main></div><figcaption><b>A6 Signed in.</b> The header’s dropdown shows the account, so there is no confirmation line. Paste sits inside the link field, Open to its right. In the Home Screen app the Shortcut panel notes that it opens Safari; on iOS only, until it is dismissed.</figcaption></figure>
+</main></div><figcaption><b>A6 Signed in.</b> The header shows the account, so there is no confirmation line. Paste sits inside the link field, Open to its right. In the Home Screen app the Shortcut panel notes that it opens Safari; on iOS only, until it is dismissed.</figcaption></figure>
 </div>
 <h2 id="B">B · A shared link, signed in</h2>
 <p>Goal: act on the post I just shared. The Shortcut opens the page with ?url=…, which iOS loads in Safari. The link field is already filled in and stays there.</p>
@@ -183,14 +183,14 @@ figcaption b { color: CanvasText; }
 <ul class="list"><li><button type="button">Messages</button></li><li><button type="button" aria-current="true">FediTap shortcut</button></li><li><button type="button">Copy</button></li></ul>
 <button>Cancel</button></dialog></div><figcaption><b>B1 Share sheet.</b> Entry point, drawn by iOS. The Shortcut passes only the first link.</figcaption></figure>
 <figure id="B2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b2-in">Link</label>
 <div class="row"><div class="field"><input id="b2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
 </main></div><figcaption><b>B2 Loading.</b> The link field stays where it is with its value and focus; the busy state is on Open (“Opening…”) and Paste, and a status line says Loading…. The previous post is removed while the new one loads, so it cannot be mistaken for the new link.</figcaption></figure>
 <figure id="B3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b3-in">Link</label>
@@ -203,7 +203,7 @@ figcaption b { color: CanvasText; }
 <section><h2>Add Shortcut for iOS</h2><p class="quiet"><a href="#">Source code</a></p><a class="button" href="#">Add Shortcut</a><button>Dismiss</button></section>
 </main></div><figcaption><b>B3 Loaded.</b> The field stays at the top with the link in it; the post appears below it and is replaced when another link is submitted. Follow sits at the end of the author line, since it acts on the person; Like, Repost and Reply are icon buttons in one row under the post. There is no Change link: the field is always there. The Shortcut panel shows on iOS only.</figcaption></figure>
 <figure id="B4"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b4-in">Link</label>
@@ -216,7 +216,7 @@ figcaption b { color: CanvasText; }
 <p role="status">Liked as @me@example.social. Press Like again to undo.</p>
 </main></div><figcaption><b>B4 After Like.</b> The button keeps its place and label; the icon fills and the border and text take the accent colour (aria-pressed). Pressing it again undoes. The status line names the account and says how to undo; where the server cannot undo it says so instead and the button is aria-disabled. B4a and B4b show sending and no undo.</figcaption></figure>
 <figure id="B4a"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b4a-in">Link</label>
@@ -229,7 +229,7 @@ figcaption b { color: CanvasText; }
 <p role="status"></p>
 </main></div><figcaption><b>B4a Sending.</b> The pressed button says what it is doing (Liking…, Undoing…, Sending…); the others are aria-disabled, not disabled, so focus stays on the button.</figcaption></figure>
 <figure id="B4b"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b4b-in">Link</label>
@@ -242,7 +242,7 @@ figcaption b { color: CanvasText; }
 <p role="status">Liked as @me@example.social. This server doesn’t allow undo from here.</p>
 </main></div><figcaption><b>B4b No undo.</b> The server did not expose the activity ID, so the button keeps its on look, loses hover and press feedback (aria-disabled) and the status line says why.</figcaption></figure>
 <figure id="B5"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="b5-in">Link</label>
@@ -256,16 +256,16 @@ figcaption b { color: CanvasText; }
 <div class="flow"><figure id="C1"><p class="quiet">Safari</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <section><h2>Shared link</h2><p class="quiet">https://social.example/@anna/1234</p></section>
 <form><fieldset><legend>Connect account</legend>
 <label for="c1-in">Account</label>
-<div class="row"><input id="c1-in" placeholder="@you@example.com"><button class="primary">Connect</button></div></fieldset></form>
+<div class="row"><div class="field"><input id="c1-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
 <details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
 </main></div><figcaption><b>C1 Pending link.</b> The link is shown above the form so the person knows it arrived. It survives connecting (through sessionStorage). The field is the same one A1 uses.</figcaption></figure>
 <figure id="C2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="c2-in">Link</label>
@@ -275,7 +275,7 @@ figcaption b { color: CanvasText; }
 <h2 id="D">D · Open directly</h2>
 <p>Goal: act on a link I copied. The link field is the first task, with Paste inside it.</p>
 <div class="flow"><figure id="D1"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="d1-in">Link</label>
@@ -283,14 +283,14 @@ figcaption b { color: CanvasText; }
 <section><h2>Add Shortcut for iOS</h2><p class="quiet">The Shortcut opens Safari, not this app.</p><p class="quiet"><a href="#">Source code</a></p><a class="button" href="#">Add Shortcut</a><button>Dismiss</button></section>
 </main></div><figcaption><b>D1 Ready.</b> The link field with Paste inside it and Open beside it. Paste (iOS shows its own “Allow Paste” prompt) reads the clipboard, fills the field and opens the link at once. On iOS the Shortcut panel sits below as the way to skip this screen next time.</figcaption></figure>
 <figure id="D2"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="d2-in">Link</label>
 <div class="row"><div class="field"><input id="d2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
 </main></div><figcaption><b>D2 Pasted.</b> The field keeps the pasted link; progress is on Open and a status line. Paste and Open are aria-disabled, not disabled, so focus is not lost.</figcaption></figure>
 <figure id="D3"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="d3-in">Link</label>
@@ -300,7 +300,7 @@ figcaption b { color: CanvasText; }
 </div>
 <h2 id="E">E · Reply</h2>
 <div class="flow"><figure id="E1"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="e1-u">Link</label>
@@ -318,7 +318,7 @@ figcaption b { color: CanvasText; }
 <p class="quiet">Replies are public.</p>
 <div class="row"><button>Cancel</button><button class="primary">Send</button></div></fieldset></dialog></div><figcaption><b>E1 Composer.</b> A bottom-docked dialog: a heading, a line naming the post and account, the field with the visibility said in words and the counter under it, and a button row. Send stays disabled until there is text.</figcaption></figure>
 <figure id="E2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="e2-u">Link</label>
@@ -336,7 +336,7 @@ figcaption b { color: CanvasText; }
 <p class="quiet">Replies are public.</p>
 <div class="row"><button disabled>Cancel</button><button class="primary" disabled aria-busy="true">Sending…</button></div></fieldset></dialog></div><figcaption><b>E2 Sending.</b> Text stays. Controls are off; the Send button says “Sending…”. A failure keeps the draft and shows error text in the dialog; Send is the retry.</figcaption></figure>
 <figure id="E3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="e3-in">Link</label>
@@ -351,7 +351,7 @@ figcaption b { color: CanvasText; }
 </div>
 <h2 id="F">F · Profile link</h2>
 <div class="flow"><figure id="F1"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="f1-in">Link</label>
@@ -359,7 +359,7 @@ figcaption b { color: CanvasText; }
 <article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Bike mechanic, slow runner, occasional gardener.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
 </main></div><figcaption><b>F1 Profile.</b> Like, Repost and Reply don’t apply, so the action row is absent. Follow is in the byline, as on a post.</figcaption></figure>
 <figure id="F2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="f2-in">Link</label>
@@ -369,54 +369,58 @@ figcaption b { color: CanvasText; }
 </main></div><figcaption><b>F2 Requested.</b> Follow is a toggle like the others. The status line says “request sent”, the honest word: a request is all the client knows. Press Follow again to undo, if the server exposes the ID.</figcaption></figure>
 </div>
 <h2 id="G">G · Connected accounts</h2>
-<p>Goal: act as the right account, add another, or remove one. Today the picker, “Manage accounts”, the connect form and Remove share one area. Proposed: the account button opens one dialog.</p>
+<p>Goal: act as the right account, add another, or remove one. Switching is one tap in the header; everything else is in one sheet.</p>
 <div class="flow"><figure id="G1"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="g1-u">Link</label>
 <div class="row"><div class="field"><input id="g1-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-</main><dialog open class="sheet" aria-labelledby="g1-t"><h2 id="g1-t">Accounts</h2>
-<ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
-<form><fieldset><legend>Connect account</legend>
-<label for="g1-in">Account</label>
-<div class="row"><input id="g1-in" placeholder="@you@example.com"><button class="primary">Connect</button></div></fieldset></form>
-<button>Done</button></dialog></div><figcaption><b>G1 Accounts.</b> A list of buttons with the active account in bold and outlined replaces the dropdown and the Manage toggle. Connect account and Done are buttons below the list.</figcaption></figure>
+</main><dialog open class="sheet" aria-labelledby="g1-t"><div class="row title"><h2 id="g1-t">Accounts</h2><button type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<ul class="list"><li><button type="button" class="pick" aria-label="me@example.social" aria-current="true"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></button><button type="button" class="destructive" aria-label="Remove me@example.social">Remove</button></li><li><button type="button" class="pick" aria-label="alex@other.example"><span class="avatar c1" aria-hidden="true">A</span><span class="who"><span>alex</span><span class="quiet">other.example</span></span></button><button type="button" class="destructive" aria-label="Remove alex@other.example">Remove</button></li></ul>
+<form><fieldset><legend>Add account</legend>
+<label for="g1-in">Add account</label>
+<div class="row"><div class="field"><input id="g1-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div></fieldset></form>
+<button>Done</button></dialog></div><figcaption><b>G1 Accounts.</b> Opened from the current account or “+N” in the header, with focus on the current row. Each row is the account to switch to, then Remove; the current one has the accent border and a check mark. Add account and Done are below the list, and the “×” at the top does what Done does.</figcaption></figure>
 <figure id="G2"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@alex@other.example</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="alex@other.example, accounts"><span class="avatar c1" aria-hidden="true">A</span><span class="who"><span>alex</span><span class="quiet">other.example</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to me@example.social"><span class="avatar c0" aria-hidden="true">M</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="g2-in">Link</label>
 <div class="row"><div class="field"><input id="g2-in" type="url" value="https://social.example/@anna/1234" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Opening…</button></div><p role="status">Loading…</p></fieldset></form>
-</main></div><figcaption><b>G2 Switched.</b> Choosing a row closes the dialog, updates the account button and reloads the post for the new account; the status line says so.</figcaption></figure>
+</main></div><figcaption><b>G2 Switched.</b> A tap on a circle, or on a row in the sheet, switches: the previous account takes the tapped circle’s place, the post reloads for the new account, and the pill says “Switched to …”.</figcaption></figure>
 <figure id="G3"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="g3-u">Link</label>
 <div class="row"><div class="field"><input id="g3-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-</main><dialog open class="sheet" aria-labelledby="g3-t"><h2 id="g3-t">Accounts</h2>
-<ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
-<form><fieldset><legend>Connect account</legend>
-<label for="g3-in">Account</label>
-<div class="row"><input id="g3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="g3-in-e"><button class="primary">Connect</button></div>
+</main><dialog open class="sheet" aria-labelledby="g3-t"><div class="row title"><h2 id="g3-t">Accounts</h2><button type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<ul class="list"><li><button type="button" class="pick" aria-label="me@example.social" aria-current="true"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></button><button type="button" class="destructive" aria-label="Remove me@example.social">Remove</button></li><li><button type="button" class="pick" aria-label="alex@other.example"><span class="avatar c1" aria-hidden="true">A</span><span class="who"><span>alex</span><span class="quiet">other.example</span></span></button><button type="button" class="destructive" aria-label="Remove alex@other.example">Remove</button></li></ul>
+<form><fieldset><legend>Add account</legend>
+<label for="g3-in">Add account</label>
+<div class="row"><div class="field"><input id="g3-in" value="anna@exmple.social" aria-invalid="true" aria-describedby="g3-in-e"><button type="button">Paste</button></div><button class="primary">Connect</button></div>
 <p id="g3-in-e" role="alert"><strong>Can’t find anna@exmple.social.</strong> Check the spelling, or use a profile link.</p>
 <button>Use profile link</button></fieldset></form>
-<button>Done</button></dialog></div><figcaption><b>G3 Edit.</b> Removal appears only while editing, away from the connect form, as a red button at the end of each account row.</figcaption></figure>
+<button>Done</button></dialog></div><figcaption><b>G3 Edit.</b> A connection that fails stays in the sheet, with the error below the field.</figcaption></figure>
 <figure id="G4"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="g4-u">Link</label>
 <div class="row"><div class="field"><input id="g4-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-</main><dialog open aria-labelledby="g4-t" aria-describedby="g4-d"><h2 id="g4-t">Remove @alex@other.example?</h2>
-<p id="g4-d" class="quiet">Signs out here only. Revoke FediTap under connected apps on your server.</p>
-<div class="row"><button>Cancel</button><button class="destructive">Remove</button></div></dialog></div><figcaption><b>G4 Confirm.</b> The same dialog element, centred, with a heading, one sentence and a button row. The copy says removal is local and the server’s access grant remains.</figcaption></figure>
+</main><dialog open class="sheet" aria-labelledby="g4-t"><div class="row title"><h2 id="g4-t">Accounts</h2><button type="button" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<ul class="list"><li><button type="button" class="pick" aria-label="me@example.social" aria-current="true"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></button><button type="button" class="destructive" aria-label="Remove me@example.social">Remove</button></li><li class="confirm"><span>Remove alex@other.example?</span><button type="button">Cancel</button><button type="button" class="destructive">Remove</button></li></ul>
+<p class="quiet">Signs out here only. Revoke FediTap under connected apps on your server.</p>
+<form><fieldset><legend>Add account</legend>
+<label for="g4-in">Add account</label>
+<div class="row"><div class="field"><input id="g4-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div></fieldset></form>
+<button>Done</button></dialog></div><figcaption><b>G4 Confirm.</b> Remove asks in place: the question replaces the row, with Cancel and Remove under it, and the sentence below the list says removal is local and the server’s access grant remains.</figcaption></figure>
 <figure id="G5"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social (reconnect)</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, needs reconnecting, accounts"><span class="avatar c0 reconnect" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <section><p role="alert"><strong>Connection expired.</strong> Reconnect as @me@example.social.</p>
 <button class="primary">Reconnect</button><button>Connect account</button></section>
@@ -425,18 +429,18 @@ figcaption b { color: CanvasText; }
 <div class="row"><div class="field"><input id="g5-in" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button>Open</button></div></fieldset></form>
 </main></div><figcaption><b>G5 Session ended.</b> The problem is plain text where the action would happen. One filled recovery button, one plain alternative; the link field is still there.</figcaption></figure>
 <figure id="G6"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="g6-u">Link</label>
 <div class="row"><div class="field"><input id="g6-u" type="url" value="https://social.example/@anna/1234"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 <article class="post"><div class="byline"><div><h2>Anna Ruiz</h2><p class="quiet"><span>@anna@social.example</span></p></div><button type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM19 8v6M22 11h-6"/></svg>Follow</button></div><p>Finished the bike repair.</p><footer class="row quiet"><a href="#">social.example</a></footer></article>
-</main><dialog open class="sheet" aria-labelledby="g6-t"><h2 id="g6-t">Accounts</h2>
-<ul class="list"><li><span>@me@example.social</span><button type="button" class="destructive">Remove</button></li><li><span>@alex@other.example</span><button type="button" class="destructive">Remove</button></li></ul>
-<form><fieldset><legend>Connect account</legend>
-<label for="g6-in">Account</label>
-<div class="row"><input id="g6-in" value="@anna@social.example" readonly><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
-<button disabled>Done</button></dialog></div><figcaption><b>G6 Connect account.</b> The same field-and-button row as A1 inside the dialog, with the A2 to A4 states (errors appear below the field). Cancel is a button; it returns to G1 with the new account selected.</figcaption></figure>
+</main><dialog open class="sheet" aria-labelledby="g6-t"><div class="row title"><h2 id="g6-t">Accounts</h2><button type="button" aria-label="Close" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<ul class="list"><li><button type="button" class="pick" aria-label="me@example.social" aria-current="true"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg></button><button type="button" class="destructive" aria-label="Remove me@example.social">Remove</button></li><li><button type="button" class="pick" aria-label="alex@other.example"><span class="avatar c1" aria-hidden="true">A</span><span class="who"><span>alex</span><span class="quiet">other.example</span></span></button><button type="button" class="destructive" aria-label="Remove alex@other.example">Remove</button></li></ul>
+<form><fieldset><legend>Add account</legend>
+<label for="g6-in">Add account</label>
+<div class="row"><div class="field"><input id="g6-in" value="@anna@social.example" readonly><button type="button" aria-disabled="true">Paste</button></div><button class="primary" aria-disabled="true" aria-busy="true">Looking up…</button></div></fieldset></form>
+<button aria-disabled="true">Done</button></dialog></div><figcaption><b>G6 Connect account.</b> The same field-and-button row as A1 inside the sheet, with the A2 to A4 states (errors appear below the field). Done and “×” wait until the connection ends.</figcaption></figure>
 </div>
 <h2 id="H">H · Edge cases</h2>
 <div class="flow"><figure id="H1"><p class="quiet">Safari</p><div class="frame"><main>
@@ -446,7 +450,7 @@ figcaption b { color: CanvasText; }
 <h2>Try this</h2><ul><li>Allow website data for this page.</li><li>Use a current browser.</li><li>Use the published https address.</li><li>Clear this site’s data in your browser settings.</li></ul>
 </main></div><figcaption><b>H1 Storage blocked or browser too old.</b> Today: a disabled form and one line. Proposed: the cause as error text under the title, then the steps as a plain list. With no field to attach it to, the error sits under the title.</figcaption></figure>
 <figure id="H2"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="h2-in">Link</label>
@@ -459,7 +463,7 @@ figcaption b { color: CanvasText; }
 <p role="status">Reconnecting…</p>
 </main></div><figcaption><b>H2 Token refresh.</b> On a 401 the app refreshes and retries once itself. The person sees “Reconnecting…” briefly, with the action buttons aria-disabled so focus stays put.</figcaption></figure>
 <figure id="H3"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="h3-in">Link</label>
@@ -468,7 +472,7 @@ figcaption b { color: CanvasText; }
 <details><summary>Add to Home Screen</summary><p class="quiet">Safari: Share, then Add to Home Screen.</p></details>
 </main></div><figcaption><b>H3 Shortcut section in Safari.</b> The Shortcut section is the only extra. “Add to Home Screen” is a one-line disclosure under it (Safari only; hidden once the page runs standalone).</figcaption></figure>
 <figure id="H4"><p class="quiet">Safari</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="h4-in">Link</label>
@@ -479,7 +483,7 @@ figcaption b { color: CanvasText; }
 <h2 id="I">I · Added to the Home Screen</h2>
 <p>Goal: open the tool like an app, with no browser bar. iOS keeps a Home Screen web app’s storage separate from Safari’s, so connections are not shared. A link opened from the Shortcut loads in Safari, not in the Home Screen app. The design has to work well in both. The Web Share Target API isn’t available on iOS, so the Shortcut stays for sharing.</p>
 <div class="flow"><figure id="I1"><p class="quiet">iOS share sheet in Safari (system UI)</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="i1-in">Link</label>
@@ -491,10 +495,10 @@ figcaption b { color: CanvasText; }
 <figure id="I2"><p class="quiet">Home Screen app</p><div class="frame"><main>
 <header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a></header>
 <h1>Connect account</h1>
-<p>Like, repost, reply to or follow a Fediverse post from your own account.</p>
+<p>Like, repost, reply and follow Fediverse content on the web using the default <span class="symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2"/></svg> Share</span> card of your device.</p>
 <form><fieldset><legend>Connect account</legend>
 <label for="i2-in">Account</label>
-<div class="row"><input id="i2-in" placeholder="@you@example.com"><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
+<div class="row"><div class="field"><input id="i2-in" placeholder="@you@example.com"><button type="button">Paste</button></div><button class="primary">Connect</button></div><p class="quiet">Signed in separately from Safari.</p></fieldset></form>
 <p class="quiet">Works with WordPress (ActivityPub plugin) and servers that have the ActivityPub API.</p>
 <details><summary>Supported servers</summary><p class="quiet">The server needs the ActivityPub client API. On WordPress, install the ActivityPub plugin and turn on the API. Mastodon, Pixelfed, Lemmy and Misskey do not support it.</p></details>
 </main></div><figcaption><b>I2 First launch.</b> Standalone: the content respects the safe areas. The extra hint explains separate storage, and only in this context.</figcaption></figure>
@@ -505,14 +509,14 @@ figcaption b { color: CanvasText; }
 <p><strong>FediTap</strong> wants to act as <strong>@anna@social.example</strong>: like, repost, reply and follow.</p>
 <button type="button" class="primary">Allow</button><button>Deny</button></dialog></div><figcaption><b>I3 Server consent.</b> iOS opens the connect step in a system sheet. Risk: returning to the app through the redirect may land in Safari instead of the Home Screen app. Must be tested on a device (see plan, phase 5).</figcaption></figure>
 <figure id="I4"><p class="quiet">Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="i4-in">Link</label>
 <div class="row"><div class="field"><input id="i4-in" type="url" placeholder="Paste a link"><button type="button">Paste</button></div><button class="primary">Open</button></div></fieldset></form>
 </main></div><figcaption><b>I4 Everyday use.</b> The app opens straight to the link field. No install hint, no Shortcut section. Same as D1.</figcaption></figure>
 <figure id="I5"><p class="quiet">System sheet over the Home Screen app</p><div class="frame"><main>
-<header class="row"><a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a><select aria-label="Account"><option>@me@example.social</option><option>Connect account</option></select></header>
+<header class="row"><div class="accounts" role="group" aria-label="Accounts"><button type="button" class="active" aria-haspopup="dialog" aria-label="me@example.social, accounts"><span class="avatar c0" aria-hidden="true">M</span><span class="who"><span>me</span><span class="quiet">example.social</span></span><span class="caret" aria-hidden="true"></span></button><span class="others"><button type="button" aria-label="Switch to alex@other.example"><span class="avatar c1" aria-hidden="true">A</span></button></span></div></header>
 <h1>Open a post or profile</h1>
 <form><fieldset><legend>Open a post or profile</legend>
 <label for="i5-in">Link</label>

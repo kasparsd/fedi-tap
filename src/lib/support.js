@@ -1,5 +1,8 @@
 import { readStore } from "./store.js";
 
+/** Whose share button the signed-out page draws. */
+export const appleDevice = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
+
 export const standalone =
   matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 

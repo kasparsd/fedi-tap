@@ -42,6 +42,8 @@ Project rules from `AGENTS.md` apply: greenfield (no backward-compatibility work
 
 ## Decisions: header and account dropdown
 
+Superseded on 2026-11-28 where it concerns the header, the account dropdown, avatars and remote images: see [components.md, Header and accounts](../ux/components.md#header-and-accounts).
+
 - Every screen has the same header: the "⁂tap" mark (a plain link, aria-label "FediTap") and, once an account is stored, a native "Account" dropdown whose last option is "Add account". The account chip and the accounts sheet are gone; the Accounts dialog (stored accounts with Remove, plus the add-account row) opens only from that last option.
 - A short summary paragraph shows above the sign-in form only while no account is stored. The Shortcut panel ("Add Shortcut for iOS") and the Add to Home Screen disclosure show on iOS only, never when signed out.
 - Labels follow `docs/research/fediverse-ui-conventions.md` (Like and Repost kept). Replies are public with a Mention of the author, and the reply counter and 500 limit are gone. The expired-sign-in screen has one primary button, Sign in.

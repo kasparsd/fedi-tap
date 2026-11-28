@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Account switcher: avatar mocks</title>
+<link rel="stylesheet" href="../../src/app.css">
+<style>
+/* Page presentation only. */
+.wrap { max-inline-size: 84rem; margin-inline: auto; padding: var(--space-2); }
+.wrap > h2 { margin-block: var(--space-4) var(--space-1); }
+.wrap > p { max-inline-size: 46rem; margin-block-end: var(--space-1); }
+.flow { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-3); margin-block-start: var(--space-2); }
+figure { margin: 0; max-inline-size: 100%; }
+figcaption { margin-block-start: var(--space-1); max-inline-size: 24.375rem; font-size: var(--small); color: var(--quiet); }
+figcaption b { color: CanvasText; }
+.frame { position: relative; inline-size: 390px; max-inline-size: 100%; padding: var(--space-2); border: var(--rule); }
+.frame.narrow { inline-size: 320px; }
+.frame > * + * { margin-block-start: var(--space-3); }
+
+/* Proposed component. These are the rules that would move into app.css. */
+/* The current account leads; the others sit at the end and drop to their own line when text is large. */
+header.row .accounts { display: flex; flex: 1; flex-wrap: wrap; align-items: center; min-inline-size: 0; container-type: inline-size; }
+.accounts button { flex: none; padding: 0; border: 0; background: none; }
+.accounts > .active { flex: 1 1 min(9.5rem, 100%); justify-content: flex-start; gap: var(--space-1); min-inline-size: min(9.5rem, 100%); padding-inline-end: var(--space-1); }
+.others { display: flex; flex-wrap: wrap; justify-content: flex-end; margin-inline-start: auto; }
+/* No fill behind text: hover and pressed are a ring on the circle (the current account underlines its name). */
+.accounts button:is(:hover, :active):not([aria-disabled="true"]) { background: none; }
+.others button:hover:not([aria-disabled="true"]) .avatar { box-shadow: 0 0 0 2px var(--line); }
+.others button:active:not([aria-disabled="true"]) .avatar { box-shadow: 0 0 0 3px CanvasText; }
+.accounts > .active:is(:hover, :active):not([aria-disabled="true"]) .name { text-decoration: underline; }
+/* Busy: every account control is aria-disabled (so focus stays), and the one being switched to pulses. */
+.accounts button[aria-disabled="true"] { cursor: default; }
+.others button[aria-disabled="true"]:not([aria-busy="true"]) { opacity: 0.5; }
+.accounts [aria-busy="true"] .avatar { animation: pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .accounts [aria-busy="true"] .avatar { animation: none; box-shadow: 0 0 0 2px var(--accent); }
+}
+/* The transparent borders become visible in forced colours, where fills are dropped. */
+.avatar { position: relative; display: grid; flex: none; place-items: center; inline-size: 2.25rem; block-size: 2.25rem; margin: 0.25rem; border: 1px solid transparent; border-radius: 50%; color: white; font-size: var(--small); font-weight: 600; line-height: 1; }
+/* Eight fills, each at least 5.5:1 against the white letters. Listed in the order they are handed out. */
+.c4 { background: oklch(0.5 0.12 240); }
+.c1 { background: oklch(0.5 0.11 60); }
+.c7 { background: oklch(0.5 0.16 355); }
+.c3 { background: oklch(0.5 0.09 190); }
+.c5 { background: oklch(0.5 0.17 280); }
+.c0 { background: oklch(0.5 0.15 25); }
+.c2 { background: oklch(0.5 0.12 135); }
+.c6 { background: oklch(0.5 0.17 320); }
+/* A photo covers the letters once it has loaded; a missing or broken one leaves them showing. */
+.avatar img { position: absolute; inset: -1px; inline-size: calc(100% + 2px); block-size: calc(100% + 2px); border-radius: 50%; object-fit: cover; }
+.reconnect::after { z-index: 1; content: "!"; position: absolute; inset-block-start: -0.25rem; inset-inline-end: -0.25rem; display: grid; place-items: center; inline-size: 1rem; block-size: 1rem; border: 2px solid Canvas; outline: 1px solid transparent; border-radius: 50%; background: var(--danger); color: Canvas; font-size: var(--small); }
+.stack { display: grid; justify-items: start; min-inline-size: 0; line-height: 1.3; text-align: start; }
+.stack > span { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name, .host { font-size: var(--small); }
+.name { font-weight: 600; }
+/* Only with enlarged text (the header is then few rem wide) do the name and host wrap instead of clipping. */
+@container (max-inline-size: 12rem) {
+  .accounts .stack > span { white-space: normal; overflow-wrap: anywhere; }
+}
+.host { color: var(--quiet); font-weight: 400; }
+.caret { flex: none; inline-size: 0.4rem; block-size: 0.4rem; border: solid currentColor; border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); }
+/* "+N": the accounts that don't fit. It opens the same sheet as the current account. */
+.avatar.more { background: color-mix(in srgb, var(--line) 40%, Canvas); color: CanvasText; }
+.avatar.more.reconnect::after { inset-block-start: -0.375rem; inset-inline-end: -0.375rem; }
+/* The sheet: names and hosts wrap in full, and the current row has a check mark as well as a border. */
+dialog .list .pick { flex: 1; justify-content: flex-start; gap: var(--space-1); min-inline-size: 0; padding: 0.25rem; }
+dialog .list .pick:active:not([aria-disabled="true"]) { background: color-mix(in srgb, var(--line) 15%, Canvas); }
+dialog .list .stack { flex: 1; }
+dialog .list .stack > span { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+dialog .list .avatar { margin: 0; }
+.check { flex: none; inline-size: 1.25rem; block-size: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; }
+/* At large text sizes Remove moves under its account instead of squeezing it. */
+dialog .list > li { flex-wrap: wrap; }
+dialog .list > li > .pick { flex-basis: 11rem; }
+dialog .list > li > .destructive { margin-inline-start: auto; }
+
+/* A shortcut for Done at the top end of the sheet, in reach while the list scrolls. */
+dialog .title { position: sticky; inset-block-start: calc(-1 * var(--space-2)); z-index: 1; flex-wrap: nowrap; background: Canvas; }
+dialog .close { flex: none; padding: 0; border-color: transparent; }
+.close svg { inline-size: 1.25rem; block-size: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* Mock only: the status pill and the sheet are placed inside their frame instead of over the screen. */
+.frame > .pill { position: absolute; inset-block-end: var(--space-2); margin-block: 0 0; }
+.frame.open { min-block-size: 38rem; overflow: hidden; }
+.frame.open::before { content: ""; position: absolute; inset: 0; z-index: 1; background: color-mix(in srgb, var(--line) 50%, transparent); }
+.frame > dialog.sheet { position: absolute; inset: auto 0 0; z-index: 2; margin: 0; max-block-size: 100%; }
+.frame > dialog.sheet > * + * { margin-block-start: var(--space-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Account switcher: avatar mocks</h1>
+<p>Exploration for the account switcher; the decisions that hold are in <a href="../ux/components.md#header-and-accounts">components.md</a>. Tap a circle to switch, or the current account or “+N” to open the accounts sheet.</p>
+
+<h2>Signed out</h2>
+<p>The name shows only until there is an account.</p>
+<div class="flow" id="out"></div>
+
+<h2>Header</h2>
+<p>Up to three other accounts are circles. Beyond that, two circles and “+N”. Switching puts the previous account where the tapped one was, so switching back is the same spot. With large text the circles move to a second line.</p>
+<div class="flow" id="header"></div>
+
+<h2>Telling accounts apart</h2>
+<p>Each account gets the least-used colour when it is added and keeps it. Accounts with the same initial also show a second letter.</p>
+<div class="flow" id="apart"></div>
+
+<h2>Photos</h2>
+<p>An account’s own photo replaces its letters. Letters show only when there is no photo or it fails to load. The photos here are drawn placeholders.</p>
+<div class="flow" id="photos"></div>
+
+<h2>States</h2>
+<div class="flow" id="states"></div>
+
+<h2>The sheet</h2>
+<p>Every account in full, one tap to switch, Remove on each row, and the field to add another. It opens with focus on the current account and closes with Done, or the “×” at the top right.</p>
+<div class="flow" id="sheet"></div>
+</div>
+
+<script>
+const ANNA = ["anna@social.example", "anna@photos.example", "blog@anna.example"];
+const FOUR = [...ANNA, "anna@mastodon.example"];
+const MORE = [...FOUR, "news@very-long-community-server.example", "zed@zed.example"];
+const LONG = ["alexandra.fernandez@very-long-community-server.example", "anna@photos.example", "blog@anna.example"];
+// The order colours are handed out in: the first few are the furthest apart.
+const PALETTE = ["c4", "c1", "c7", "c3", "c5", "c0", "c2", "c6"];
+const TAP_GUARD = 400; // milliseconds in which a second tap is ignored
+
+/** A drawn stand-in for a profile photo, so the mock needs no network. */
+const portrait = (sky, shirt) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="${sky}"/><path d="M5 40c0-10 7-15 15-15s15 5 15 15z" fill="${shirt}"/><circle cx="20" cy="17" r="8" fill="#e8b996"/></svg>`)}`;
+const FACE = portrait("#9ec9e8", "#2f5d50");
+const LOGO = portrait("#f2d16b", "#7a3b69");
+
+const el = (tag, props = {}, ...children) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+};
+
+/** Adds accounts one at a time, as a person would: each takes the least-used colour and keeps it. */
+function accountsFrom(handles) {
+  const used = new Map(PALETTE.map((name) => [name, 0]));
+  return handles.map((handle) => {
+    const colour = PALETTE.reduce((best, name) => (used.get(name) < used.get(best) ? name : best));
+    used.set(colour, used.get(colour) + 1);
+    return { handle, colour };
+  });
+}
+
+const segmenter = new Intl.Segmenter();
+/** The letters and digits of a name, as whole characters. */
+const characters = (text) => [...segmenter.segment(text)].map((part) => part.segment).filter((part) => /[\p{L}\p{N}]/u.test(part));
+// Uppercase only when it stays one character ("ß" would become "SS").
+const capital = (part = "") => (part.toUpperCase().length === part.length ? part.toUpperCase() : part);
+
+/** One letter each; accounts that would look alike get a second one (host first, then more of the name). */
+function initials(accounts) {
+  const options = accounts.map(({ handle }) => {
+    const [user, host] = handle.split("@");
+    const [u1 = "?", u2 = ""] = characters(user);
+    const [h1 = "", h2 = ""] = characters(host);
+    const a = capital(u1);
+    return [a, a + capital(h1), a + u2, a + capital(h2)];
+  });
+  const level = accounts.map(() => 0);
+  for (let step = 0; step < 3; step++) {
+    const labels = options.map((option, i) => option[level[i]]);
+    labels.forEach((label, i) => {
+      if (labels.indexOf(label) !== labels.lastIndexOf(label)) level[i]++;
+    });
+  }
+  return options.map((option, i) => option[level[i]]);
+}
+
+function identity(handle) {
+  const [user, host] = handle.split("@");
+  return el("span", { className: "stack" }, el("span", { className: "name" }, user), el("span", { className: "host" }, host));
+}
+
+function button(className, label, ...children) {
+  const node = el("button", { type: "button", className }, ...children);
+  node.setAttribute("aria-label", label);
+  return node;
+}
+
+const CHECK = '<svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg>';
+
+/**
+ * One mocked screen. state: accounts, current (index), slots (the others, in header order),
+ * reconnect (indexes), open, removing (index), busy (index), status.
+ */
+function screen(frame, state) {
+  const { accounts, current } = state;
+  const marks = initials(accounts);
+  const needs = (index) => state.reconnect.includes(index);
+  const note = (index) => (needs(index) ? ", needs reconnecting" : "");
+
+  const redraw = (changes, focus) => {
+    screen(frame, { ...state, ...changes });
+    if (focus) frame.querySelector(focus)?.focus();
+  };
+  /** The previous account takes the chosen one's place. A hidden choice changes only the first circle. */
+  const choose = (index) => () => {
+    if (state.busy !== undefined || performance.now() - Number(frame.dataset.tapped ?? -TAP_GUARD) < TAP_GUARD) return;
+    frame.dataset.tapped = performance.now();
+    if (index === current) return redraw({ open: false }, ".active");
+    const slots = [...state.slots];
+    const from = slots.indexOf(index);
+    if (slots.length <= 3 || from < 2) slots[from] = current;
+    else [slots[0], slots[from]] = [current, slots[0]];
+    redraw({ current: index, slots, open: false, status: `Switched to ${accounts[index].handle}.`, keepStatus: false }, ".active");
+  };
+  const openFrom = (opener) => () => redraw({ open: true, opener }, '[aria-current="true"]');
+  const face = (index) => {
+    const node = el("span", { className: `avatar ${accounts[index].colour}` }, marks[index]);
+    if (needs(index)) node.classList.add("reconnect");
+    node.setAttribute("aria-hidden", "true");
+    const source = state.photos?.[accounts[index].handle];
+    if (source) {
+      const image = el("img", { alt: "", hidden: true });
+      image.addEventListener("load", () => (image.hidden = false));
+      image.addEventListener("error", () => image.remove());
+      image.src = source;
+      node.append(image);
+    }
+    return node;
+  };
+  const busy = (node, index) => {
+    if (state.busy === undefined) return node;
+    node.setAttribute("aria-disabled", "true");
+    if (index === state.busy) node.setAttribute("aria-busy", "true");
+    return node;
+  };
+
+  frame.replaceChildren();
+  frame.classList.toggle("open", Boolean(state.open));
+  const bar = el("header", { className: "row" });
+  frame.append(bar);
+
+  if (!accounts.length) {
+    bar.innerHTML = '<a href="#" aria-label="FediTap"><abbr title="fedi">⁂</abbr>tap</a>';
+  } else {
+    const group = el("div", { className: "accounts", role: "group" });
+    group.setAttribute("aria-label", "Accounts");
+    const active = busy(button("active", `${accounts[current].handle}${note(current)}, accounts`, face(current), identity(accounts[current].handle), el("span", { className: "caret" })));
+    active.setAttribute("aria-haspopup", "dialog");
+    active.addEventListener("click", openFrom(".active"));
+    group.append(active);
+
+    const shown = state.slots.length <= 3 ? state.slots : state.slots.slice(0, 2);
+    const others = el("span", { className: "others" }, ...shown.map((index) => {
+      const other = busy(button("", `Switch to ${accounts[index].handle}${note(index)}`, face(index)), index);
+      other.title = accounts[index].handle;
+      other.addEventListener("click", choose(index));
+      return other;
+    }));
+    const hidden = state.slots.slice(shown.length);
+    if (hidden.length) {
+      const count = el("span", { className: "avatar more" }, `+${hidden.length}`);
+      const waiting = hidden.some(needs);
+      if (waiting) count.classList.add("reconnect");
+      const more = busy(button("plus", `+${hidden.length} more accounts${waiting ? ", one needs reconnecting" : ""}`, count));
+      more.setAttribute("aria-haspopup", "dialog");
+      more.addEventListener("click", openFrom(".plus"));
+      others.append(more);
+    }
+    group.append(others);
+    bar.append(group);
+  }
+
+  // The app's usual pair: a status line a screen reader announces (out of sight) and the pill that shows it.
+  frame.append(el("p", { role: "status", className: "sr" }, state.status ?? ""));
+  if (accounts.length && needs(current)) {
+    // Switching never leaves the page by itself: the existing card asks first.
+    frame.insertAdjacentHTML("beforeend", `<section><fieldset class="problem"><legend>Connection expired</legend><p><strong>Connection expired</strong> Reconnect as ${accounts[current].handle}.</p><button type="button" class="primary">Reconnect</button><button type="button">Use another account</button></fieldset></section>`);
+  } else {
+    frame.insertAdjacentHTML("beforeend", '<div class="row"><div class="field"><input type="url" placeholder="Paste a link" aria-label="Link"><button type="button">Paste</button></div><button type="button" class="primary">Open</button></div>');
+  }
+
+  clearTimeout(Number(frame.dataset.timer));
+  if (state.status) {
+    const pill = el("div", { className: "pill" }, state.status);
+    pill.setAttribute("aria-hidden", "true");
+    frame.append(pill);
+    if (!state.keepStatus) frame.dataset.timer = setTimeout(() => pill.remove(), 4000);
+  }
+
+  if (!state.open) return;
+  const rows = accounts.map((account, index) => {
+    if (state.removing === index) {
+      const cancel = el("button", { type: "button", className: "cancel" }, "Cancel");
+      cancel.addEventListener("click", () => redraw({ removing: undefined }, `[data-remove="${index}"]`));
+      return el("li", {}, el("span", {}, `Remove ${account.handle}?`), cancel, el("button", { type: "button", className: "destructive" }, "Remove"));
+    }
+    const pick = button("pick", `${account.handle}${note(index)}`, face(index), identity(account.handle));
+    if (index === current) {
+      pick.setAttribute("aria-current", "true");
+      pick.insertAdjacentHTML("beforeend", CHECK);
+    }
+    pick.addEventListener("click", choose(index));
+    const remove = button("destructive", `Remove ${account.handle}`, "Remove");
+    remove.dataset.remove = index;
+    remove.addEventListener("click", () => redraw({ removing: index }, ".cancel"));
+    return el("li", {}, pick, remove);
+  });
+  const sheet = el("dialog", { className: "sheet", open: true });
+  sheet.setAttribute("aria-labelledby", `${frame.id}-title`);
+  const cross = button("close", "Close", "");
+  cross.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  sheet.append(el("div", { className: "row title" }, el("h2", { id: `${frame.id}-title` }, "Accounts"), cross), el("ul", { className: "list" }, ...rows));
+  sheet.insertAdjacentHTML("beforeend", `<form onsubmit="return false"><label for="${frame.id}-add">Add account</label><div class="row"><input id="${frame.id}-add" placeholder="@you@example.com"><button type="button" class="primary">Connect</button></div></form><button type="button" class="done">Done</button>`);
+  // Focus goes back to whatever opened the sheet.
+  const close = () => redraw({ open: false, removing: undefined }, state.opener ?? ".active");
+  cross.addEventListener("click", close);
+  sheet.querySelector(".done").addEventListener("click", close);
+  sheet.addEventListener("keydown", (event) => event.key === "Escape" && close());
+  frame.append(sheet);
+}
+
+let frameCount = 0;
+function figure(target, title, note, handles, state = {}, narrow = false) {
+  const frame = el("div", { id: `frame-${++frameCount}`, className: narrow ? "frame narrow" : "frame" });
+  const accounts = accountsFrom(handles);
+  const current = state.current ?? 0;
+  const slots = accounts.map((_, index) => index).filter((index) => index !== current);
+  const caption = el("figcaption");
+  caption.append(el("b", {}, title), ` ${note}`);
+  document.getElementById(target).append(el("figure", {}, frame, caption));
+  screen(frame, { accounts, reconnect: [], ...state, current, slots });
+}
+
+figure("out", "No account.", "390 px.", []);
+figure("header", "One account.", "390 px.", ANNA.slice(0, 1));
+figure("header", "Two.", "390 px.", ANNA.slice(0, 2));
+figure("header", "Three.", "390 px.", ANNA);
+figure("header", "Four, the most that show.", "390 px.", FOUR);
+figure("header", "Six.", "390 px.", MORE);
+figure("header", "Four at 320 px, long handle.", "The narrowest phone; the sheet has the full handle.", [...LONG, "zed@zed.example"], {}, true);
+figure("header", "Six at 320 px.", "", MORE, { current: 4 }, true);
+figure("apart", "Same name, four servers.", "Every circle differs by letters and colour.", ["anna@social.example", "anna@mastodon.example", "anna@sample.example", "anna@photos.example"]);
+figure("apart", "Non-Latin and symbol-led names.", "Whole characters; punctuation is skipped.", ["_bot@social.example", "ßeta@social.example", "ჩემი@social.example", "क्षमा@social.example"]);
+const SHARED = { "anna@social.example": FACE, "anna@photos.example": FACE, "blog@anna.example": LOGO };
+figure("photos", "Photos.", "Two accounts using one photo look alike as circles.", ANNA, { photos: SHARED });
+figure("photos", "Mixed.", "No photo and a broken one keep their letters.", FOUR, { photos: { "anna@social.example": FACE, "blog@anna.example": "data:image/png;base64,broken" } });
+figure("photos", "Needs reconnecting.", "", ANNA, { photos: SHARED, reconnect: [1] });
+figure("photos", "In the sheet.", "", ANNA, { photos: SHARED, open: true });
+figure("states", "Another account needs reconnecting.", "Tapping it switches and shows the card; nothing redirects.", ANNA, { reconnect: [1] });
+figure("states", "The current account needs reconnecting.", "", ANNA, { current: 1, reconnect: [1] });
+figure("states", "A hidden one needs reconnecting.", "The mark carries to “+N”.", MORE, { reconnect: [5] });
+figure("states", "Busy.", "Controls keep focus; the chosen circle pulses.", ANNA, { busy: 1 });
+figure("states", "Switched.", "The app’s usual pill, for a few seconds.", ANNA, { current: 1, status: "Switched to anna@photos.example.", keepStatus: true });
+figure("sheet", "Four accounts.", "", FOUR, { open: true });
+figure("sheet", "Long handle at 320 px.", "It wraps.", LONG, { open: true, reconnect: [1] }, true);
+figure("sheet", "Remove.", "The question replaces the row.", ANNA, { open: true, removing: 2 });
+</script>
+</body>
+</html>

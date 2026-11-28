@@ -2,6 +2,7 @@
 // functions below; the protocol itself lives in lib/ and knows nothing about the page.
 
 import { tick } from "svelte";
+import { currentId, otherIds, selectAccount } from "./lib/accounts.js";
 import { activityKey, backendFor } from "./lib/backend.js";
 import { ACTIONS, DRAFT_KEY } from "./lib/constants.js";
 import { repostable } from "./lib/discovery.js";
@@ -23,11 +24,15 @@ export const SLOTS = {
   reauth: { status: "reauth-status", error: "reauth-error" },
 };
 const EMPTY = { status: "", problem: null };
-const ADD_VALUE = "add";
+// A second switch this soon after one is a double tap on circles that have just traded places.
+const SWITCH_GUARD = 400;
 
 class AppState {
+  // In the order they were connected, which is the order the Accounts sheet lists them in.
   accounts = $state.raw([]);
   current = $state.raw(null);
+  // The ids of the other accounts, in the order the header shows them.
+  others = $state.raw([]);
   // The loaded post or profile. Raw, so a slow task can tell it is still the same object.
   resolved = $state.raw(null);
   // The link that was opened to get `resolved`. The post is stale once the field no longer holds it.
@@ -108,6 +113,9 @@ export const app = new AppState();
 
 let liveSection = null;
 let liveMessage = "";
+let switchedAt = -SWITCH_GUARD;
+// The control that opened the Accounts sheet, which gets focus back when it closes.
+let sheetOpener = "";
 
 // --- Small helpers the components use -------------------------------------------------------------
 
@@ -211,7 +219,7 @@ export async function settleFocus() {
   if (app.replyOpen) focusFirst(byId("reply-text"));
   else if (!app.accountsOpen) {
     const enabled = [...document.querySelectorAll("#action-controls button:not(:disabled)")];
-    focusFirst(...enabled, byId("post-url"), byId("account-select"));
+    focusFirst(...enabled, byId("post-url"), byId("account-active"));
   }
 }
 
@@ -220,10 +228,9 @@ export async function settleFocus() {
 function refresh() {
   const store = readStore();
   app.accounts = Object.values(store.accounts);
-  app.current =
-    app.accounts.find((account) => account.actor === store.selectedActorId) ??
-    app.accounts[0] ??
-    null;
+  const selected = currentId(store);
+  app.current = app.accounts.find((account) => account.actor === selected) ?? null;
+  app.others = otherIds(store);
   return app.current;
 }
 
@@ -350,6 +357,17 @@ function withSession(actorId, task) {
   );
 }
 
+// --- Clipboard ---------------------------------------------------------------------------------------
+
+/** The clipboard's text, or null when reading it is denied or unavailable: the person types instead. */
+async function readClipboard() {
+  try {
+    return (await navigator.clipboard.readText()).trim();
+  } catch {
+    return null;
+  }
+}
+
 // --- Sign in -----------------------------------------------------------------------------------------
 
 export function onAccountInput(value) {
@@ -366,6 +384,24 @@ export async function useProfileLink() {
   clearMessages("auth");
   await tick();
   byId("account-input")?.focus();
+}
+
+/** Fills the account field from the clipboard. Connect leaves the page, so that stays the person's tap. */
+export async function pasteAccount() {
+  if (app.busy) return;
+  const previous = app.accountValue;
+  const copied = await readClipboard();
+  if (app.busy || app.accountValue !== previous) return;
+  if (!copied) {
+    if (copied === "") fail("auth", "Nothing to paste.", "Copy your account address first.");
+    else fail("auth", "Can’t paste.", "Type it instead.");
+    app.accountInvalid = true;
+    byId("account-input")?.focus();
+    return;
+  }
+  onAccountInput(copied);
+  await tick();
+  byId("continue")?.focus();
 }
 
 export async function submitSignIn() {
@@ -407,59 +443,70 @@ export function reauthenticate() {
 
 // --- Accounts sheet ----------------------------------------------------------------------------------
 
+const focusCurrentRow = () => byId("account-list")?.querySelector('[aria-current="true"]')?.focus();
+
+/** Opens the sheet on the current account. `keepMessages` is for a failed return from sign-in. */
 export async function openAccountsSheet(keepMessages = false) {
+  if (app.busy && !keepMessages) return;
   if (!keepMessages) {
     clearMessages("sheet");
     clearMessages("auth");
   }
+  sheetOpener = document.activeElement?.id ?? "";
   app.accountsOpen = true;
   if (keepMessages) return;
   await tick();
-  byId("account-input")?.focus();
+  focusCurrentRow();
+}
+
+export function closeAccountsSheet() {
+  if (!app.busy) app.accountsOpen = false;
 }
 
 export function accountsClosed() {
   app.removing = null;
-  focusFirst(app.current ? byId("account-select") : byId("account-input"));
+  focusFirst(byId(sheetOpener), byId("account-active"), byId("account-input"));
 }
 
-// Choosing the last option opens the Accounts dialog and leaves the active account selected; choosing
-// an account switches to it, and one that needs signing in goes straight to its sign-in.
-export function chooseAccount(select) {
-  const { value } = select;
-  if (value === ADD_VALUE) {
-    select.value = app.current?.actor ?? "";
-    void openAccountsSheet();
-  } else {
-    void switchAccount(value, select);
-  }
-}
-
-async function switchAccount(actorId, select) {
-  if (app.busy || !actorId || actorId === app.current?.actor) {
-    if (select) select.value = app.current?.actor ?? "";
+/**
+ * Switches accounts, says so, and reopens the link for the new one. One that needs reconnecting shows
+ * its card instead: only that card's button leaves the page.
+ */
+export async function switchAccount(actorId) {
+  if (app.busy || performance.now() - switchedAt < SWITCH_GUARD) return;
+  if (actorId === app.current?.actor) {
+    app.accountsOpen = false;
     return;
   }
   clearMessages("actions");
+  clearMessages("reauth");
   const switched = await runTask(
     "lookup",
     "",
     async () => {
       await useStore((store) => {
         if (!store.accounts[actorId]) throw new Error("That account was removed in another tab.");
-        store.selectedActorId = actorId;
+        selectAccount(store, actorId);
         saveStore(store);
       });
       refresh();
     },
-    { title: "Couldn’t switch accounts" },
+    { key: `switch:${actorId}`, title: "Couldn’t switch accounts" },
   );
   if (!switched) return;
-  if (app.current?.needsReauth) reauthenticate();
-  else if (app.targetValue) await findTarget();
+  switchedAt = performance.now();
+  sheetOpener = "account-active";
+  app.accountsOpen = false;
+  // The sheet has to be gone first: the page behind it is inert, so nothing there is announced.
+  await tick();
+  byId("account-active")?.focus({ preventScroll: true });
+  setMessage("actions", { status: `Switched to ${app.current.handle}.` });
+  if (app.current.needsReauth) resetPreview(true);
+  else if (app.targetValue) await findTarget({ keepNotice: true });
 }
 
 export async function askRemove(actorId) {
+  if (app.busy) return;
   const account = app.accounts.find((item) => item.actor === actorId);
   if (!account) {
     // Removed in another tab: show what is left instead of asking about a ghost.
@@ -476,14 +523,17 @@ export async function askRemove(actorId) {
 }
 
 export async function cancelRemove() {
+  if (app.busy) return;
   const actorId = app.removing;
   app.removing = null;
   await tick();
-  const index = app.accounts.findIndex((item) => item.actor === actorId);
-  byId("account-list")?.querySelectorAll("li")[index]?.querySelector("button")?.focus();
+  byId("account-list")
+    ?.querySelector(`[data-remove="${CSS.escape(actorId)}"]`)
+    ?.focus();
 }
 
 export async function confirmRemove() {
+  if (app.busy) return;
   const actorId = app.removing;
   app.removing = null;
   if (!actorId) return;
@@ -493,10 +543,11 @@ export async function confirmRemove() {
     "",
     async () => {
       await useStore((store) => {
+        // The first circle takes over from a removed current account.
+        const next = currentId(store) === actorId ? otherIds(store)[0] : currentId(store);
         delete store.accounts[actorId];
-        if (store.selectedActorId === actorId) {
-          store.selectedActorId = Object.keys(store.accounts)[0] ?? null;
-        }
+        store.selectedActorId = next ?? null;
+        store.others = otherIds(store);
         saveStore(store);
       });
       if (wasCurrent) resetPreview();
@@ -510,7 +561,7 @@ export async function confirmRemove() {
     return;
   }
   await tick();
-  byId("account-list")?.querySelector("button")?.focus();
+  focusCurrentRow();
 }
 
 // --- Open a link -------------------------------------------------------------------------------------
@@ -528,14 +579,15 @@ function markTargetInvalid() {
   app.targetDescribedBy = `${SLOTS.lookup.error}-text`;
 }
 
-export async function findTarget() {
+/** `keepNotice` leaves the actions' status line, for the word that an account was switched. */
+export async function findTarget({ keepNotice = false } = {}) {
   if (app.busy || !app.current) return;
   if (app.current.needsReauth) {
     focusFirst(byId("reauth-sign-in"));
     return;
   }
   // What is on screen stays until the new link arrives; only the answers about it are dropped.
-  clearMessages("actions");
+  if (!keepNotice) clearMessages("actions");
   clearMessages("reply");
   app.replyOpen = false;
   app.replyText = "";
@@ -587,14 +639,9 @@ export async function findTarget() {
 export async function pasteLink() {
   if (app.busy || !app.current) return;
   const previous = app.targetValue;
-  let copied = "";
-  try {
-    copied = await navigator.clipboard.readText();
-  } catch {
-    // Denied or unavailable: the person types instead.
-  }
+  const copied = await readClipboard();
   if (app.busy || !app.current || app.targetValue !== previous) return;
-  const target = httpsUrl(copied.trim());
+  const target = httpsUrl(copied ?? "");
   if (!target) {
     if (copied) fail("lookup", "No link copied.", "Copy a post or profile link first.");
     else fail("lookup", "Can’t paste.", "Type the link instead.");

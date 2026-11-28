@@ -7,7 +7,8 @@ import { certificate, mockServer, PORT } from "./tools/mock-server.js";
 // injects inline styles for hot reload.
 const CSP = [
   "default-src 'none'",
-  "img-src 'self'",
+  // Remote images are for the connected accounts' own photos; post authors stay text-only.
+  "img-src 'self' https:",
   "manifest-src 'self'",
   "script-src 'self'",
   "style-src 'self'",

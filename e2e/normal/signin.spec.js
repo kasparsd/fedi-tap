@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
+  expectCurrent,
   expectSignedIn,
   expectView,
   mockUrl,
@@ -18,6 +19,27 @@ test.describe("signed out", () => {
     await expect(page.locator("#account-input")).toBeVisible();
     await expect(page.locator("#shortcut-card")).toBeVisible();
     await expect(page.locator("#shortcut-have")).toHaveCount(0);
+  });
+
+  test("Paste fills the account field and leaves connecting to the person", async ({
+    context,
+    page,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/");
+    const address = page.url();
+    const link = profileLink(page, "alice");
+    await page.evaluate((text) => navigator.clipboard.writeText(` ${text}\n`), link);
+    await page.click("#paste-account");
+    await expect(page.locator("#account-input")).toHaveValue(link);
+    await expect(page.locator("#continue")).toBeFocused();
+    expect(page.url()).toBe(address);
+
+    await page.evaluate(() => navigator.clipboard.writeText(""));
+    await page.click("#paste-account");
+    await expect(problem(page, "auth")).toBeVisible();
+    await expect(page.locator("#account-input")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.locator("#account-input")).toHaveValue(link);
   });
 
   test("a handle that can't be found offers a profile link", async ({ page }) => {
@@ -46,7 +68,7 @@ test.describe("signing in", () => {
     await signIn(page, "alice");
     await expectSignedIn(page);
     expect(page.url()).not.toMatch(/code=|state=|iss=/);
-    await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
+    await expectCurrent(page, "alice");
   });
 
   test("a shared link waits through sign-in and then opens", async ({ page }) => {

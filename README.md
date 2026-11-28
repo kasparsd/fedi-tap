@@ -34,7 +34,7 @@ The screenshots are an iPhone in dark mode. The share sheet and the prompt come 
 - **Like, Repost and Follow** are toggles. Each shows its done state (Liked, Reposted, Follow requested) and offers **Undo**.
 - **Reply** opens a sheet that names the post and your account and says who can see the reply. The author is mentioned. A failed send keeps your draft.
 - **Posts and profiles.** A post link shows the post with its author. A profile link offers only Follow.
-- **Several accounts.** Connect as many as you like and switch from the account menu. Removing an account clears it from this browser only.
+- **Several accounts.** Connect as many as you like and switch with one tap on their pictures at the top. Removing an account clears it from this browser only.
 - **Installable.** Add it to the Home Screen on iOS and Android. It keeps its own sign-in, separate from the browser.
 
 ## Supported servers
@@ -58,6 +58,7 @@ Lemmy and Misskey use different APIs and are not supported. FediTap picks the ba
 ## Privacy and security
 
 - Accounts and tokens live in your browser's local storage and are sent only to your own server. There is no FediTap backend.
+- The only remote pictures the page loads are your connected accounts' own photos, from the servers that host them.
 - The shortcut sends only the shared link, in the page address, and never receives credentials.
 - Remote text is shown as plain text; HTML from servers is never rendered. A strict Content Security Policy forbids inline code and requires Trusted Types. The page draws nothing when another page frames it.
 - Sign-in uses OAuth with PKCE and checks that the account that signs in is the one you asked for. To end access completely, also revoke FediTap in your server's settings.

@@ -1,51 +1,166 @@
 import { expect, test } from "@playwright/test";
-import { expectSignedIn, expectView, mockUrl, profileLink, resetMock, signIn } from "../helpers.js";
+import {
+  addAccount,
+  circle,
+  expectCurrent,
+  expectSignedIn,
+  expectView,
+  mockUrl,
+  openAccounts,
+  resetMock,
+  signIn,
+} from "../helpers.js";
 
 test.beforeEach(({ page }) => resetMock(page));
 
-/** Opens the Accounts sheet through the account menu's last option. */
-async function openAccounts(page) {
-  await page.selectOption("#account-select", "add");
-  await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", true);
-}
+/** The users of the header's circles, in order. */
+const circles = (page) =>
+  page
+    .locator(".others button[aria-label^='Switch to']")
+    .evaluateAll((buttons) => buttons.map((button) => button.title.split("@")[0]));
 
-/** Adds another mock account from inside the Accounts sheet. */
-async function addAccount(page, user) {
-  await openAccounts(page);
-  await page.fill("#account-input", profileLink(page, user));
-  await Promise.all([page.waitForURL(/oauth\/authorize/), page.click("#accounts-sheet #continue")]);
-  await page.selectOption("select[name=user]", user);
-  const origin = new URL(page.url()).origin;
-  await Promise.all([
-    page.waitForURL((url) => url.origin === origin && url.pathname === "/"),
-    page.click("button[value=approve]"),
-  ]);
-  await expect(page.locator("#account-select")).toBeVisible();
+/** Taps a circle after the pause that tells a switch from a double tap. */
+async function switchTo(page, user) {
+  await page.waitForTimeout(450);
+  await circle(page, user).click();
+  await expectCurrent(page, user);
 }
 
 test("adds a second account, switches between them and removes one", async ({ page }) => {
   await signIn(page, "alice");
+  // Signed in, the accounts take the product name's place.
+  await expect(page.locator("header a")).toHaveCount(0);
   await openAccounts(page);
   await expect(page.locator("#account-list li")).toHaveCount(1);
-  await expect(page.locator("#accounts-sheet #account-input")).toBeFocused();
+  await expect(page.locator("#account-list [aria-current=true]")).toBeFocused();
   await page.keyboard.press("Escape");
+  await expect(page.locator("#account-active")).toBeFocused();
 
   await addAccount(page, "shorty");
-  await expect(page.locator("#account-select option")).toHaveCount(3);
-  await expect(page.locator("#account-select option:checked")).toContainText("@shorty@localhost");
-
-  await page.selectOption("#account-select", { label: "@alice@localhost" });
-  await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
+  await switchTo(page, "alice");
+  await expect(page.locator("#account-active")).toBeFocused();
+  await expect(page.locator(".pill")).toContainText(/Switched to alice@localhost/);
 
   await openAccounts(page);
-  await page.getByRole("button", { name: "Remove @shorty@localhost" }).click();
+  await page.getByRole("button", { name: /^Remove shorty@/ }).click();
   // The question replaces the account's row; no second dialog opens.
-  await expect(page.locator("#remove-text")).toContainText("@shorty@localhost");
+  await expect(page.locator("#remove-text")).toContainText("shorty@localhost");
   await expect(page.locator("dialog[open]")).toHaveCount(1);
+  await page.click("#remove-cancel");
+  await expect(page.getByRole("button", { name: /^Remove shorty@/ })).toBeFocused();
+  await page.getByRole("button", { name: /^Remove shorty@/ }).click();
   await page.click("#remove-confirm");
   await expect(page.locator("#account-list li")).toHaveCount(1);
   await page.click("#sheet-done");
-  await expect(page.locator("#account-select")).toBeFocused();
+  await expect(page.locator("#account-active")).toBeFocused();
+});
+
+test("the button at the top right closes the Accounts sheet like Done", async ({ page }) => {
+  await signIn(page, "alice");
+  await openAccounts(page);
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", false);
+  await expect(page.locator("#account-active")).toBeFocused();
+});
+
+test("circles trade places with the current account, and +N holds the rest", async ({ page }) => {
+  await signIn(page, "alice");
+  for (const user of ["mario", "erin", "shorty"]) await addAccount(page, user);
+  // Three others fit. Each new account took the front, as one picked from the sheet would.
+  await expect.poll(() => circles(page)).toHaveLength(3);
+  await expect(page.locator("#account-more")).toHaveCount(0);
+  const before = await circles(page);
+
+  // The previous account takes the tapped circle's place, so the same spot switches back.
+  await switchTo(page, before[1]);
+  await expect.poll(() => circles(page)).toEqual([before[0], "shorty", before[2]]);
+  await switchTo(page, "shorty");
+  await expect.poll(() => circles(page)).toEqual(before);
+
+  await addAccount(page, "flaky");
+  await expect.poll(() => circles(page)).toHaveLength(2);
+  await expect(page.locator("#account-more")).toHaveAccessibleName("+2 more accounts");
+
+  // One picked from behind "+N": the previous account comes to the front.
+  const shown = await circles(page);
+  await page.locator("#account-more").click();
+  const rows = page.locator("#account-list .pick");
+  await expect(rows).toHaveCount(5);
+  const hidden = (
+    await rows.evaluateAll((buttons) => buttons.map((b) => b.ariaLabel.split("@")[0]))
+  ).filter((user) => user !== "flaky" && !shown.includes(user));
+  await page.waitForTimeout(450);
+  await page
+    .locator("#account-list")
+    .getByRole("button", { name: new RegExp(`^${hidden[0]}@`) })
+    .click();
+  await expectCurrent(page, hidden[0]);
+  await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", false);
+  await expect.poll(() => circles(page)).toEqual(["flaky", shown[1]]);
+
+  // The order is saved.
+  await page.reload();
+  await expectCurrent(page, hidden[0]);
+  await expect.poll(() => circles(page)).toEqual(["flaky", shown[1]]);
+});
+
+test("a second tap right after a switch does nothing", async ({ page }) => {
+  await signIn(page, "alice");
+  await addAccount(page, "shorty");
+  await page.waitForTimeout(450);
+  await circle(page, "alice").dblclick();
+  await expectCurrent(page, "alice");
+  await page.waitForTimeout(100);
+  await expectCurrent(page, "alice");
+});
+
+test("circles show the account's photo, and letters when there is none", async ({ page }) => {
+  await signIn(page, "alice");
+  await expect(page.locator("#account-active img")).toBeVisible();
+  // No photo, and a photo that can't be loaded.
+  for (const user of ["shorty", "erin"]) {
+    await addAccount(page, user);
+    await expect(page.locator("#account-active img:visible")).toHaveCount(0);
+    await expect(page.locator("#account-active .avatar")).toHaveText(user[0].toUpperCase());
+  }
+});
+
+test("switching to an account that needs reconnecting shows the card and stays here", async ({
+  page,
+}) => {
+  await signIn(page, "alice");
+  await addAccount(page, "shorty");
+  await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((name) => localStorage[name].includes('"accounts"'));
+    const store = JSON.parse(localStorage[key]);
+    for (const account of Object.values(store.accounts)) {
+      if (account.handle.startsWith("alice@")) account.needsReauth = true;
+    }
+    localStorage[key] = JSON.stringify(store);
+  });
+  await page.reload();
+  await expect(circle(page, "alice")).toHaveAccessibleName(/needs reconnecting/);
+  const address = page.url();
+  await switchTo(page, "alice");
+  await expect(page.locator("#reauth")).toBeVisible();
+  expect(page.url()).toBe(address);
+});
+
+test("with large text the header wraps without scrolling sideways", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await signIn(page, "alice");
+  for (const user of ["mario", "erin", "shorty", "flaky"]) await addAccount(page, user);
+  await page.evaluate(() => document.documentElement.style.setProperty("font-size", "200%"));
+  const overflow = () =>
+    page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+  expect(await overflow()).toBeLessThanOrEqual(0);
+  await openAccounts(page);
+  expect(await overflow()).toBeLessThanOrEqual(0);
+  expect(
+    await page.locator("#accounts-sheet").evaluate((e) => e.scrollWidth - e.clientWidth),
+  ).toBeLessThanOrEqual(0);
 });
 
 test("switching accounts reopens the shared link for the new one", async ({ page }) => {
@@ -55,9 +170,10 @@ test("switching accounts reopens the shared link for the new one", async ({ page
   await expect(page.locator("#target-card")).toBeVisible();
   await addAccount(page, "shorty");
   await expect(page.locator("#target-card")).toBeVisible();
-  await page.selectOption("#account-select", { label: "@alice@localhost" });
-  await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
+  await switchTo(page, "alice");
   await expect(page.locator("#target-card")).toBeVisible();
+  // Loading the link doesn't clear the word that the account changed.
+  await expect(page.locator(".pill")).toContainText(/Switched to alice@/);
 });
 
 test("an account whose first token is rejected renews it and carries on", async ({ page }) => {
@@ -71,7 +187,7 @@ test("an account whose first token is rejected renews it and carries on", async 
 test("removing the last account closes the sheet and signs out", async ({ page }) => {
   await signIn(page, "alice");
   await openAccounts(page);
-  await page.getByRole("button", { name: "Remove @alice@localhost" }).click();
+  await page.getByRole("button", { name: /^Remove alice@/ }).click();
   await page.click("#remove-confirm");
   await expectView(page, "signed-out");
   await expect(page.locator("#accounts-sheet")).toHaveJSProperty("open", false);
@@ -86,7 +202,7 @@ test("another tab sees accounts that are added and removed", async ({ context, p
   await expectSignedIn(other);
 
   await openAccounts(other);
-  await other.getByRole("button", { name: "Remove @alice@localhost" }).click();
+  await other.getByRole("button", { name: /^Remove alice@/ }).click();
   await other.click("#remove-confirm");
   await expectView(other, "signed-out");
   await expectView(page, "signed-out");

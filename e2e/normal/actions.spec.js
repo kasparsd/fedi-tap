@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   action,
+  expectCurrent,
   expectSignedIn,
   expectView,
   mockUrl,
@@ -158,7 +159,7 @@ test("a reload reopens the link for the same account", async ({ page }) => {
   await page.reload();
   await expect(page.locator("#target-card")).toBeVisible();
   await expectSignedIn(page);
-  await expect(page.locator("#account-select option:checked")).toContainText("@alice@localhost");
+  await expectCurrent(page, "alice");
 });
 
 test("a post groups the in-app actions and the server's own actions", async ({ page }) => {

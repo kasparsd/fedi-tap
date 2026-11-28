@@ -12,6 +12,7 @@
   import ReauthCard from "./components/ReauthCard.svelte";
   import ReplySheet from "./components/ReplySheet.svelte";
   import ServerLinks from "./components/ServerLinks.svelte";
+  import ShareIcon from "./components/ShareIcon.svelte";
   import ShortcutCard from "./components/ShortcutCard.svelte";
   import SignInForm from "./components/SignInForm.svelte";
   import TargetCard from "./components/TargetCard.svelte";
@@ -37,14 +38,10 @@
   {#if !app.accountsOpen && !app.replyOpen}<Notices />{/if}
 
   {#if app.view === "signed-out"}
-    <section>
-      <p>Act on Fediverse posts from your own account:</p>
-      <ol>
-        <li>Connect your Fediverse account.</li>
-        <li>Open a post or profile link, or share one from your phone.</li>
-        <li>Like, repost, reply or follow.</li>
-      </ol>
-    </section>
+    <p>
+      Like, repost, reply and follow Fediverse content on the web using the default
+      <span class="symbol"><ShareIcon /> Share</span> card of your device.
+    </p>
     {#if app.targetValue}
       <section id="pending-card">
         <h2>Shared link</h2>
@@ -73,9 +70,9 @@
       <div class="card">
         <TargetCard object={app.resolved} />
       </div>
-      {#if !app.resolved.isActor}<ActionButtons />{/if}
       <!-- Names who the API buttons act as; the server links act as whoever is signed in there. -->
       {#if app.accounts.length > 1}<p class="quiet">Acting as @{app.current.handle}</p>{/if}
+      {#if !app.resolved.isActor}<ActionButtons />{/if}
       <ServerLinks />
     </section>
   {:else if usable && app.opening && app.showProgress}

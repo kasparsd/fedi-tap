@@ -1,3 +1,4 @@
+import { freeColour, selectAccount } from "./accounts.js";
 import { backendFor, detect } from "./backend.js";
 import { SIGN_IN_KEY } from "./constants.js";
 import { findActor, findIntents } from "./discovery.js";
@@ -101,8 +102,10 @@ export async function completeSignIn(params, onStarted) {
   const intents = await findIntents(account.handle, origin);
   if (Object.keys(intents).length) account.intents = intents;
   await useStore((store) => {
-    store.accounts[account.actor] = account;
-    store.selectedActorId = account.actor;
+    // Connecting an account again keeps its colour; its photo is whatever the server says now.
+    const colour = store.accounts[account.actor]?.colour ?? freeColour(store.accounts);
+    store.accounts[account.actor] = { ...account, colour };
+    selectAccount(store, account.actor);
     saveStore(store);
   });
 }
